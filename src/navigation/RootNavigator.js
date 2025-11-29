@@ -1,29 +1,52 @@
-import React, { useState, useEffect } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useState, useEffect } from "react";
+import { View, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AuthNavigator } from "../auth/navigation";
 // import { BusinessNavigator } from '../business/navigation';
 // import { SingleNavigator } from '../single/navigation';
 
 const RootNavigator = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkUserType();
+    checkAuthStatus();
   }, []);
 
-  const checkUserType = async () => {
+  const checkAuthStatus = async () => {
     try {
-      const storedUserType = await AsyncStorage.getItem('userType');
-      const token = await AsyncStorage.getItem('authToken');
+      const token = await AsyncStorage.getItem("authToken");
+      const storedUserType = await AsyncStorage.getItem("userType");
 
-      if (storedUserType && token) {
+      if (token && storedUserType) {
+        setIsAuthenticated(true);
         setUserType(storedUserType);
+      } else {
+        setIsAuthenticated(false);
       }
     } catch (error) {
-      console.error('Error checking user type:', error);
+      console.error("Error checking auth status:", error);
+      setIsAuthenticated(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getNavigator = () => {
+    if (!isAuthenticated) {
+      return <AuthNavigator />;
+    }
+
+    switch (userType) {
+      case "business":
+        // return <BusinessNavigator />;
+        return <AuthNavigator />; // Temporary fallback until BusinessNavigator is ready
+      case "single":
+        // return <SingleNavigator />;
+        return <AuthNavigator />; // Temporary fallback until SingleNavigator is ready
+      default:
+        return <AuthNavigator />; // Fallback
     }
   };
 
@@ -35,19 +58,7 @@ const RootNavigator = () => {
     );
   }
 
-  // TODO: Implement navigation based on user type
-  // if (userType === 'business') {
-  //   return <BusinessNavigator />;
-  // }
-  // return <SingleNavigator />;
-
-  return (
-    <View className="flex-1 justify-center items-center bg-background">
-      <Text className="text-lg font-semibold text-text">
-        App Ready - Add Navigation
-      </Text>
-    </View>
-  );
+  return getNavigator();
 };
 
 export default RootNavigator;

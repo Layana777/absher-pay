@@ -1,11 +1,15 @@
 import { StatusBar } from "expo-status-bar";
-import { Text, View, ScrollView } from "react-native";
-import { Button } from "./src/common/components";
+import { View } from "react-native";
+import { NavigationContainer } from "@react-navigation/native";
+import { RootNavigator } from "./src/navigation";
 
 export default function App() {
   return (
-    <View className="flex-1 bg-background">
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <View className="flex-1 bg-background">
+        <RootNavigator />
+        <StatusBar style="auto" />
+      </View>
+    </NavigationContainer>
   );
 }
