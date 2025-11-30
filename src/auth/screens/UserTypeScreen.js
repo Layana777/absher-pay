@@ -15,7 +15,10 @@ const UserTypeScreen = ({ navigation }) => {
   };
 
   return (
-    <View className="flex-1 bg-[#F5F7FA] px-5 pt-[60px] pb-2.5">
+    <View
+      className="flex-1 bg-[#F5F7FA] px-5 pt-[60px] pb-2.5"
+      style={{ direction: "ltr" }}
+    >
       {/* Cards Container */}
       <View className="flex-[0.9] justify-center gap-5">
         {/* Header */}
