@@ -1,12 +1,11 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Image, Animated } from "react-native";
-
+import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
 const SplashScreen = ({
   backgroundColor = "#028550",
   title = "محفظة أبشر الرقمية",
   subtitle = "مستقبل المدفوعات الحكومية",
   footerText = "وزارة الداخلية - المملكة العربية السعودية",
-  logoSource = require("../assets/icons/logo-white.png"),
 }) => {
   // Animation values for three dots
   const dot1Opacity = useRef(new Animated.Value(0.3)).current;
@@ -66,11 +65,7 @@ const SplashScreen = ({
 
       {/* Logo */}
       <View className="items-center mb-12">
-        <Image
-          source={logoSource}
-          className="w-32 h-32"
-          resizeMode="contain"
-        />
+        <AbsherPay width={150} height={150} />
       </View>
 
       {/* Title */}
@@ -101,9 +96,7 @@ const SplashScreen = ({
 
       {/* Footer */}
       <View className="absolute bottom-10">
-        <Text className="text-xs text-white/80 text-center">
-          {footerText}
-        </Text>
+        <Text className="text-xs text-white/80 text-center">{footerText}</Text>
       </View>
     </View>
   );
