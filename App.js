@@ -3,6 +3,8 @@ import { View, I18nManager } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { RootNavigator } from "./src/navigation";
 import { useEffect } from "react";
+import { Provider } from "react-redux";
+import { store } from "./src/store";
 
 // Enable RTL
 I18nManager.allowRTL(true);
@@ -18,11 +20,13 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <View className="flex-1 bg-background">
-        <RootNavigator />
-        <StatusBar style="auto" />
-      </View>
-    </NavigationContainer>
+    <Provider store={store}>
+      <NavigationContainer>
+        <View className="flex-1 bg-background">
+          <RootNavigator />
+          <StatusBar style="auto" />
+        </View>
+      </NavigationContainer>
+    </Provider>
   );
 }

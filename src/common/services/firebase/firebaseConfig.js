@@ -1,17 +1,21 @@
-import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
-import { getAuth } from 'firebase/auth';
-import { getStorage } from 'firebase/storage';
+import { initializeApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
+import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
-// TODO: Replace with your Firebase configuration
+
+// Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  databaseURL: "YOUR_DATABASE_URL",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyCx0GXCgSaNJlrg1a_goaLHp58IuwviL3M",
+  authDomain: "absher-pay.firebaseapp.com",
+  databaseURL:
+    "https://absher-pay-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "absher-pay",
+  storageBucket: "absher-pay.firebasestorage.app",
+  messagingSenderId: "523633067316",
+  appId: "1:523633067316:web:862ec426fee4e8abb85161",
+  measurementId: "G-NGTKK52CB7",
 };
 
 // Initialize Firebase
@@ -21,5 +25,6 @@ const app = initializeApp(firebaseConfig);
 export const database = getDatabase(app);
 export const auth = getAuth(app);
 export const storage = getStorage(app);
+// export const analytics = getAnalytics(app);
 
 export default app;
