@@ -94,10 +94,28 @@ const SingleOnboardingScreen = ({ navigation }) => {
 
   return (
     <View style={{ direction: "ltr" }} className="flex-1 bg-white">
+      {/* Background Circles */}
+      <View
+        className="absolute top-[12%] left-[5%] w-36 h-36 rounded-full"
+        style={{ backgroundColor: "rgba(2,133,80,0.03)" }}
+      />
+      {/* <View className="absolute top-[40%] right-[8%] w-32 h-32 rounded-full bg-[#028550]/5" /> */}
+      <View
+        className="absolute bottom-[20%] left-[15%] w-28 h-28 rounded-full"
+        style={{ backgroundColor: "rgba(2,133,80,0.03)" }}
+      />
+      <View
+        className="absolute bottom-[52%] left-[70%] w-20 h-20 rounded-full"
+        style={{ backgroundColor: "rgba(2,133,80,0.03)" }}
+      />
+
       {/* Top Section - Skip Button & Pagination Dots */}
       <View className="absolute top-16 left-0 right-0 flex-row justify-between items-center px-5 z-10">
         {/* Pagination Dots - Left */}
-        <PaginationDots count={onboardingData.length} currentIndex={currentIndex} />
+        <PaginationDots
+          count={onboardingData.length}
+          currentIndex={currentIndex}
+        />
 
         {/* Skip Button - Right */}
         <TouchableOpacity onPress={handleSkip}>
