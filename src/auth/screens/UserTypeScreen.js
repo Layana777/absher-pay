@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Image } from "react-native";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
+
 const UserTypeScreen = ({ navigation }) => {
   const [selectedType, setSelectedType] = useState(null);
 
@@ -13,6 +14,8 @@ const UserTypeScreen = ({ navigation }) => {
     setSelectedType("business");
     navigation.navigate("BusinessSplash");
   };
+
+
 
   return (
     <View
