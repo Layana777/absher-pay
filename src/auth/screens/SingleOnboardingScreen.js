@@ -7,7 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import SvgIcons from "../../common/components/SvgIcons";
-import { PaginationDots } from "../../common/components/ui";
+import { PaginationDots, Button } from "../../common/components/ui";
 
 const { width } = Dimensions.get("window");
 
@@ -58,14 +58,14 @@ const SingleOnboardingScreen = ({ navigation }) => {
       });
       setCurrentIndex(nextIndex);
     } else {
-      // Navigate to next screen (Login/Signup)
-      console.log("Navigate to login/signup");
+      // Navigate to login screen
+      navigation.navigate("SingleLogin");
     }
   };
 
   const handleSkip = () => {
-    // Navigate to login/signup
-    console.log("Skip to login/signup");
+    // Navigate to login screen
+    navigation.navigate("SingleLogin");
   };
 
   const renderItem = ({ item }) => (
@@ -144,17 +144,14 @@ const SingleOnboardingScreen = ({ navigation }) => {
       {/* Bottom Section */}
       <View className="pb-10 px-5">
         {/* Next Button */}
-        <TouchableOpacity
+        <Button
+          title={
+            currentIndex === onboardingData.length - 1 ? "ابدأ الآن" : "التالي"
+          }
           onPress={handleNext}
-          className="bg-[#028550] rounded-xl py-4 items-center"
-          activeOpacity={0.8}
-        >
-          <Text className="text-white text-lg font-bold">
-            {currentIndex === onboardingData.length - 1
-              ? "ابدأ الآن"
-              : "التالي"}
-          </Text>
-        </TouchableOpacity>
+          variant="single-primary"
+          size="medium"
+        />
       </View>
     </View>
   );
