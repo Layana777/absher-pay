@@ -7,6 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import SvgIcons from "../../common/components/SvgIcons";
+import { PaginationDots } from "../../common/components/ui";
 
 const { width } = Dimensions.get("window");
 
@@ -96,16 +97,7 @@ const SingleOnboardingScreen = ({ navigation }) => {
       {/* Top Section - Skip Button & Pagination Dots */}
       <View className="absolute top-16 left-0 right-0 flex-row justify-between items-center px-5 z-10">
         {/* Pagination Dots - Left */}
-        <View className="flex-row items-center">
-          {onboardingData.map((_, index) => (
-            <View
-              key={index}
-              className={`h-2 rounded-full mx-1 ${
-                index === currentIndex ? "w-8 bg-[#028550]" : "w-2 bg-gray-300"
-              }`}
-            />
-          ))}
-        </View>
+        <PaginationDots count={onboardingData.length} currentIndex={currentIndex} />
 
         {/* Skip Button - Right */}
         <TouchableOpacity onPress={handleSkip}>

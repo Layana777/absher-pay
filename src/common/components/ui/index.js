@@ -1,5 +1,6 @@
 // Export all UI components
 export { default as Button } from './Button';
+export { default as PaginationDots } from './PaginationDots';
 // Add more exports as components are created
 // export { default as Input } from './Input';
 // export { default as Card } from './Card';
