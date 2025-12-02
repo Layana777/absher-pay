@@ -4,6 +4,10 @@ import Wallet from "../assets/icons/wallet.svg";
 import Ai from "../assets/icons/Ai-icon.svg";
 import FingerPrint from "../assets/icons/fingerPrint.svg";
 import DirectPay from "../assets/icons/directPay.svg";
+import PaymentManagement from "../assets/icons/businessPaymentsManagement.svg";
+import BusinessAi from "../assets/icons/businessAI.svg";
+import BusinessAnalysis from "../assets/icons/businessAnalysis.svg";
+import BusinessShield from "../assets/icons/businessShield.svg";
 
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
@@ -15,6 +19,14 @@ const SvgIcons = ({ name, size, color, style }) => {
       return <FingerPrint height={size} width={size} />;
     case "directPay":
       return <DirectPay height={size} width={size} />;
+    case "paymentManagement":
+      return <PaymentManagement height={size} width={size} />;
+    case "businessAi":
+      return <BusinessAi height={size} width={size} />;
+    case "businessAnalysis":
+      return <BusinessAnalysis height={size} width={size} />;
+    case "businessShield":
+      return <BusinessShield height={size} width={size} />;
 
     default:
       return null;
