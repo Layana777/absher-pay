@@ -9,6 +9,7 @@ import {
   OtpSingleScreen,
   OtpBusinessScreen,
 } from "../screens";
+import BusinessOnboardingScreen from "../screens/BusinessOnboardingScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -19,7 +20,8 @@ const AuthNavigator = () => {
         headerShown: false,
       }}
     >
-      <Stack.Screen name="UserType" component={UserTypeScreen} />
+      
+      <Stack.Screen name="UserType" component={UserTypeScreen} /> 
       <Stack.Screen name="SingleSplash" component={SingleSplashScreen} />
       <Stack.Screen name="BusinessSplash" component={BusinessSplashScreen} />
       <Stack.Screen name="SingleOnboarding" component={SingleOnboardingScreen} />
@@ -27,6 +29,8 @@ const AuthNavigator = () => {
       <Stack.Screen name="BusinessLogin" component={BusinessLoginScreen} />
       <Stack.Screen name="OtpSingle" component={OtpSingleScreen} />
       <Stack.Screen name="OtpBusiness" component={OtpBusinessScreen} />
+      <Stack.Screen name="BusinessOnboarding" component={BusinessOnboardingScreen} />
+
     </Stack.Navigator>
   );
 };
