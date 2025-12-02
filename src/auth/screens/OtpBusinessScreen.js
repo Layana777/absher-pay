@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Keyboard,
   TouchableWithoutFeedback,
+  StatusBar,
 } from "react-native";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
 
@@ -63,20 +64,21 @@ const OtpBusinessScreen = ({ navigation }) => {
     }
   }, [otp]);
 
+  // Auto-focus first input on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      inputRefs.current[0]?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View className="flex-1" style={{ direction: "ltr" }}>
+        <StatusBar barStyle="light-content" />
         {/* Blue Header Section */}
         <View className="bg-[#0055aa] pt-12 pb-20 px-6 relative">
           {/* Skip Button */}
-          <TouchableOpacity
-            onPress={handleSkip}
-            className="absolute top-12 right-6 flex-row items-center z-10"
-            activeOpacity={0.7}
-          >
-            <Text className="text-white text-lg font-semibold ml-2">تخطي</Text>
-            <Text className="text-white text-lg font-bold"> →</Text>
-          </TouchableOpacity>
 
           {/* Logo and Title */}
           <View className="items-center mt-8">
@@ -85,7 +87,6 @@ const OtpBusinessScreen = ({ navigation }) => {
               <AbsherPay width={100} />
             </View>
 
-                      
             <Text className="text-white text-2xl font-bold mb-2">
               محفظة أبشر أعمال
             </Text>

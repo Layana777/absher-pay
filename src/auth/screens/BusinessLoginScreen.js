@@ -37,6 +37,7 @@ const BusinessLoginScreen = ({ navigation }) => {
     // TODO: Implement actual login logic
     setTimeout(() => {
       setLoading(false);
+      navigation.navigate("OtpBusiness");
     }, 2000);
   };
 
