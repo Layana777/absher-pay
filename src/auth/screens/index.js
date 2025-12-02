@@ -3,4 +3,5 @@ export { default as SingleSplashScreen } from './SingleSplashScreen';
 export { default as BusinessSplashScreen } from './BusinessSplashScreen';
 export { default as SingleOnboardingScreen } from './SingleOnboardingScreen';
 export { default as OtpSingleScreen } from './OtpSingleScreen';
+export { default as OtpBusinessScreen } from './OtpBusinessScreen';
 export { default as SingleLoginScreen } from './SingleLoginScreen';
