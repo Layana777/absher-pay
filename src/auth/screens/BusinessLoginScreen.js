@@ -12,7 +12,7 @@ import { Button } from "../../common/components/ui";
 import TextInput from "../../common/components/forms/TextInput";
 import SvgIcons from "../../common/components/SvgIcons";
 
-const SingleLoginScreen = ({ navigation }) => {
+const BusinessLoginScreen = ({ navigation }) => {
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -37,7 +37,6 @@ const SingleLoginScreen = ({ navigation }) => {
     // TODO: Implement actual login logic
     setTimeout(() => {
       setLoading(false);
-      navigation.navigate("OtpSingle");
     }, 2000);
   };
 
@@ -65,8 +64,8 @@ const SingleLoginScreen = ({ navigation }) => {
         contentContainerStyle={{ flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Green Header Section */}
-        <View className="bg-single-primary rounded-b-[30px] pb-10 pt-12">
+        {/* Blue Header Section */}
+        <View className="bg-business-primary rounded-b-[30px] pb-10 pt-12">
           {/* Back Button */}
           <TouchableOpacity
             onPress={handleBack}
@@ -84,12 +83,12 @@ const SingleLoginScreen = ({ navigation }) => {
 
             {/* Title */}
             <Text className="text-white text-xl font-bold mb-1">
-              محفظة أبشر أفراد
+              محفظة أبشر أعمال
             </Text>
 
             {/* Subtitle */}
             <Text className="text-white/80 text-sm">
-              أداة ذكية للمدفوعات الحكومية
+              إدارة ذكية للمدفوعات الحكومية
             </Text>
           </View>
         </View>
@@ -103,7 +102,7 @@ const SingleLoginScreen = ({ navigation }) => {
             </Text>
 
             {/* Biometric Auth Box */}
-            <View className="bg-[#028550]/10 rounded-2xl p-4 mb-6">
+            <View className="bg-[#0055aa]/10 rounded-2xl p-4 mb-6">
               <View className="flex-row items-center justify-between">
                 {/* Text Section */}
                 <View className="flex-1 mx-4">
@@ -116,7 +115,7 @@ const SingleLoginScreen = ({ navigation }) => {
                 {/* Fingerprint Button */}
                 <TouchableOpacity
                   onPress={handleBiometricLogin}
-                  className="w-16 h-16 bg-[#028550] rounded-[15px] items-center justify-center"
+                  className="w-16 h-16 bg-[#0055aa] rounded-[15px] items-center justify-center"
                   activeOpacity={0.8}
                 >
                   <SvgIcons name="FingerPrintWhite" size={32} />
@@ -127,7 +126,7 @@ const SingleLoginScreen = ({ navigation }) => {
               <Button
                 title="الدخول بالهوية الرقمية"
                 onPress={handleDigitalIdLogin}
-                variant="single-primary"
+                variant="business-primary"
                 size="small"
                 className="mt-4"
               />
@@ -168,7 +167,7 @@ const SingleLoginScreen = ({ navigation }) => {
                 className="self-end mb-6"
                 activeOpacity={0.7}
               >
-                <Text className="text-[#028550] text-sm font-medium">
+                <Text className="text-[#0055aa] text-sm font-medium">
                   نسيت كلمة المرور؟
                 </Text>
               </TouchableOpacity>
@@ -177,7 +176,7 @@ const SingleLoginScreen = ({ navigation }) => {
               <Button
                 title="تسجيل الدخول"
                 onPress={handleLogin}
-                variant="single-primary"
+                variant="business-primary"
                 size="medium"
                 disabled={!isFormValid}
                 loading={loading}
@@ -186,8 +185,8 @@ const SingleLoginScreen = ({ navigation }) => {
               {/* Register Footer */}
               <View className="flex-row items-center justify-center mt-6">
                 <TouchableOpacity onPress={handleRegister} activeOpacity={0.7}>
-                  <Text className="text-[#028550] text-sm font-medium mx-2">
-                    التسجيل في أبشر أفضل
+                  <Text className="text-[#0055aa] text-sm font-medium mx-2">
+                    التسجيل في أبشر أعمال
                   </Text>
                 </TouchableOpacity>
                 <Text className="text-gray-500 text-sm">ليس لديك حساب؟</Text>
@@ -200,4 +199,4 @@ const SingleLoginScreen = ({ navigation }) => {
   );
 };
 
-export default SingleLoginScreen;
+export default BusinessLoginScreen;

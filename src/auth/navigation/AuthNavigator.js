@@ -5,6 +5,8 @@ import {
   BusinessSplashScreen,
   SingleOnboardingScreen,
   SingleLoginScreen,
+  BusinessLoginScreen,
+  OtpSingleScreen,
 } from "../screens";
 
 const Stack = createNativeStackNavigator();
@@ -21,6 +23,8 @@ const AuthNavigator = () => {
       <Stack.Screen name="BusinessSplash" component={BusinessSplashScreen} />
       <Stack.Screen name="SingleOnboarding" component={SingleOnboardingScreen} />
       <Stack.Screen name="SingleLogin" component={SingleLoginScreen} />
+      <Stack.Screen name="BusinessLogin" component={BusinessLoginScreen} />
+      <Stack.Screen name="OtpSingle" component={OtpSingleScreen} />
     </Stack.Navigator>
   );
 };

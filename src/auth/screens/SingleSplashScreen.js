@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { StatusBar } from "react-native";
 import { SplashScreen } from "../../common/components";
 
 const SingleSplashScreen = ({ navigation }) => {
@@ -12,12 +13,15 @@ const SingleSplashScreen = ({ navigation }) => {
   }, [navigation]);
 
   return (
-    <SplashScreen
-      backgroundColor="#028550"
-      title="محفظة أبشر أفراد"
-      subtitle="مستقبل المدفوعات الحكومية"
-      footerText="وزارة الداخلية - المملكة العربية السعودية"
-    />
+    <>
+      <StatusBar barStyle="light-content" />
+      <SplashScreen
+        backgroundColor="#028550"
+        title="محفظة أبشر أفراد"
+        subtitle="مستقبل المدفوعات الحكومية"
+        footerText="وزارة الداخلية - المملكة العربية السعودية"
+      />
+    </>
   );
 };
 
