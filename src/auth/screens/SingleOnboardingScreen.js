@@ -59,13 +59,13 @@ const SingleOnboardingScreen = ({ navigation }) => {
       setCurrentIndex(nextIndex);
     } else {
       // Navigate to login screen
-      navigation.navigate("SingleLogin");
+      navigation.replace("SingleLogin");
     }
   };
 
   const handleSkip = () => {
     // Navigate to login screen
-    navigation.navigate("SingleLogin");
+    navigation.replace("SingleLogin");
   };
 
   const renderItem = ({ item }) => (

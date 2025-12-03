@@ -7,12 +7,21 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   StatusBar,
+  Alert,
 } from "react-native";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
+import { useDispatch } from "react-redux";
+import { setUser } from "../../store/slices/userSlice";
+import { getUserByUid } from "../../common/services";
 
-const OtpBusinessScreen = ({ navigation }) => {
+const OtpBusinessScreen = ({ navigation, route }) => {
+  const dispatch = useDispatch();
+  const { uid, nationalId, phoneNumber } = route.params || {};
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputRefs = useRef([]);
+  const [loading, setLoading] = useState(false);
+  const [verificationSuccess, setVerificationSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const handleOtpChange = (value, index) => {
     // Only allow numbers
@@ -45,15 +54,53 @@ const OtpBusinessScreen = ({ navigation }) => {
     // Or navigate to next screen
   };
 
-  const handleAutoSubmit = () => {
+  const handleAutoSubmit = async () => {
     const otpCode = otp.join("");
-    if (otpCode.length === 4) {
-      // Dismiss keyboard
-      Keyboard.dismiss();
-      // Verify OTP or navigate to next screen
+    if (otpCode.length !== 4) return;
+
+    // Dismiss keyboard
+    Keyboard.dismiss();
+    setLoading(true);
+    setError("");
+
+    try {
+      // For now, accept any 4-digit OTP (simulated)
       console.log("OTP Complete:", otpCode);
-      // TODO: Add your OTP verification logic here
-      // navigation.navigate('NextScreen');
+      console.log("Verifying user with UID:", uid);
+
+      // Fetch full user data from database
+      const userData = await getUserByUid(uid);
+
+      if (!userData) {
+        setError("فشل في جلب بيانات المستخدم");
+        setLoading(false);
+        return;
+      }
+
+      // Dispatch user data to Redux store
+      dispatch(setUser(userData));
+
+      // Show success state
+      setVerificationSuccess(true);
+
+      // Show success alert
+      Alert.alert(
+        "تم التحقق بنجاح",
+        `مرحباً ${userData.firstName} ${userData.lastName}`,
+        [
+          {
+            text: "حسناً",
+            style: "default",
+          },
+        ]
+      );
+
+      console.log("User authenticated and saved to Redux:", userData);
+    } catch (error) {
+      console.error("OTP verification error:", error);
+      setError("حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,8 +150,24 @@ const OtpBusinessScreen = ({ navigation }) => {
 
           {/* Subtitle */}
           <Text className="text-sm text-gray-500 text-right mb-8">
-            أدخل الرمز المرسل إلى رقم الجوال
+            أدخل الرمز المرسل إلى رقم الجوال {phoneNumber || ""}
           </Text>
+
+          {/* Error Message */}
+          {error ? (
+            <View className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+              <Text className="text-red-600 text-sm text-center">{error}</Text>
+            </View>
+          ) : null}
+
+          {/* Success Message */}
+          {verificationSuccess ? (
+            <View className="bg-green-50 border border-green-200 rounded-xl p-3 mb-4">
+              <Text className="text-green-600 text-sm text-center">
+                ✓ تم التحقق بنجاح
+              </Text>
+            </View>
+          ) : null}
 
           {/* OTP Input Label */}
           <Text className="text-sm text-gray-600 text-center mb-4">
@@ -125,7 +188,14 @@ const OtpBusinessScreen = ({ navigation }) => {
                 onKeyPress={(e) => handleKeyPress(e, index)}
                 keyboardType="number-pad"
                 maxLength={1}
-                className="w-16 h-16 border-2 border-gray-300 rounded-2xl text-center text-2xl font-bold text-gray-800"
+                editable={!loading && !verificationSuccess}
+                className={`w-16 h-16 border-2 rounded-2xl text-center text-2xl font-bold ${
+                  verificationSuccess
+                    ? "border-green-500 bg-green-50 text-green-600"
+                    : loading
+                    ? "border-gray-200 bg-gray-50 text-gray-400"
+                    : "border-gray-300 text-gray-800"
+                }`}
                 style={{
                   textAlign: "center",
                 }}
@@ -133,10 +203,18 @@ const OtpBusinessScreen = ({ navigation }) => {
             ))}
           </View>
 
+          {/* Loading Indicator */}
+          {loading ? (
+            <Text className="text-[#0055aa] text-sm text-center mb-4">
+              جاري التحقق...
+            </Text>
+          ) : null}
+
           {/* Resend Code */}
           <TouchableOpacity
             onPress={handleResendCode}
             className="flex-row items-center justify-center mb-6"
+            disabled={loading || verificationSuccess}
           >
             <View className="w-6 h-6 items-center justify-center">
               <Text className="text-[#0055aa] text-xl">↺</Text>

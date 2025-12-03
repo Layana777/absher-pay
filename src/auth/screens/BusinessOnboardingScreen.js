@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   Dimensions,
-  } from 'react-native'
+} from "react-native";
 import SvgIcons from "../../common/components/SvgIcons";
 import { PaginationDots } from "../../common/components/ui";
 
@@ -29,22 +29,19 @@ const onboardingData = [
   {
     id: "3",
     title: "تحليلات شاملة",
-    description:
-      "رسوم بيانية وتقارير تفصيلية لحالة المبيعات وتدفق المدفوعات.",
-    icon: <SvgIcons name={"businessAnalysis"} size={80}/>,
+    description: "رسوم بيانية وتقارير تفصيلية لحالة المبيعات وتدفق المدفوعات.",
+    icon: <SvgIcons name={"businessAnalysis"} size={80} />,
   },
   {
     id: "4",
     title: "أمان عالي المستوى",
-    description:
-      "حماية متقدمة لبيانات منشأتك مع أعلى درجات الأمان والامتثال.",
-    icon: <SvgIcons name={"businessShield"} size={80}/>,
+    description: "حماية متقدمة لبيانات منشأتك مع أعلى درجات الأمان والامتثال.",
+    icon: <SvgIcons name={"businessShield"} size={80} />,
   },
 ];
 
 const BusinessOnboardingScreen = ({ navigation }) => {
-
- const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
 
   const handleScroll = (event) => {
@@ -53,7 +50,7 @@ const BusinessOnboardingScreen = ({ navigation }) => {
     setCurrentIndex(index);
   };
 
-    const handleNext = () => {
+  const handleNext = () => {
     if (currentIndex < onboardingData.length - 1) {
       const nextIndex = currentIndex + 1;
       flatListRef.current?.scrollToOffset({
@@ -62,47 +59,43 @@ const BusinessOnboardingScreen = ({ navigation }) => {
       });
       setCurrentIndex(nextIndex);
     } else {
-
       // navigation.replace(""); skip to the business login screen
-      console.log("Go to business login/signup");
+      navigation.replace("BusinessLogin");
     }
   };
 
-    const handleSkip = () => {
+  const handleSkip = () => {
     // navigation.replace(""); skip to the business login
-    console.log("Skip to business login/signup");
+    navigation.replace("BusinessLogin");
   };
 
-const renderItem = ({ item }) => (
-  <View
-    style={{ width }}
-    className="flex-1 items-center justify-center px-8"
-  >
-    {/* iconplaceholder */}
-    <View className="w-40 h-40 rounded-3xl bg-[#0055aa] items-center justify-center mb-8 shadow-md">
-      {item.icon}
+  const renderItem = ({ item }) => (
+    <View style={{ width }} className="flex-1 items-center justify-center px-8">
+      {/* iconplaceholder */}
+      <View className="w-40 h-40 rounded-3xl bg-[#0055aa] items-center justify-center mb-8 shadow-md">
+        {item.icon}
+      </View>
+
+      {/* title */}
+      <Text className="text-xl font-bold text-gray-800 text-center mb-3">
+        {item.title}
+      </Text>
+
+      {/* description */}
+      <Text className="text-base text-gray-500 text-center leading-6">
+        {item.description}
+      </Text>
     </View>
+  );
 
-    {/* title */}
-    <Text className="text-xl font-bold text-gray-800 text-center mb-3">
-      {item.title}
-    </Text>
-
-    {/* description */}
-    <Text className="text-base text-gray-500 text-center leading-6">
-      {item.description}
-    </Text>
-  </View>
-);
-
-
-    return (
+  return (
     <View style={{ direction: "ltr" }} className="flex-1 bg-white">
       {/* Top Section - Skip Button & Pagination Dots */}
       <View className="absolute top-16 left-0 right-0 flex-row justify-between items-center px-5 z-10">
         {/* Pagination Dots - Left */}
-        <PaginationDots count={onboardingData.length} 
-          currentIndex={currentIndex} 
+        <PaginationDots
+          count={onboardingData.length}
+          currentIndex={currentIndex}
           color="#0055aa"
         />
 
@@ -149,4 +142,4 @@ const renderItem = ({ item }) => (
   );
 };
 
-export default BusinessOnboardingScreen
+export default BusinessOnboardingScreen;

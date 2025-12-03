@@ -6,7 +6,7 @@ const BusinessSplashScreen = ({ navigation }) => {
   useEffect(() => {
     // Navigate to Business Login screen
     const timer = setTimeout(() => {
-      navigation.replace("BusinessLogin");
+      navigation.replace("BusinessOnboarding");
     }, 2000);
 
     return () => clearTimeout(timer);
