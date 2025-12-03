@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import ActionButtons from "./ActionButtons";
+import SvgIcons from "../../common/components/SvgIcons";
 
 const WalletCard = ({
   balance = "45,230",
@@ -31,7 +32,7 @@ const WalletCard = ({
               رصيد المحفظة
             </Text>
             <View className="flex-row items-center">
-              <Text className="text-gray-300 text-lg font-bold mr-2">ريال</Text>
+              <SvgIcons name={"SAR"} size={35} />
               <Text className="text-gray-200 text-4xl font-bold">
                 {balance}
               </Text>
@@ -59,7 +60,7 @@ const WalletCard = ({
         {/* Amount Display */}
         <View className="items-end mb-4">
           <View className="flex-row items-center justify-center">
-            <Text className="text-white text-2x font-bold mr-2">ريال</Text>
+            <SvgIcons name={"SAR"} size={35} />
             <Text className="text-white text-4xl font-bold">28,450</Text>
           </View>
 

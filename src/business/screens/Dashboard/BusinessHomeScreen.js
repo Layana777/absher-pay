@@ -7,10 +7,22 @@ import {
   Text,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useUser } from "../../../store/hooks";
 import { WalletCard } from "../../components";
 import SvgIcons from "../../../common/components/SvgIcons";
 
 const BusinessHomeScreen = ({ navigation }) => {
+  // Get user data from Redux
+  const user = useUser();
+  console.log(user);
+
+  // Extract business information from user data
+  const businessName =
+    user?.businessName || user?.companyName || "مؤسسة تجارية";
+  const crNumber =
+    user?.crNumber || user?.commercialRegistration || "غير متوفر";
+  const balance = user?.balance || user?.walletBalance || "0";
+
   return (
     <View className="flex-1 bg-white" style={{ direction: "ltr" }}>
       <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
@@ -30,9 +42,9 @@ const BusinessHomeScreen = ({ navigation }) => {
       <ScrollView className="flex-1 bg-gray-50">
         {/* Wallet Card Component */}
         <WalletCard
-          balance="45,230"
-          institution="مؤسسة النجاح التجارية"
-          crNumber="1010567890"
+          balance={balance}
+          institution={businessName}
+          crNumber={crNumber}
         />
       </ScrollView>
     </View>

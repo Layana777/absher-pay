@@ -41,7 +41,7 @@ const SvgIcons = ({ name, size, color, style }) => {
     case "Lock":
       return <Lock height={size} width={size} />;
     case "SAR":
-      return <SAR height={size} width={size} fill="white" />;
+      return <SAR height={size} width={size} />;
 
     default:
       return null;

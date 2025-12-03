@@ -7,8 +7,8 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   StatusBar,
-  Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../store/slices/userSlice";
@@ -82,25 +82,30 @@ const OtpBusinessScreen = ({ navigation, route }) => {
         return;
       }
 
-      // Dispatch user data to Redux store
-      dispatch(setUser(userData));
+      // Use uid as authToken
+      const authToken = uid;
+      const userType = "business";
+
+      // Dispatch user data to Redux store with auth info
+      dispatch(
+        setUser({
+          user: userData,
+          authToken: authToken,
+          userType: userType,
+        })
+      );
+
+      // Store auth data in AsyncStorage for persistence
+      await AsyncStorage.setItem("authToken", authToken);
+      await AsyncStorage.setItem("userType", userType);
 
       // Show success state
       setVerificationSuccess(true);
 
-      // Show success alert
-      Alert.alert(
-        "تم التحقق بنجاح",
-        `مرحباً ${userData.firstName} ${userData.lastName}`,
-        [
-          {
-            text: "حسناً",
-            style: "default",
-          },
-        ]
-      );
-
       console.log("User authenticated and saved to Redux:", userData);
+
+      // Redux state update will trigger RootNavigator to automatically
+      // switch to BusinessNavigator (no manual navigation needed)
     } catch (error) {
       console.error("OTP verification error:", error);
       setError("حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى");

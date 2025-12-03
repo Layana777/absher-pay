@@ -1,20 +1,25 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   user: null,
+  authToken: null,
+  userType: null,
   isAuthenticated: false,
   loading: false,
   error: null,
 };
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
     // Set user data
     setUser: (state, action) => {
-      state.user = action.payload;
-      state.isAuthenticated = !!action.payload;
+      const { user, authToken, userType } = action.payload;
+      state.user = user || action.payload;
+      state.authToken = authToken || null;
+      state.userType = userType || null;
+      state.isAuthenticated = !!(user || action.payload);
       state.error = null;
     },
 
@@ -28,6 +33,8 @@ const userSlice = createSlice({
     // Clear user data (logout)
     clearUser: (state) => {
       state.user = null;
+      state.authToken = null;
+      state.userType = null;
       state.isAuthenticated = false;
       state.error = null;
     },
@@ -62,6 +69,8 @@ export const {
 
 // Export selectors
 export const selectUser = (state) => state.user.user;
+export const selectAuthToken = (state) => state.user.authToken;
+export const selectUserType = (state) => state.user.userType;
 export const selectIsAuthenticated = (state) => state.user.isAuthenticated;
 export const selectUserLoading = (state) => state.user.loading;
 export const selectUserError = (state) => state.user.error;
