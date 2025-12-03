@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AuthNavigator } from "../auth/navigation";
-// import { BusinessNavigator } from '../business/navigation';
+import { BusinessNavigator } from '../business/navigation';
 // import { SingleNavigator } from '../single/navigation';
 
 const RootNavigator = () => {
@@ -35,13 +35,12 @@ const RootNavigator = () => {
 
   const getNavigator = () => {
     if (!isAuthenticated) {
-      return <AuthNavigator />;
+      return  <BusinessNavigator />;;
     }
 
     switch (userType) {
       case "business":
-        // return <BusinessNavigator />;
-        return <AuthNavigator />; // Temporary fallback until BusinessNavigator is ready
+        return <BusinessNavigator />;
       case "single":
         // return <SingleNavigator />;
         return <AuthNavigator />; // Temporary fallback until SingleNavigator is ready
