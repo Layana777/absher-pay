@@ -13,6 +13,7 @@ import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../store/slices/userSlice";
 import { getUserByUid } from "../../common/services";
+import { useResendTimer } from "../../common/hooks";
 
 const OtpBusinessScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
@@ -22,6 +23,7 @@ const OtpBusinessScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [error, setError] = useState("");
+  const { timer, canResend, resetTimer } = useResendTimer(60);
 
   const handleOtpChange = (value, index) => {
     // Only allow numbers
@@ -45,7 +47,10 @@ const OtpBusinessScreen = ({ navigation, route }) => {
   };
 
   const handleResendCode = () => {
+    if (!canResend) return;
     console.log("Resend OTP code");
+    // Reset timer
+    resetTimer();
     // Add resend logic here
   };
 
@@ -113,10 +118,10 @@ const OtpBusinessScreen = ({ navigation, route }) => {
 
   // Auto-focus first input on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timeout = setTimeout(() => {
       inputRefs.current[0]?.focus();
     }, 100);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
@@ -150,7 +155,8 @@ const OtpBusinessScreen = ({ navigation, route }) => {
 
           {/* Subtitle */}
           <Text className="text-sm text-gray-500 text-right mb-8">
-            أدخل الرمز المرسل إلى رقم الجوال {phoneNumber || ""}
+            أدخل الرمز المرسل إلى رقم الجوال {""}
+            {phoneNumber.substring(1) + "+" || ""}
           </Text>
 
           {/* Error Message */}
@@ -214,13 +220,29 @@ const OtpBusinessScreen = ({ navigation, route }) => {
           <TouchableOpacity
             onPress={handleResendCode}
             className="flex-row items-center justify-center mb-6"
-            disabled={loading || verificationSuccess}
+            disabled={loading || verificationSuccess || !canResend}
           >
             <View className="w-6 h-6 items-center justify-center">
-              <Text className="text-[#0055aa] text-xl">↺</Text>
+              <Text
+                className={`text-xl ${
+                  canResend && !loading && !verificationSuccess
+                    ? "text-[#0055aa]"
+                    : "text-gray-400"
+                }`}
+              >
+                ↺
+              </Text>
             </View>
-            <Text className="text-[#0055aa] text-base ml-2">
-              إعادة إرسال الرمز
+            <Text
+              className={`text-base ml-2 ${
+                canResend && !loading && !verificationSuccess
+                  ? "text-[#0055aa]"
+                  : "text-gray-400"
+              }`}
+            >
+              {canResend
+                ? "إعادة إرسال الرمز"
+                : `إعادة الإرسال بعد ${timer} ثانية`}
             </Text>
           </TouchableOpacity>
 

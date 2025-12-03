@@ -9,10 +9,12 @@ import {
   StatusBar,
 } from "react-native";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
+import { useResendTimer } from "../../common/hooks";
 
 const OtpSingleScreen = ({ navigation }) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputRefs = useRef([]);
+  const { timer, canResend, resetTimer } = useResendTimer(60);
 
   const handleOtpChange = (value, index) => {
     // Only allow numbers
@@ -36,7 +38,10 @@ const OtpSingleScreen = ({ navigation }) => {
   };
 
   const handleResendCode = () => {
+    if (!canResend) return;
     console.log("Resend OTP code");
+    // Reset timer
+    resetTimer();
     // Add resend logic here
   };
 
@@ -66,10 +71,10 @@ const OtpSingleScreen = ({ navigation }) => {
 
   // Auto-focus first input on mount
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const timeout = setTimeout(() => {
       inputRefs.current[0]?.focus();
     }, 100);
-    return () => clearTimeout(timer);
+    return () => clearTimeout(timeout);
   }, []);
 
   return (
@@ -105,7 +110,8 @@ const OtpSingleScreen = ({ navigation }) => {
 
           {/* Subtitle */}
           <Text className="text-sm text-gray-500 text-right mb-8">
-            أدخل الرمز المرسل إلى رقم الجوال
+            أدخل الرمز المرسل إلى رقم الجوال {""}
+            {phoneNumber.substring(1) + "+" || ""}
           </Text>
 
           {/* OTP Input Label */}
@@ -139,12 +145,25 @@ const OtpSingleScreen = ({ navigation }) => {
           <TouchableOpacity
             onPress={handleResendCode}
             className="flex-row items-center justify-center mb-6"
+            disabled={!canResend}
           >
             <View className="w-6 h-6 items-center justify-center">
-              <Text className="text-[#028550] text-xl">↺</Text>
+              <Text
+                className={`text-xl ${
+                  canResend ? "text-[#028550]" : "text-gray-400"
+                }`}
+              >
+                ↺
+              </Text>
             </View>
-            <Text className="text-[#028550] text-base ml-2">
-              إعادة إرسال الرمز
+            <Text
+              className={`text-base ml-2 ${
+                canResend ? "text-[#028550]" : "text-gray-400"
+              }`}
+            >
+              {canResend
+                ? "إعادة إرسال الرمز"
+                : `إعادة الإرسال بعد ${timer} ثانية`}
             </Text>
           </TouchableOpacity>
 
