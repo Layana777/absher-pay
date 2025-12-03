@@ -5,13 +5,19 @@ import {
   StatusBar,
   TouchableOpacity,
   Text,
+  Alert,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
 import { useUser } from "../../../store/hooks";
+import { clearUser } from "../../../store/slices/userSlice";
 import { WalletCard } from "../../components";
 import SvgIcons from "../../../common/components/SvgIcons";
 
 const BusinessHomeScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
+
   // Get user data from Redux
   const user = useUser();
   console.log(user);
@@ -23,13 +29,47 @@ const BusinessHomeScreen = ({ navigation }) => {
     user?.crNumber || user?.commercialRegistration || "غير متوفر";
   const balance = user?.balance || user?.walletBalance || "0";
 
+  // Handle logout
+  const handleLogout = () => {
+    Alert.alert(
+      "تسجيل الخروج",
+      "هل أنت متأكد من تسجيل الخروج؟",
+      [
+        {
+          text: "إلغاء",
+          style: "cancel",
+        },
+        {
+          text: "تسجيل الخروج",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Clear Redux state
+              dispatch(clearUser());
+
+              // Clear AsyncStorage
+              await AsyncStorage.removeItem("authToken");
+              await AsyncStorage.removeItem("userType");
+
+              console.log("User logged out successfully");
+              // RootNavigator will automatically switch to AuthNavigator
+            } catch (error) {
+              console.error("Logout error:", error);
+              Alert.alert("خطأ", "حدث خطأ أثناء تسجيل الخروج");
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View className="flex-1 bg-white" style={{ direction: "ltr" }}>
       <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
 
       {/* Top Header with Notification and Menu */}
       <View className="bg-[#0055aa] pt-12 pb-4 px-6 flex-row justify-between items-center">
-        <TouchableOpacity className="relative">
+        <TouchableOpacity className="relative" onPress={handleLogout}>
           <Feather name="bell" size={24} color="white" />
           <View className="absolute -top-1 -right-1 bg-red-500 rounded-full w-4 h-4 items-center justify-center">
             <Text className="text-white text-xs font-bold">3</Text>
