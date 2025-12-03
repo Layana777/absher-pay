@@ -9,12 +9,12 @@ import {
   StatusBar,
 } from "react-native";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
+import { useResendTimer } from "../../common/hooks";
 
 const OtpSingleScreen = ({ navigation }) => {
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputRefs = useRef([]);
-  const [timer, setTimer] = useState(40);
-  const [canResend, setCanResend] = useState(false);
+  const { timer, canResend, resetTimer } = useResendTimer(60);
 
   const handleOtpChange = (value, index) => {
     // Only allow numbers
@@ -41,8 +41,7 @@ const OtpSingleScreen = ({ navigation }) => {
     if (!canResend) return;
     console.log("Resend OTP code");
     // Reset timer
-    setTimer(40);
-    setCanResend(false);
+    resetTimer();
     // Add resend logic here
   };
 
@@ -77,18 +76,6 @@ const OtpSingleScreen = ({ navigation }) => {
     }, 100);
     return () => clearTimeout(timeout);
   }, []);
-
-  // Timer countdown
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setCanResend(true);
-    }
-  }, [timer]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>

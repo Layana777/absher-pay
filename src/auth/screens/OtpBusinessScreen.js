@@ -13,6 +13,7 @@ import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../store/slices/userSlice";
 import { getUserByUid } from "../../common/services";
+import { useResendTimer } from "../../common/hooks";
 
 const OtpBusinessScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
@@ -22,8 +23,7 @@ const OtpBusinessScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [timer, setTimer] = useState(60);
-  const [canResend, setCanResend] = useState(false);
+  const { timer, canResend, resetTimer } = useResendTimer(60);
 
   const handleOtpChange = (value, index) => {
     // Only allow numbers
@@ -50,8 +50,7 @@ const OtpBusinessScreen = ({ navigation, route }) => {
     if (!canResend) return;
     console.log("Resend OTP code");
     // Reset timer
-    setTimer(60);
-    setCanResend(false);
+    resetTimer();
     // Add resend logic here
   };
 
@@ -124,18 +123,6 @@ const OtpBusinessScreen = ({ navigation, route }) => {
     }, 100);
     return () => clearTimeout(timeout);
   }, []);
-
-  // Timer countdown
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    } else {
-      setCanResend(true);
-    }
-  }, [timer]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
