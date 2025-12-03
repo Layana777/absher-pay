@@ -1,18 +1,18 @@
-import React, { useState } from "react";
-import { View, ScrollView, StatusBar, TouchableOpacity, Text } from "react-native";
+import React from "react";
+import {
+  View,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { WalletCard, BottomTabBar } from "../../components";
+import { WalletCard } from "../../components";
+import SvgIcons from "../../../common/components/SvgIcons";
 
 const BusinessHomeScreen = ({ navigation }) => {
-  const [activeTab, setActiveTab] = useState("home");
-
-  const handleTabPress = (tabId) => {
-    setActiveTab(tabId);
-    // Add navigation logic here based on tabId
-  };
-
   return (
-    <View className="flex-1 bg-white" style={{direction:"ltr"}}>
+    <View className="flex-1 bg-white" style={{ direction: "ltr" }}>
       <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
 
       {/* Top Header with Notification and Menu */}
@@ -24,9 +24,7 @@ const BusinessHomeScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity>
-          <Feather name="bar-chart-2" size={24} color="white" />
-        </TouchableOpacity>
+        <SvgIcons name={"AbsherWhite"} size={45} />
       </View>
 
       <ScrollView className="flex-1 bg-gray-50">
@@ -37,9 +35,6 @@ const BusinessHomeScreen = ({ navigation }) => {
           crNumber="1010567890"
         />
       </ScrollView>
-
-      {/* Bottom Tab Bar */}
-      <BottomTabBar activeTab={activeTab} onTabPress={handleTabPress} />
     </View>
   );
 };

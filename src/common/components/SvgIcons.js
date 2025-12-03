@@ -7,10 +7,12 @@ import DirectPay from "../assets/icons/directPay.svg";
 import FingerPrintWhite from "../assets/icons/fingerPrintWhite.svg";
 import AbhserWhite from "../assets/icons/logo-white-abhser.svg";
 import Person from "../assets/icons/person.svg";
-import Lock from "../assets/icons/lock.svg";import PaymentManagement from "../assets/icons/businessPaymentsManagement.svg";
+import Lock from "../assets/icons/lock.svg";
+import PaymentManagement from "../assets/icons/businessPaymentsManagement.svg";
 import BusinessAi from "../assets/icons/businessAI.svg";
 import BusinessAnalysis from "../assets/icons/businessAnalysis.svg";
 import BusinessShield from "../assets/icons/businessShield.svg";
+import SAR from "../assets/icons/SAR.svg";
 
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
@@ -38,6 +40,8 @@ const SvgIcons = ({ name, size, color, style }) => {
       return <Person height={size} width={size} />;
     case "Lock":
       return <Lock height={size} width={size} />;
+    case "SAR":
+      return <SAR height={size} width={size} fill="white" />;
 
     default:
       return null;
