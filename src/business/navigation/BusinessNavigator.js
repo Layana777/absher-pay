@@ -1,12 +1,10 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { BusinessHomeScreen } from "../screens";
 
 const Tab = createBottomTabNavigator();
-const Stack = createNativeStackNavigator();
 
 // Placeholder screen component for tabs
 const PlaceholderScreen = ({ route }) => {
