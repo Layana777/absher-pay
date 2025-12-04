@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
-const AmountKeypad = ({ onNumberPress, onDelete }) => {
+const AmountKeypad = ({ onKeyPress, primaryColor = "#0055aa" }) => {
   const keys = [
     ["1", "2", "3"],
     ["4", "5", "6"],
@@ -11,11 +11,7 @@ const AmountKeypad = ({ onNumberPress, onDelete }) => {
   ];
 
   const handlePress = (key) => {
-    if (key === "delete") {
-      onDelete();
-    } else {
-      onNumberPress(key);
-    }
+    onKeyPress(key);
   };
 
   return (
@@ -26,15 +22,18 @@ const AmountKeypad = ({ onNumberPress, onDelete }) => {
             <TouchableOpacity
               key={key}
               onPress={() => handlePress(key)}
-              className="bg-white rounded-2xl items-center justify-center shadow-sm"
+              className="bg-white items-center justify-center shadow-sm"
               style={{
                 width: 100,
                 height: 65,
+                borderRadius: 50,
+                borderWidth: key === "delete" ? 0 : 1,
+                borderColor: "#e5e7eb",
               }}
               activeOpacity={0.7}
             >
               {key === "delete" ? (
-                <Feather name="delete" size={24} color="#374151" />
+                <Feather name="delete" size={24} color={primaryColor} />
               ) : (
                 <Text className="text-gray-900 text-2xl font-semibold">
                   {key}

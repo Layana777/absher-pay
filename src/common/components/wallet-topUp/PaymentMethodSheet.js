@@ -16,20 +16,27 @@ const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const PaymentMethodSheet = ({
   visible,
   onClose,
-  onSelectMethod,
   primaryColor = "#0055aa", // أزرق للـ Business، أخضر للـ Customer
+  navigation,
 }) => {
   const translateY = useRef(new Animated.Value(0)).current;
   const gestureStartY = useRef(0);
 
   const handleApplePay = () => {
-    onSelectMethod("APPLE_PAY");
     onClose();
+    // الانتقال لشاشة إدخال المبلغ مع Apple Pay
+    navigation.navigate("TopupAmount", {
+      paymentMethod: "APPLE_PAY",
+      primaryColor: primaryColor,
+    });
   };
 
   const handleCard = () => {
-    onSelectMethod("CARD");
     onClose();
+    // Always navigate to CardSelection screen where user can choose saved card or add new one
+    navigation.navigate("CardSelection", {
+      primaryColor: primaryColor,
+    });
   };
 
   const panGesture = Gesture.Pan()
@@ -126,7 +133,7 @@ const PaymentMethodSheet = ({
                         </Text>
                       </View>
                       <View className="w-12 h-12 bg-white rounded-xl items-center justify-center ml-4">
-                        <Feather name="smartphone" size={24} color="#000" />
+                        <SvgIcons name={"Apple"} size={30} />
                       </View>
                     </View>
                   </TouchableOpacity>

@@ -1,4 +1,3 @@
-import React from "react";
 import {
   View,
   ScrollView,
@@ -85,6 +84,7 @@ const BusinessHomeScreen = ({ navigation }) => {
           balance={balance}
           institution={businessName}
           crNumber={crNumber}
+          navigation={navigation}
         />
       </ScrollView>
     </View>

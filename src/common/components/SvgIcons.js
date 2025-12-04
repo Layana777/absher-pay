@@ -14,6 +14,10 @@ import BusinessAnalysis from "../assets/icons/businessAnalysis.svg";
 import BusinessShield from "../assets/icons/businessShield.svg";
 import SAR from "../assets/icons/SAR.svg";
 import CreditCard from "../assets/icons/CreditCard.svg";
+import SARBlack from "../assets/icons/SARBlack.svg";
+import Apple from "../assets/icons/Apple.svg";
+import SARGreen from "../assets/icons/SAR-green.svg";
+import SARBlue from "../assets/icons/SAR-blue.svg";
 
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
@@ -45,6 +49,15 @@ const SvgIcons = ({ name, size, color, style }) => {
       return <SAR height={size} width={size} />;
     case "CreditCard":
       return <CreditCard height={size} width={size} />;
+    case "SARBlack":
+      return <SARBlack height={size} width={size} />;
+
+    case "Apple":
+      return <Apple height={size} width={size} />;
+    case "SARGreen":
+      return <SARGreen height={size} width={size} />;
+    case "SARBlue":
+      return <SARBlue height={size} width={size} />;
 
     default:
       return null;

@@ -3,22 +3,23 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import ActionButtons from "./ActionButtons";
 import SvgIcons from "../../common/components/SvgIcons";
-import { WalletTopupFlow } from "../../common/components/wallet_topup";
+import { PaymentMethodSheet } from "../../common/components/wallet-topUp";
 
 const WalletCard = ({
   balance = "45,230",
   institution = "مؤسسة النجاح التجارية",
   crNumber = "1010567890",
   hasSavedCard = false,
+  navigation
 }) => {
-  const [showTopupFlow, setShowTopupFlow] = useState(false);
+  const [showPaymentMethodSheet, setShowPaymentMethodSheet] = useState(false);
 
   const handleTopupPress = () => {
-    setShowTopupFlow(true);
+    setShowPaymentMethodSheet(true);
   };
 
-  const handleCloseTopup = () => {
-    setShowTopupFlow(false);
+  const handleCloseSheet = () => {
+    setShowPaymentMethodSheet(false);
   };
 
   return (
@@ -96,10 +97,11 @@ const WalletCard = ({
         </View>
       </View>
 
-      {/* Wallet Topup Flow */}
-      <WalletTopupFlow
-        visible={showTopupFlow}
-        onClose={handleCloseTopup}
+      {/* Payment Method Sheet */}
+      <PaymentMethodSheet
+        visible={showPaymentMethodSheet}
+        onClose={handleCloseSheet}
+        navigation={navigation}
         hasSavedCard={hasSavedCard}
         primaryColor="#0055aa"
       />

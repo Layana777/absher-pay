@@ -4,6 +4,14 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { BusinessHomeScreen } from "../screens";
+import {
+  CardSelectionScreen,
+  AddCardScreen,
+  TopupAmountScreen,
+  TopupSuccessScreen,
+  TopupTransactionBusinessDetailsScreen,
+} from "../screens/wallet_topup";
+import { OtpVerificationScreen } from "../../common/screens";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -146,6 +154,14 @@ const BusinessNavigator = () => {
     >
       {/* Main Tabs - Default screen */}
       <Stack.Screen name="BusinessTabs" component={BusinessTabNavigator} />
+
+      {/* Wallet Top-up Flow Screens */}
+      <Stack.Screen name="CardSelection" component={CardSelectionScreen} />
+      <Stack.Screen name="AddCard" component={AddCardScreen} />
+      <Stack.Screen name="TopupAmount" component={TopupAmountScreen} />
+      <Stack.Screen name="TopupTransactionDetails" component={TopupTransactionBusinessDetailsScreen} />
+      <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
+      <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
 
       {/* Standalone screens without tabs - Add your screens here */}
       {/* Example:
