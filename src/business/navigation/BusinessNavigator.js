@@ -1,10 +1,12 @@
 import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { BusinessHomeScreen } from "../screens";
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
 
 // Placeholder screen component for tabs
 const PlaceholderScreen = ({ route }) => {
@@ -50,7 +52,8 @@ const PlaceholderScreen = ({ route }) => {
   );
 };
 
-const BusinessNavigator = () => {
+// Bottom Tab Navigator - Main screens with tabs
+const BusinessTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -130,6 +133,27 @@ const BusinessNavigator = () => {
         }}
       />
     </Tab.Navigator>
+  );
+};
+
+// Main Business Navigator - Combines tabs and standalone screens
+const BusinessNavigator = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      {/* Main Tabs - Default screen */}
+      <Stack.Screen name="BusinessTabs" component={BusinessTabNavigator} />
+
+      {/* Standalone screens without tabs - Add your screens here */}
+      {/* Example:
+      <Stack.Screen name="PaymentDetails" component={PaymentDetailsScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
+      */}
+    </Stack.Navigator>
   );
 };
 
