@@ -12,8 +12,16 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../store/slices/userSlice";
-import { getUserByUid } from "../../common/services";
+import { setWallets } from "../../store/slices/walletSlice";
+import {
+  getUserByUid,
+  checkUserWallets,
+  createPersonalWallet,
+  createBusinessWallet,
+  getWalletsByUserId,
+} from "../../common/services";
 import { useResendTimer } from "../../common/hooks";
+import WalletLoadingScreen from "../../common/components/WalletLoadingScreen";
 
 const OtpBusinessScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
@@ -23,6 +31,8 @@ const OtpBusinessScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [verificationSuccess, setVerificationSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [walletLoading, setWalletLoading] = useState(false);
+  const [walletCreationStep, setWalletCreationStep] = useState("");
   const { timer, canResend, resetTimer } = useResendTimer(60);
 
   const handleOtpChange = (value, index) => {
@@ -73,7 +83,7 @@ const OtpBusinessScreen = ({ navigation, route }) => {
       console.log("OTP Complete:", otpCode);
       console.log("Verifying user with UID:", uid);
 
-      // Fetch full user data from database
+      // 1. Fetch full user data from database
       const userData = await getUserByUid(uid);
 
       if (!userData) {
@@ -82,11 +92,54 @@ const OtpBusinessScreen = ({ navigation, route }) => {
         return;
       }
 
-      // Use uid as authToken
+      // 2. Check if user has wallets
+      setLoading(false); // Hide OTP loading
+      setWalletLoading(true); // Show wallet loading screen
+
+      const { hasWallets } = await checkUserWallets(uid);
+
+      let personalWalletData = null;
+      let businessWalletData = null;
+
+      if (!hasWallets) {
+        // 3. Create wallets
+        console.log("Creating wallets for user:", uid);
+
+        // Create personal wallet (always)
+        setWalletCreationStep("جاري إنشاء محفظتك الشخصية...");
+        personalWalletData = await createPersonalWallet(
+          uid,
+          userData.nationalId
+        );
+
+        // Create business wallet if needed
+        if (userData.isBusiness) {
+          setWalletCreationStep("جاري إنشاء محفظة الأعمال...");
+          businessWalletData = await createBusinessWallet(
+            uid,
+            userData.nationalId
+          );
+        }
+
+        // Simulate realistic delay for better UX (3-4 seconds total)
+        setWalletCreationStep("جاري إتمام الإعداد...");
+        await new Promise((resolve) => setTimeout(resolve, 3500));
+      } else {
+        // 4. Fetch existing wallets
+        console.log("Loading existing wallets for user:", uid);
+        setWalletCreationStep("جاري تحميل محفظتك...");
+        const fetchedWallets = await getWalletsByUserId(uid);
+        personalWalletData = fetchedWallets.personal;
+        businessWalletData = fetchedWallets.business;
+
+        // Brief delay for loading screen
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+
+      // 5. Dispatch to Redux
       const authToken = uid;
       const userType = "business";
 
-      // Dispatch user data to Redux store with auth info
       dispatch(
         setUser({
           user: userData,
@@ -95,22 +148,34 @@ const OtpBusinessScreen = ({ navigation, route }) => {
         })
       );
 
-      // Store auth data in AsyncStorage for persistence
+      // Dispatch wallets
+      dispatch(
+        setWallets({
+          personal: personalWalletData,
+          business: businessWalletData,
+        })
+      );
+
+      // 6. Save to AsyncStorage
       await AsyncStorage.setItem("authToken", authToken);
       await AsyncStorage.setItem("userType", userType);
 
-      // Show success state
+      // 7. Show success
+      setWalletLoading(false);
       setVerificationSuccess(true);
 
-      console.log("User authenticated and saved to Redux:", userData);
+      console.log("User authenticated with wallets:", {
+        user: userData,
+        wallets: { personal: personalWalletData, business: businessWalletData },
+      });
 
       // Redux state update will trigger RootNavigator to automatically
       // switch to BusinessNavigator (no manual navigation needed)
     } catch (error) {
       console.error("OTP verification error:", error);
       setError("حدث خطأ أثناء التحقق. يرجى المحاولة مرة أخرى");
-    } finally {
       setLoading(false);
+      setWalletLoading(false);
     }
   };
 
@@ -128,6 +193,15 @@ const OtpBusinessScreen = ({ navigation, route }) => {
     }, 100);
     return () => clearTimeout(timeout);
   }, []);
+
+  // Show wallet loading screen if wallets are being created/loaded
+  if (walletLoading) {
+    return (
+      <WalletLoadingScreen
+        message={walletCreationStep || "جاري إنشاء محفظتك الرقمية..."}
+      />
+    );
+  }
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
