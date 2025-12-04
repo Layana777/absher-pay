@@ -13,7 +13,7 @@ import BusinessAi from "../assets/icons/businessAI.svg";
 import BusinessAnalysis from "../assets/icons/businessAnalysis.svg";
 import BusinessShield from "../assets/icons/businessShield.svg";
 import SAR from "../assets/icons/SAR.svg";
-import CreditCard from "../assets/icons/creditCard.svg";
+import CreditCard from "../assets/icons/CreditCard.svg";
 
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
