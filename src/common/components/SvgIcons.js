@@ -13,6 +13,7 @@ import BusinessAi from "../assets/icons/businessAI.svg";
 import BusinessAnalysis from "../assets/icons/businessAnalysis.svg";
 import BusinessShield from "../assets/icons/businessShield.svg";
 import SAR from "../assets/icons/SAR.svg";
+import CreditCard from "../assets/icons/creditCard.svg";
 
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
@@ -42,6 +43,8 @@ const SvgIcons = ({ name, size, color, style }) => {
       return <Lock height={size} width={size} />;
     case "SAR":
       return <SAR height={size} width={size} />;
+    case "CreditCard":
+      return <CreditCard height={size} width={size} />;
 
     default:
       return null;
