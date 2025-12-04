@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Keyboard,
   TouchableWithoutFeedback,
@@ -12,6 +11,7 @@ import {
   Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { CustomHeader } from "../../../common/components";
 
 const AddCardScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
@@ -77,7 +77,13 @@ const AddCardScreen = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
+    <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
+      {/* Header */}
+      <CustomHeader
+        title="إضافة بطاقة جديدة"
+        onBack={() => navigation.goBack()}
+      />
+
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -85,17 +91,6 @@ const AddCardScreen = ({ navigation, route }) => {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1">
-            {/* Header */}
-            <View className="flex-row items-center justify-between px-4 py-4 bg-white border-b border-gray-200">
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                className="p-2"
-              >
-                <Feather name="arrow-right" size={24} color="#000" />
-              </TouchableOpacity>
-              <Text className="text-lg font-semibold">إضافة بطاقة جديدة</Text>
-              <View style={{ width: 40 }} />
-            </View>
 
             {/* Form */}
             <ScrollView
@@ -169,13 +164,7 @@ const AddCardScreen = ({ navigation, route }) => {
                       <View
                         className="absolute left-4 top-1/2"
                         style={{ transform: [{ translateY: -10 }] }}
-                      >
-                        <Feather
-                          name="check-circle"
-                          size={20}
-                          color={primaryColor}
-                        />
-                      </View>
+                      ></View>
                     )}
                   </View>
                   {errors.cardNumber && (
@@ -210,13 +199,7 @@ const AddCardScreen = ({ navigation, route }) => {
                       <View
                         className="absolute left-4 top-1/2"
                         style={{ transform: [{ translateY: -10 }] }}
-                      >
-                        <Feather
-                          name="check-circle"
-                          size={20}
-                          color={primaryColor}
-                        />
-                      </View>
+                      ></View>
                     )}
                   </View>
                   {errors.cardHolder && (
@@ -323,7 +306,7 @@ const AddCardScreen = ({ navigation, route }) => {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

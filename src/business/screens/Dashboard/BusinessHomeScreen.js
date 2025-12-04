@@ -18,16 +18,9 @@ import SvgIcons from "../../../common/components/SvgIcons";
 const BusinessHomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
 
-  // Get user data from Redux
+  // Get user data from Redux for debugging
   const user = useUser();
   console.log(user);
-
-  // Extract business information from user data
-  const businessName =
-    user?.businessName || user?.companyName || "مؤسسة تجارية";
-  const crNumber =
-    user?.crNumber || user?.commercialRegistration || "غير متوفر";
-  const balance = user?.balance || user?.walletBalance || "0";
 
   // Handle logout
   const handleLogout = () => {
@@ -82,12 +75,7 @@ const BusinessHomeScreen = ({ navigation }) => {
 
       <ScrollView className="flex-1 bg-gray-50">
         {/* Wallet Card Component */}
-        <WalletCard
-          balance={balance}
-          institution={businessName}
-          crNumber={crNumber}
-          navigation={navigation}
-        />
+        <WalletCard navigation={navigation} />
       </ScrollView>
     </View>
   );

@@ -3,12 +3,12 @@ import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
 import { formatAmount } from "../../../common/utils";
+import { CustomHeader } from "../../../common/components";
 
 const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
   const {
@@ -44,18 +44,16 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView
+    <View
       className="flex-1 bg-backgroundRGB"
       style={{ direction: "ltr" }}
     >
-      {/* Header - Fixed */}
-      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 bg-white">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-          <Feather name="arrow-right" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold">تفاصيل العملية</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      {/* Header */}
+      <CustomHeader
+        title="تفاصيل العملية"
+        onBack={() => navigation.goBack()}
+        statusBarBackgroundColor="#F3F4F6"
+      />
 
       <ScrollView className="flex-1">
         <View className="px-4 py-6">
@@ -255,7 +253,7 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -1,10 +1,8 @@
-import React, { useState, useRef } from "react";
+import { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Keyboard,
 } from "react-native";
@@ -12,6 +10,7 @@ import { Feather } from "@expo/vector-icons";
 import { useResendTimer } from "../hooks/useResendTimer";
 import { formatAmount } from "../utils";
 import SvgIcons from "../components/SvgIcons";
+import { CustomHeader, OTPInput } from "../components";
 
 const OtpVerificationScreen = ({ navigation, route }) => {
   const {
@@ -23,30 +22,8 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     description = "أدخل رمز التحقق المرسل إلى رقم جوالك",
   } = route.params || {};
 
-  const [otp, setOtp] = useState(["", "", "", ""]);
-  const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
+  const [otpValue, setOtpValue] = useState("");
   const { timer, canResend, resetTimer } = useResendTimer(60);
-
-  const handleOtpChange = (index, value) => {
-    // Only allow numbers
-    if (value && !/^\d$/.test(value)) return;
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 3) {
-      inputRefs[index + 1].current?.focus();
-    }
-  };
-
-  const handleKeyPress = (index, key) => {
-    // Handle backspace
-    if (key === "Backspace" && !otp[index] && index > 0) {
-      inputRefs[index - 1].current?.focus();
-    }
-  };
 
   const handleResendOtp = () => {
     if (canResend) {
@@ -56,25 +33,28 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleVerify = () => {
-    const otpCode = otp.join("");
-    if (otpCode.length === 4) {
-      Keyboard.dismiss();
+  const handleOtpComplete = (otpCode) => {
+    Keyboard.dismiss();
 
-      // If custom callback provided, use it
-      if (onVerifySuccess) {
-        onVerifySuccess(otpCode);
-      } else {
-        // Default behavior: navigate to success screen
-        navigation.navigate("TopupSuccess", {
-          amount,
-          primaryColor,
-        });
-      }
+    // If custom callback provided, use it
+    if (onVerifySuccess) {
+      onVerifySuccess(otpCode);
+    } else {
+      // Default behavior: navigate to success screen
+      navigation.navigate("TopupSuccess", {
+        amount,
+        primaryColor,
+      });
     }
   };
 
-  const isOtpComplete = otp.every((digit) => digit !== "");
+  const handleVerify = () => {
+    if (otpValue.length === 4) {
+      handleOtpComplete(otpValue);
+    }
+  };
+
+  const isOtpComplete = otpValue.length === 4;
 
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -83,15 +63,14 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundRGB">
-      {/* Header - Fixed */}
-      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 bg-white">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-          <Feather name="arrow-right" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold">OTP</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View className="flex-1 bg-backgroundRGB">
+      {/* Header */}
+      <CustomHeader
+        title="OTP"
+        onBack={() => navigation.goBack()}
+        statusBarBackgroundColor="#F3F4F6"
+        showBackButton={false}
+      />
 
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
         <View className="flex-1 px-6 py-8">
@@ -124,10 +103,10 @@ const OtpVerificationScreen = ({ navigation, route }) => {
               <Text className="text-gray-600 text-sm mb-2">المبلغ</Text>
               <View className="flex-row items-center">
                 <Text
-                  className="text-5xl font-bold mr-2"
+                  className="text-4xl font-bold mr-2"
                   style={{ color: primaryColor }}
                 >
-                  <SvgIcons name={"SARBlue"} size={35} />
+                  <SvgIcons name={"SARBlue"} size={25} />
                   {formatAmount(amount)}
                 </Text>
               </View>
@@ -135,26 +114,14 @@ const OtpVerificationScreen = ({ navigation, route }) => {
           )}
 
           {/* OTP Input Fields */}
-          <View className="flex-row justify-center mb-6" style={{ gap: 12 }}>
-            {otp.map((digit, index) => (
-              <TextInput
-                key={index}
-                ref={inputRefs[index]}
-                className="w-16 h-16 text-center text-2xl font-bold rounded-xl border-2"
-                style={{
-                  borderColor: digit ? primaryColor : "#d1d5db",
-                  color: primaryColor,
-                }}
-                value={digit}
-                onChangeText={(value) => handleOtpChange(index, value)}
-                onKeyPress={({ nativeEvent: { key } }) =>
-                  handleKeyPress(index, key)
-                }
-                keyboardType="number-pad"
-                maxLength={1}
-                selectTextOnFocus
-              />
-            ))}
+          <View className="mb-6">
+            <OTPInput
+              length={4}
+              onComplete={handleOtpComplete}
+              onChangeOtp={setOtpValue}
+              primaryColor={primaryColor}
+              autoFocus={true}
+            />
           </View>
 
           {/* Timer / Resend */}
@@ -183,23 +150,23 @@ const OtpVerificationScreen = ({ navigation, route }) => {
             style={{ backgroundColor: `${primaryColor}08` }}
           >
             <View className="flex-row items-start">
-              <Feather
-                name="shield"
-                size={20}
-                color={primaryColor}
-                style={{ marginLeft: 8, marginTop: 2 }}
-              />
               <View className="flex-1">
                 <Text
-                  className="font-semibold text-sm mb-1 text-right"
+                  className="font-semibold text-sm mb-1 text-left"
                   style={{ color: primaryColor }}
                 >
                   معاملة آمنة 100%
                 </Text>
-                <Text className="text-gray-600 text-xs text-right">
+                <Text className="text-gray-600 text-xs text-left">
                   رمز التحقق يُرسل عبر رسالة SMS لضمان أمان حسابك
                 </Text>
               </View>
+              <Feather
+                name="shield"
+                size={20}
+                color={primaryColor}
+                style={{ marginRight: 8, marginTop: 2 }}
+              />
             </View>
           </View>
 
@@ -228,7 +195,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
