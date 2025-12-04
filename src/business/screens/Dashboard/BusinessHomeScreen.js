@@ -11,6 +11,7 @@ import { Feather } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
 import { useUser } from "../../../store/hooks";
 import { clearUser } from "../../../store/slices/userSlice";
+import { clearWallets } from "../../../store/slices/walletSlice";
 import { WalletCard } from "../../components";
 import SvgIcons from "../../../common/components/SvgIcons";
 
@@ -45,6 +46,7 @@ const BusinessHomeScreen = ({ navigation }) => {
             try {
               // Clear Redux state
               dispatch(clearUser());
+              dispatch(clearWallets());
 
               // Clear AsyncStorage
               await AsyncStorage.removeItem("authToken");
