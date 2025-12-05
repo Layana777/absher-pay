@@ -1,5 +1,6 @@
 // Export all business screens
 export { default as BusinessHomeScreen } from "./Dashboard/BusinessHomeScreen";
+export { default as BankTransferScreen } from "./Dashboard/BankTransferScreen";
 // export { default as DashboardScreen } from './Dashboard/DashboardScreen';
 // export { default as OrdersListScreen } from './Orders/OrdersListScreen';
 // export { default as OrderDetailScreen } from './Orders/OrderDetailScreen';

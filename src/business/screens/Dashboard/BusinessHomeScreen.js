@@ -95,7 +95,9 @@ const BusinessHomeScreen = ({ navigation }) => {
 
       <ScrollView className="flex-1 bg-gray-50">
         {/* Wallet Card Component */}
-        <WalletCard navigation={navigation} />
+        <WalletCard navigation={navigation}
+          onTransferPress={() => navigation.navigate("BankTransfer")}
+        />
 
         {/* Home Content Sections - Reusable Components */}
         {/*

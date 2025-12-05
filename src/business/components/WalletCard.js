@@ -6,7 +6,7 @@ import SvgIcons from "../../common/components/SvgIcons";
 import { PaymentMethodSheet } from "../../common/components/wallet-topUp";
 import { useBusinessWallet } from "../../store/hooks";
 
-const WalletCard = ({ navigation }) => {
+const WalletCard = ({ navigation,  onTransferPress }) => {
   // Get business wallet data from Redux
   const businessWallet = useBusinessWallet();
   const [showPaymentMethodSheet, setShowPaymentMethodSheet] = useState(false);
@@ -74,7 +74,8 @@ const WalletCard = ({ navigation }) => {
             secondaryText="+ تحويل"
             size="small"
             onPrimaryPress={handleTopupPress}
-          />
+            onSecondaryPress={onTransferPress}
+        />
         </View>
 
         {/* Monthly Total Section */}

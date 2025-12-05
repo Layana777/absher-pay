@@ -13,6 +13,7 @@ import {
 } from "../screens/wallet_topup";
 import { OtpVerificationScreen } from "../../common/screens";
 import AiBusinessChatScreen from "../screens/aiBussenis/AiBusinessChatScreen";
+import BankTransferScreen from "../screens/Dashboard/BankTransferScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -165,6 +166,8 @@ const BusinessNavigator = () => {
       />
       <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
       <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
+      <Stack.Screen name="BusinessHome" component={BusinessHomeScreen} />
+      <Stack.Screen name="BankTransfer" component={BankTransferScreen} />
 
       {/* Standalone screens without tabs - Add your screens here */}
       {/* Example:
