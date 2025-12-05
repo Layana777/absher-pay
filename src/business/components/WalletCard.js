@@ -8,6 +8,7 @@ const WalletCard = ({
   balance = "45,230",
   institution = "مؤسسة النجاح التجارية",
   crNumber = "1010567890",
+  onTransferPress,
 }) => {
   return (
     <View
@@ -48,6 +49,7 @@ const WalletCard = ({
           primaryText="شحن المحفظة"
           secondaryText="+ تحويل"
           size="small"
+          onSecondaryPress={onTransferPress}
         />
       </View>
 

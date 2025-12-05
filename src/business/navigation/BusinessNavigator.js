@@ -1,10 +1,27 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { BusinessHomeScreen } from "../screens";
+import BankTransferScreen from "../screens/Dashboard/BankTransferScreen";
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+// Home Stack Navigator - handles navigation within the Home tab
+const HomeStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      <Stack.Screen name="BusinessHome" component={BusinessHomeScreen} />
+      <Stack.Screen name="BankTransfer" component={BankTransferScreen} />
+    </Stack.Navigator>
+  );
+};
 
 // Placeholder screen component for tabs
 const PlaceholderScreen = ({ route }) => {
@@ -73,7 +90,7 @@ const BusinessNavigator = () => {
     >
       <Tab.Screen
         name="Home"
-        component={BusinessHomeScreen}
+        component={HomeStack}
         options={{
           tabBarLabel: "الرئيسية",
           tabBarIcon: ({ color, size }) => (

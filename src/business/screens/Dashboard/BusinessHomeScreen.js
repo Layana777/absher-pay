@@ -85,6 +85,7 @@ const BusinessHomeScreen = ({ navigation }) => {
           balance={balance}
           institution={businessName}
           crNumber={crNumber}
+          onTransferPress={() => navigation.navigate("BankTransfer")}
         />
       </ScrollView>
     </View>
