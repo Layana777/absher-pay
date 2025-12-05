@@ -101,6 +101,7 @@ export const generateDummyUserData = (nationalId, isBusiness = true) => {
     isBusiness,
     createdAt: Date.now(),
     lastLogin: Date.now(),
+    wallets: {}, // Initialize empty wallets object
   };
 };
 

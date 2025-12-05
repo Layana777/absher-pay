@@ -1,27 +1,22 @@
 import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { BusinessHomeScreen } from "../screens";
+import {
+  CardSelectionScreen,
+  AddCardScreen,
+  TopupAmountScreen,
+  TopupSuccessScreen,
+  TopupTransactionBusinessDetailsScreen,
+} from "../screens/wallet_topup";
+import { OtpVerificationScreen } from "../../common/screens";
 import BankTransferScreen from "../screens/Dashboard/BankTransferScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
-
-// Home Stack Navigator - handles navigation within the Home tab
-const HomeStack = () => {
-  return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="BusinessHome" component={BusinessHomeScreen} />
-      <Stack.Screen name="BankTransfer" component={BankTransferScreen} />
-    </Stack.Navigator>
-  );
-};
 
 // Placeholder screen component for tabs
 const PlaceholderScreen = ({ route }) => {
@@ -67,7 +62,8 @@ const PlaceholderScreen = ({ route }) => {
   );
 };
 
-const BusinessNavigator = () => {
+// Bottom Tab Navigator - Main screens with tabs
+const BusinessTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
@@ -147,6 +143,37 @@ const BusinessNavigator = () => {
         }}
       />
     </Tab.Navigator>
+  );
+};
+
+// Main Business Navigator - Combines tabs and standalone screens
+const BusinessNavigator = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      {/* Main Tabs - Default screen */}
+      <Stack.Screen name="BusinessTabs" component={BusinessTabNavigator} />
+
+      {/* Wallet Top-up Flow Screens */}
+      <Stack.Screen name="CardSelection" component={CardSelectionScreen} />
+      <Stack.Screen name="AddCard" component={AddCardScreen} />
+      <Stack.Screen name="TopupAmount" component={TopupAmountScreen} />
+      <Stack.Screen name="TopupTransactionDetails" component={TopupTransactionBusinessDetailsScreen} />
+      <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
+      <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
+      <Stack.Screen name="BusinessHome" component={BusinessHomeScreen} />
+      <Stack.Screen name="BankTransfer" component={BankTransferScreen} />
+
+      {/* Standalone screens without tabs - Add your screens here */}
+      {/* Example:
+      <Stack.Screen name="PaymentDetails" component={PaymentDetailsScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
+      */}
+    </Stack.Navigator>
   );
 };
 

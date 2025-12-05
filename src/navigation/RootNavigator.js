@@ -3,11 +3,12 @@ import { View, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useDispatch, useSelector } from "react-redux";
 import { setUser } from "../store/slices/userSlice";
+import { setWallets } from "../store/slices/walletSlice";
 import {
   selectIsAuthenticated,
   selectUserType,
 } from "../store/slices/userSlice";
-import { getUserByUid } from "../common/services";
+import { getUserByUid, getWalletsByUserId } from "../common/services";
 import { AuthNavigator } from "../auth/navigation";
 import { BusinessNavigator } from "../business/navigation";
 // import { SingleNavigator } from '../single/navigation';
@@ -41,6 +42,16 @@ const RootNavigator = () => {
                 userType: storedUserType,
               })
             );
+
+            // Fetch and dispatch wallet data
+            try {
+              const wallets = await getWalletsByUserId(token);
+              dispatch(setWallets(wallets));
+              console.log("Wallets loaded on app start:", wallets);
+            } catch (walletError) {
+              console.error("Error fetching wallet data:", walletError);
+              // Continue anyway - wallets will be created on next interaction
+            }
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
