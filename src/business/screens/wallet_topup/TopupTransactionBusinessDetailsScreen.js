@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
 import { formatAmount } from "../../../common/utils";
 import { CustomHeader } from "../../../common/components";
+import { useUser, useBusinessWallet } from "../../../store/hooks";
 
 const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
   const {
@@ -17,6 +18,10 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
     primaryColor = "#0055aa",
     cardData,
   } = route.params || {};
+
+  // Get user and wallet data from Redux
+  const user = useUser();
+  const businessWallet = useBusinessWallet();
 
   // Calculate fees and totals
   const vatRate = 0.15; // 15% VAT
@@ -36,10 +41,22 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
   });
 
   const handleConfirm = () => {
+    // Use uid for user ID (Firebase Auth UID)
+    // Both user.uid and businessWallet.id should exist if logged in
+    const userId = user?.uid || user?.id;
+    const walletId = businessWallet?.id;
+
     navigation.navigate("OtpVerification", {
       amount: totalAmount,
       paymentMethod,
       primaryColor,
+      userId,
+      walletId,
+      phoneNumber: user?.phoneNumber || "05xxxxxxxx",
+      paymentDetails: {
+        lastFourDigits: cardData?.cardNumber?.slice(-4),
+        cardType: cardData?.cardType || "mada",
+      },
     });
   };
 

@@ -142,7 +142,7 @@ const OtpBusinessScreen = ({ navigation, route }) => {
 
       dispatch(
         setUser({
-          user: userData,
+          user: { ...userData, uid: uid }, // Add uid to user object
           authToken: authToken,
           userType: userType,
         })

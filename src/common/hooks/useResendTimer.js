@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 /**
  * Custom hook for managing OTP resend timer
@@ -8,24 +8,60 @@ import { useState, useEffect } from "react";
 export const useResendTimer = (initialTime = 60) => {
   const [timer, setTimer] = useState(initialTime);
   const [canResend, setCanResend] = useState(false);
+  const intervalRef = useRef(null);
 
   // Timer countdown
   useEffect(() => {
+    // Clear any existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
     if (timer > 0) {
-      const interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
+      intervalRef.current = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            clearInterval(intervalRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
-      return () => clearInterval(interval);
     } else {
       setCanResend(true);
     }
-  }, [timer]);
+
+    // Cleanup on unmount
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []); // Only run once on mount
 
   // Reset timer function
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     setTimer(initialTime);
     setCanResend(false);
-  };
+
+    // Clear existing interval
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
+
+    // Start new countdown
+    intervalRef.current = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 1) {
+          setCanResend(true);
+          clearInterval(intervalRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [initialTime]);
 
   return { timer, canResend, resetTimer };
 };

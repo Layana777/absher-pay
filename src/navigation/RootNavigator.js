@@ -37,7 +37,7 @@ const RootNavigator = () => {
           if (userData) {
             dispatch(
               setUser({
-                user: userData,
+                user: { ...userData, uid: token }, // Add uid to user object
                 authToken: token,
                 userType: storedUserType,
               })

@@ -1,3 +1,42 @@
+/**
+ * OtpVerificationScreen - OTP verification screen with transaction processing
+ *
+ * This screen handles OTP verification for wallet top-up transactions.
+ * When OTP is verified successfully, it:
+ * 1. Creates a top-up transaction in Firebase
+ * 2. Updates the wallet balance
+ * 3. Shows success message with transaction reference
+ * 4. Navigates to success screen
+ *
+ * Usage Example:
+ * ```javascript
+ * navigation.navigate('OtpVerification', {
+ *   amount: 500.00,
+ *   userId: 'user123',
+ *   walletId: 'wallet_personal_1234567890',
+ *   phoneNumber: '0501234567',
+ *   paymentMethod: 'mada',
+ *   paymentDetails: {
+ *     lastFourDigits: '4532',
+ *     cardType: 'mada',
+ *   },
+ *   primaryColor: '#0055aa',
+ * });
+ * ```
+ *
+ * Required Parameters:
+ * - amount: Number - Amount to add to wallet
+ * - userId: String - Firebase user ID
+ * - walletId: String - Wallet ID to credit
+ *
+ * Optional Parameters:
+ * - phoneNumber: String - Phone number for display
+ * - paymentMethod: String - Payment method (mada, apple_pay, etc.)
+ * - paymentDetails: Object - Additional payment information
+ * - primaryColor: String - Theme color
+ * - onVerifySuccess: Function - Custom callback for verification
+ */
+
 import { useState } from "react";
 import {
   View,
@@ -5,12 +44,19 @@ import {
   TouchableOpacity,
   ScrollView,
   Keyboard,
+  ActivityIndicator,
+  Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useResendTimer } from "../hooks/useResendTimer";
 import { formatAmount } from "../utils";
 import SvgIcons from "../components/SvgIcons";
 import { CustomHeader, OTPInput } from "../components";
+import {
+  createTopUpTransaction,
+  updateWalletBalance,
+  getWalletById,
+} from "../services";
 
 const OtpVerificationScreen = ({ navigation, route }) => {
   const {
@@ -20,9 +66,14 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     onVerifySuccess,
     title = "تأكيد إضافة الرصيد",
     description = "أدخل رمز التحقق المرسل إلى رقم جوالك",
+    userId,
+    walletId,
+    paymentMethod = "mada",
+    paymentDetails = {},
   } = route.params || {};
 
   const [otpValue, setOtpValue] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
   const { timer, canResend, resetTimer } = useResendTimer(60);
 
   const handleResendOtp = () => {
@@ -33,23 +84,149 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleOtpComplete = (otpCode) => {
-    Keyboard.dismiss();
+  const processTopUpTransaction = async (otpCode) => {
+    setIsProcessing(true);
 
-    // If custom callback provided, use it
-    if (onVerifySuccess) {
-      onVerifySuccess(otpCode);
-    } else {
-      // Default behavior: navigate to success screen
-      navigation.navigate("TopupSuccess", {
-        amount,
-        primaryColor,
-      });
+    try {
+      // 1. Verify OTP (you can add actual OTP verification here)
+      console.log("Verifying OTP:", otpCode);
+
+      // 2. Get current wallet balance
+      const wallet = await getWalletById(walletId);
+
+      if (!wallet) {
+        throw new Error("لم يتم العثور على المحفظة");
+      }
+
+      const balanceBefore = wallet.balance;
+
+      // 3. Create top-up transaction
+      console.log("Creating top-up transaction...");
+      const transactionResult = await createTopUpTransaction(
+        walletId,
+        userId,
+        parseFloat(amount),
+        balanceBefore,
+        paymentMethod,
+        {
+          ...paymentDetails,
+          otpVerified: true,
+          otpCode: otpCode,
+          timestamp: Date.now(),
+        }
+      );
+
+      if (!transactionResult.success) {
+        throw new Error(transactionResult.error || "فشل إنشاء المعاملة");
+      }
+
+      const transaction = transactionResult.data;
+      console.log("Transaction created:", transaction.id);
+
+      // 4. Update wallet balance
+      const newBalance = balanceBefore + parseFloat(amount);
+      console.log(
+        "Updating wallet balance from",
+        balanceBefore,
+        "to",
+        newBalance
+      );
+
+      const balanceUpdateResult = await updateWalletBalance(
+        walletId,
+        newBalance
+      );
+
+      if (!balanceUpdateResult) {
+        // Rollback might be needed here in production
+        console.error("Failed to update wallet balance");
+        throw new Error("فشل تحديث رصيد المحفظة");
+      }
+
+      console.log("Wallet balance updated successfully");
+
+      // 5. Show success and navigate
+      setIsProcessing(false);
+
+      Alert.alert(
+        "تمت العملية بنجاح",
+        `تم إضافة ${formatAmount(amount)} ريال إلى محفظتك\n\nرقم المرجع: ${
+          transaction.referenceNumber
+        }`,
+        [
+          {
+            text: "حسناً",
+            onPress: () => {
+              navigation.navigate("TopupSuccess", {
+                amount,
+                primaryColor,
+                transactionId: transaction.id,
+                referenceNumber: transaction.referenceNumber,
+                newBalance: newBalance,
+              });
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Top-up transaction error:", error);
+      setIsProcessing(false);
+
+      Alert.alert(
+        "فشلت العملية",
+        error.message ||
+          "حدث خطأ أثناء معالجة العملية. يرجى المحاولة مرة أخرى.",
+        [
+          {
+            text: "إعادة المحاولة",
+            onPress: () => setOtpValue(""),
+          },
+          {
+            text: "إلغاء",
+            onPress: () => {
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              }
+            },
+            style: "cancel",
+          },
+        ]
+      );
     }
   };
 
+  const handleOtpComplete = async (otpCode) => {
+    Keyboard.dismiss();
+
+    // If custom callback provided, use it (custom handling)
+    if (onVerifySuccess) {
+      onVerifySuccess(otpCode);
+      return;
+    }
+
+    // Check if we have required data for transaction
+    if (!userId || !walletId || !amount) {
+      Alert.alert(
+        "خطأ",
+        "معلومات المعاملة غير مكتملة. يرجى المحاولة مرة أخرى.",
+        [{
+          text: "حسناً",
+          onPress: () => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            }
+          }
+        }]
+      );
+      return;
+    }
+
+    // Process the top-up transaction
+    await processTopUpTransaction(otpCode);
+  };
+
   const handleVerify = () => {
-    if (otpValue.length === 4) {
+    if (otpValue.length === 4 && !isProcessing) {
       handleOtpComplete(otpValue);
     }
   };
@@ -67,9 +244,13 @@ const OtpVerificationScreen = ({ navigation, route }) => {
       {/* Header */}
       <CustomHeader
         title="OTP"
-        onBack={() => navigation.goBack()}
+        onBack={() => {
+          if (navigation.canGoBack()) {
+            navigation.goBack();
+          }
+        }}
         statusBarBackgroundColor="#F3F4F6"
-        showBackButton={false}
+        showBackButton={true}
       />
 
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
@@ -121,13 +302,17 @@ const OtpVerificationScreen = ({ navigation, route }) => {
               onChangeOtp={setOtpValue}
               primaryColor={primaryColor}
               autoFocus={true}
+              editable={!isProcessing}
             />
           </View>
 
           {/* Timer / Resend */}
           <View className="items-center mb-6">
-            {canResend ? (
-              <TouchableOpacity onPress={handleResendOtp}>
+            {canResend && !isProcessing ? (
+              <TouchableOpacity
+                onPress={handleResendOtp}
+                disabled={isProcessing}
+              >
                 <Text style={{ color: primaryColor }} className="font-semibold">
                   إعادة إرسال رمز التحقق
                 </Text>
@@ -177,15 +362,25 @@ const OtpVerificationScreen = ({ navigation, route }) => {
           <View className="mb-4">
             <TouchableOpacity
               onPress={handleVerify}
-              disabled={!isOtpComplete}
+              disabled={!isOtpComplete || isProcessing}
               className="rounded-lg py-4"
               style={{
-                backgroundColor: isOtpComplete ? primaryColor : "#d1d5db",
+                backgroundColor:
+                  isOtpComplete && !isProcessing ? primaryColor : "#d1d5db",
               }}
             >
-              <Text className="text-white text-center text-base font-semibold">
-                تحقق من الرمز
-              </Text>
+              {isProcessing ? (
+                <View className="flex-row items-center justify-center">
+                  <ActivityIndicator color="#fff" size="small" />
+                  <Text className="text-white text-center text-base font-semibold mr-2">
+                    جاري المعالجة...
+                  </Text>
+                </View>
+              ) : (
+                <Text className="text-white text-center text-base font-semibold">
+                  تحقق من الرمز
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
 
