@@ -12,6 +12,7 @@ import {
   TopupTransactionBusinessDetailsScreen,
 } from "../screens/wallet_topup";
 import { OtpVerificationScreen } from "../../common/screens";
+import AiBusinessChatScreen from "../screens/aiBussenis/AiBusinessChatScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -107,8 +108,7 @@ const BusinessTabNavigator = () => {
 
       <Tab.Screen
         name="Support"
-        component={PlaceholderScreen}
-        initialParams={{ title: "المساعد", icon: "message-circle" }}
+        component={AiBusinessChatScreen}
         options={{
           tabBarLabel: "المساعد",
           tabBarIcon: ({ color, size }) => (
@@ -159,7 +159,10 @@ const BusinessNavigator = () => {
       <Stack.Screen name="CardSelection" component={CardSelectionScreen} />
       <Stack.Screen name="AddCard" component={AddCardScreen} />
       <Stack.Screen name="TopupAmount" component={TopupAmountScreen} />
-      <Stack.Screen name="TopupTransactionDetails" component={TopupTransactionBusinessDetailsScreen} />
+      <Stack.Screen
+        name="TopupTransactionDetails"
+        component={TopupTransactionBusinessDetailsScreen}
+      />
       <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
       <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
 
