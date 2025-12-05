@@ -12,6 +12,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { CustomHeader } from "../../../common/components";
 import TextInput from "../../../common/components/forms/TextInput";
+import { detectCardType } from "../../../common/utils/cardUtils";
 
 const AddCardScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
@@ -72,11 +73,17 @@ const AddCardScreen = ({ navigation, route }) => {
 
   const handleSaveCard = () => {
     if (validateForm()) {
+      const cleanCardNumber = cardNumber.replace(/\s/g, "");
+      const lastFourDigits = cleanCardNumber.slice(-4);
+      const cardType = detectCardType(cleanCardNumber);
+
       navigation.navigate("TopupAmount", {
         paymentMethod: "CARD",
         primaryColor: primaryColor,
         cardData: {
-          cardNumber: cardNumber.replace(/\s/g, ""),
+          cardNumber: cleanCardNumber,
+          lastFourDigits: lastFourDigits,
+          cardType: cardType,
           cardHolder,
           expiryDate,
           cvv,

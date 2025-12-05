@@ -94,6 +94,30 @@ const generateReferenceNumber = (type) => {
 // Database Functions
 
 /**
+ * Sanitizes an object by removing undefined and null values
+ * @param {object} obj - Object to sanitize
+ * @returns {object} Sanitized object
+ */
+const sanitizeObject = (obj) => {
+  if (!obj || typeof obj !== 'object') return obj;
+
+  const sanitized = {};
+  Object.keys(obj).forEach((key) => {
+    const value = obj[key];
+    // Only include defined, non-null values
+    if (value !== undefined && value !== null) {
+      // Recursively sanitize nested objects
+      if (typeof value === 'object' && !Array.isArray(value)) {
+        sanitized[key] = sanitizeObject(value);
+      } else {
+        sanitized[key] = value;
+      }
+    }
+  });
+  return sanitized;
+};
+
+/**
  * Creates a new transaction in Firebase
  * @param {string} walletId - Wallet ID
  * @param {object} transactionData - Transaction data object
@@ -101,6 +125,11 @@ const generateReferenceNumber = (type) => {
  */
 export const createTransaction = async (walletId, transactionData) => {
   try {
+    // Sanitize paymentDetails to remove undefined/null values
+    if (transactionData.paymentDetails) {
+      transactionData.paymentDetails = sanitizeObject(transactionData.paymentDetails);
+    }
+
     const transactionId = generateTransactionId();
     const referenceNumber = generateReferenceNumber(transactionData.type);
     const timestamp = Date.now();
@@ -115,15 +144,18 @@ export const createTransaction = async (walletId, transactionData) => {
       ...transactionData,
     };
 
+    // Final sanitization of entire transaction object
+    const sanitizedTransaction = sanitizeObject(transaction);
+
     // Write transaction to database
     const transactionRef = ref(
       database,
       DB_PATHS.TRANSACTION(walletId, transactionId)
     );
-    await set(transactionRef, transaction);
+    await set(transactionRef, sanitizedTransaction);
 
     console.log("Transaction created successfully:", transactionId);
-    return { success: true, data: transaction };
+    return { success: true, data: sanitizedTransaction };
   } catch (error) {
     console.error("Error creating transaction:", error);
     return { success: false, error: error.message };

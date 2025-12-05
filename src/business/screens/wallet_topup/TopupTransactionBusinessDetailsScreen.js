@@ -46,6 +46,22 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
     const userId = user?.uid || user?.id;
     const walletId = businessWallet?.id;
 
+    // Get cardholder name from cardData or user info
+    const cardHolderName =
+      cardData?.cardHolder ||
+      businessWallet?.businessInfo?.companyName ||
+      user?.fullName ||
+      user?.name ||
+      "Unknown";
+
+    // Extract payment details with validation and fallbacks
+    const lastFourDigits =
+      cardData?.lastFourDigits ||
+      cardData?.cardNumber?.slice(-4) ||
+      "****";
+
+    const cardType = cardData?.cardType || cardData?.type || "mada";
+
     navigation.navigate("OtpVerification", {
       amount: totalAmount,
       paymentMethod,
@@ -54,8 +70,9 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
       walletId,
       phoneNumber: user?.phoneNumber || "05xxxxxxxx",
       paymentDetails: {
-        lastFourDigits: cardData?.cardNumber?.slice(-4),
-        cardType: cardData?.cardType || "mada",
+        lastFourDigits: lastFourDigits,
+        cardType: cardType,
+        cardHolder: cardHolderName,
       },
     });
   };

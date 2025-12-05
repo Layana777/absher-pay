@@ -73,6 +73,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   } = route.params || {};
 
   const [otpValue, setOtpValue] = useState("");
+  const [lastSubmittedOtp, setLastSubmittedOtp] = useState(""); // Track last submitted OTP
   const [isProcessing, setIsProcessing] = useState(false);
   const { timer, canResend, resetTimer } = useResendTimer(60);
 
@@ -88,6 +89,15 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     setIsProcessing(true);
 
     try {
+      // Debug: Log transaction parameters
+      console.log("=== TRANSACTION DEBUG INFO ===");
+      console.log("User ID:", userId);
+      console.log("Wallet ID:", walletId);
+      console.log("Amount:", amount);
+      console.log("Payment Method:", paymentMethod);
+      console.log("Payment Details:", paymentDetails);
+      console.log("============================");
+
       // 1. Verify OTP (you can add actual OTP verification here)
       console.log("Verifying OTP:", otpCode);
 
@@ -98,6 +108,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         throw new Error("لم يتم العثور على المحفظة");
       }
 
+      console.log("Wallet found:", wallet);
       const balanceBefore = wallet.balance;
 
       // 3. Create top-up transaction
@@ -179,11 +190,15 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         [
           {
             text: "إعادة المحاولة",
-            onPress: () => setOtpValue(""),
+            onPress: () => {
+              setOtpValue("");
+              setLastSubmittedOtp(""); // Reset to allow new submission
+            },
           },
           {
             text: "إلغاء",
             onPress: () => {
+              setLastSubmittedOtp(""); // Reset on cancel
               if (navigation.canGoBack()) {
                 navigation.goBack();
               }
@@ -196,6 +211,15 @@ const OtpVerificationScreen = ({ navigation, route }) => {
   };
 
   const handleOtpComplete = async (otpCode) => {
+    // Prevent duplicate submissions of the same OTP
+    if (isProcessing || otpCode === lastSubmittedOtp) {
+      console.log("OTP already submitted or processing, ignoring duplicate");
+      return;
+    }
+
+    // Mark this OTP as submitted
+    setLastSubmittedOtp(otpCode);
+
     Keyboard.dismiss();
 
     // If custom callback provided, use it (custom handling)
@@ -212,6 +236,8 @@ const OtpVerificationScreen = ({ navigation, route }) => {
         [{
           text: "حسناً",
           onPress: () => {
+            // Reset lastSubmittedOtp to allow retry
+            setLastSubmittedOtp("");
             if (navigation.canGoBack()) {
               navigation.goBack();
             }

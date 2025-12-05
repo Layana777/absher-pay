@@ -42,7 +42,9 @@ const CardSelectionScreen = ({ navigation, route }) => {
       paymentMethod: "CARD",
       primaryColor,
       cardData: {
-        cardNumber: selectedCard.cardNumber,
+        cardNumber: selectedCard.cardNumber, // Already last 4 digits
+        lastFourDigits: selectedCard.cardNumber, // Same as cardNumber (last 4)
+        cardType: selectedCard.cardType || selectedCard.type || "mada", // Support both formats
         bankName: selectedCard.bankName,
         type: selectedCard.type,
       },
