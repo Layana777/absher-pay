@@ -73,8 +73,10 @@ const BusinessHomeScreen = ({ navigation }) => {
   // Handle payment card press
   const handlePaymentPress = (payment) => {
     console.log("Payment pressed:", payment);
-    // TODO: Navigate to payment details screen
-    // navigation.navigate("PaymentDetails", { paymentId: payment.id });
+    navigation.navigate("UpcomingPayDetails", {
+      payment,
+      primaryColor: "#0055aa"
+    });
   };
 
   return (

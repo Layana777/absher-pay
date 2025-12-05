@@ -22,7 +22,7 @@ const UpcomingPaymentsSection = ({
     {
       id: "1",
       title: "تجديد إقامة العمالة",
-      description: "حلول ذا اسبوع • 13 عامل",
+      description: "  ذا اسبوع • 13 ",
       amount: 6500,
       icon: "users",
       iconColor: "#dc2626",
