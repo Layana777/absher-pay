@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
+import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
 import { formatAmount } from "../../../common/utils";
@@ -24,10 +19,10 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
   const businessWallet = useBusinessWallet();
 
   // Calculate fees and totals
-  const vatRate = 0.15; // 15% VAT
-  const vatAmount = amount * vatRate;
+  // const vatRate = 0.15; // 15% VAT
+  // const vatAmount = amount * vatRate;
   const transactionFee = 0;
-  const totalAmount = amount + vatAmount + transactionFee;
+  const totalAmount = amount;
 
   const currentDate = new Date();
   const transactionDate = currentDate.toLocaleDateString("ar-SA", {
@@ -56,9 +51,7 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
 
     // Extract payment details with validation and fallbacks
     const lastFourDigits =
-      cardData?.lastFourDigits ||
-      cardData?.cardNumber?.slice(-4) ||
-      "****";
+      cardData?.lastFourDigits || cardData?.cardNumber?.slice(-4) || "****";
 
     const cardType = cardData?.cardType || cardData?.type || "mada";
 
@@ -78,10 +71,7 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View
-      className="flex-1 bg-backgroundRGB"
-      style={{ direction: "ltr" }}
-    >
+    <View className="flex-1 bg-backgroundRGB" style={{ direction: "ltr" }}>
       {/* Header */}
       <CustomHeader
         title="تفاصيل العملية"
