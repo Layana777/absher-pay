@@ -4,13 +4,13 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-  StatusBar,
+StatusBar,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 const CustomHeader = ({
   title,
-  onBack,
+  onBack, 
   showBackButton = true,
   backgroundColor = "#FFFFFF",
   textColor = "#000000",

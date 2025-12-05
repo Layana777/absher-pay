@@ -48,6 +48,8 @@ import {
   Alert,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { updateBusinessWalletBalance } from "../../store/slices/walletSlice";
 import { useResendTimer } from "../hooks/useResendTimer";
 import { formatAmount } from "../utils";
 import SvgIcons from "../components/SvgIcons";
@@ -72,6 +74,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     paymentDetails = {},
   } = route.params || {};
 
+  const dispatch = useDispatch();
   const [otpValue, setOtpValue] = useState("");
   const [lastSubmittedOtp, setLastSubmittedOtp] = useState(""); // Track last submitted OTP
   const [isProcessing, setIsProcessing] = useState(false);
@@ -155,6 +158,10 @@ const OtpVerificationScreen = ({ navigation, route }) => {
       }
 
       console.log("Wallet balance updated successfully");
+
+      // Update Redux state to refresh UI on home screen
+      dispatch(updateBusinessWalletBalance(newBalance));
+      console.log("Redux wallet balance updated to:", newBalance);
 
       // 5. Show success and navigate
       setIsProcessing(false);
