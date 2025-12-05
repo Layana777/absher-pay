@@ -1,83 +1,9 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
-import { Feather } from "@expo/vector-icons";
 
 // This file contains additional sections for BusinessHomeScreen
-// Not currently in use, but saved for future reference
-
-const UpcomingPaymentsSection = () => {
-  return (
-    <View className="px-4 mb-6">
-      <View className="flex-row justify-between items-center mb-4">
-        <Text className="text-gray-800 text-lg font-bold">
-          المدفوعات القادمة
-        </Text>
-        <TouchableOpacity>
-          <Text className="text-[#0055aa] text-sm">عرض الكل</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Payment Card 1 */}
-      <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-        <View className="flex-row items-start justify-between mb-3">
-          <View className="flex-row items-start flex-1">
-            <View className="w-12 h-12 bg-red-50 rounded-xl items-center justify-center">
-              <Feather name="users" size={24} color="#dc2626" />
-            </View>
-            <View className="flex-1 mr-3">
-              <Text className="text-gray-800 font-bold text-base mb-1">
-                تجديد إقامة العمالة
-              </Text>
-              <Text className="text-gray-500 text-xs">
-                حلول ذا يوم • 13 عامل
-              </Text>
-            </View>
-          </View>
-          <TouchableOpacity className="bg-red-500 px-3 py-1 rounded-lg">
-            <Text className="text-white text-xs font-bold">عاجل</Text>
-          </TouchableOpacity>
-        </View>
-        <Text className="text-gray-800 font-bold text-xl">6,500 ريال</Text>
-      </View>
-
-      {/* Payment Card 2 */}
-      <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-        <View className="flex-row items-start justify-between mb-3">
-          <View className="flex-row items-start flex-1">
-            <View className="w-12 h-12 bg-blue-50 rounded-xl items-center justify-center">
-              <Feather name="file-text" size={24} color="#0055aa" />
-            </View>
-            <View className="flex-1 mr-3">
-              <Text className="text-gray-800 font-bold text-base mb-1">
-                رسوم الغرفة
-              </Text>
-              <Text className="text-gray-500 text-xs">15 يوم • 3 أيام</Text>
-            </View>
-          </View>
-        </View>
-        <Text className="text-gray-800 font-bold text-xl">2,800 ريال</Text>
-      </View>
-
-      {/* Payment Card 3 */}
-      <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
-        <View className="flex-row items-start justify-between mb-3">
-          <View className="flex-row items-start flex-1">
-            <View className="w-12 h-12 bg-blue-50 rounded-xl items-center justify-center">
-              <Feather name="file" size={24} color="#0055aa" />
-            </View>
-            <View className="flex-1 mr-3">
-              <Text className="text-gray-800 font-bold text-base mb-1">
-                تجديد السجل التجاري
-              </Text>
-              <Text className="text-gray-500 text-xs">22 يوم</Text>
-            </View>
-          </View>
-        </View>
-        <Text className="text-gray-800 font-bold text-xl">1,200 ريال</Text>
-      </View>
-    </View>
-  );
-};
+// Export the reusable UpcomingPaymentsSection from common components
+export { default as UpcomingPaymentsSection } from "../../common/components/UpcomingPaymentsSection";
 
 const SpendingAnalyticsSection = () => {
   return (
@@ -213,7 +139,6 @@ const QuickStatsSection = () => {
 };
 
 export {
-  UpcomingPaymentsSection,
   SpendingAnalyticsSection,
   AITipsSection,
   QuickStatsSection,

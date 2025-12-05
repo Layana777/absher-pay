@@ -14,6 +14,12 @@ import { clearUser } from "../../../store/slices/userSlice";
 import { clearWallets } from "../../../store/slices/walletSlice";
 import { WalletCard } from "../../components";
 import SvgIcons from "../../../common/components/SvgIcons";
+import {
+  UpcomingPaymentsSection,
+  SpendingAnalyticsSection,
+  AITipsSection,
+  QuickStatsSection,
+} from "../../components/HomeContentSections";
 
 const BusinessHomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -57,6 +63,20 @@ const BusinessHomeScreen = ({ navigation }) => {
     );
   };
 
+  // Handle view all payments
+  const handleViewAllPayments = () => {
+    console.log("View all payments pressed");
+    // TODO: Navigate to payments list screen
+    // navigation.navigate("PaymentsList");
+  };
+
+  // Handle payment card press
+  const handlePaymentPress = (payment) => {
+    console.log("Payment pressed:", payment);
+    // TODO: Navigate to payment details screen
+    // navigation.navigate("PaymentDetails", { paymentId: payment.id });
+  };
+
   return (
     <View className="flex-1 bg-white" style={{ direction: "ltr" }}>
       <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
@@ -76,6 +96,24 @@ const BusinessHomeScreen = ({ navigation }) => {
       <ScrollView className="flex-1 bg-gray-50">
         {/* Wallet Card Component */}
         <WalletCard navigation={navigation} />
+
+        {/* Home Content Sections - Reusable Components */}
+        {/*
+          Example with custom data:
+          <UpcomingPaymentsSection
+            payments={customPayments}
+            onViewAll={handleViewAllPayments}
+            onPaymentPress={handlePaymentPress}
+            title="المدفوعات العاجلة"
+            showViewAll={true}
+          />
+        */}
+        
+        <UpcomingPaymentsSection
+          onViewAll={handleViewAllPayments}
+          onPaymentPress={handlePaymentPress}
+        />
+     
       </ScrollView>
     </View>
   );
