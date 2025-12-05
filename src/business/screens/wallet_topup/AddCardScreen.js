@@ -2,9 +2,7 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Keyboard,
   TouchableWithoutFeedback,
@@ -12,6 +10,8 @@ import {
   Platform,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { CustomHeader } from "../../../common/components";
+import TextInput from "../../../common/components/forms/TextInput";
 
 const AddCardScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
@@ -61,6 +61,15 @@ const AddCardScreen = ({ navigation, route }) => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const isFormComplete = () => {
+    return (
+      cardNumber.trim().length > 0 &&
+      cardHolder.trim().length > 0 &&
+      expiryDate.trim().length > 0 &&
+      cvv.trim().length > 0
+    );
+  };
+
   const handleSaveCard = () => {
     if (validateForm()) {
       navigation.navigate("TopupAmount", {
@@ -77,7 +86,13 @@ const AddCardScreen = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
+    <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
+      {/* Header */}
+      <CustomHeader
+        title="إضافة بطاقة جديدة"
+        onBack={() => navigation.goBack()}
+      />
+
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -85,25 +100,12 @@ const AddCardScreen = ({ navigation, route }) => {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View className="flex-1">
-            {/* Header */}
-            <View className="flex-row items-center justify-between px-4 py-4 bg-white border-b border-gray-200">
-              <TouchableOpacity
-                onPress={() => navigation.goBack()}
-                className="p-2"
-              >
-                <Feather name="arrow-right" size={24} color="#000" />
-              </TouchableOpacity>
-              <Text className="text-lg font-semibold">إضافة بطاقة جديدة</Text>
-              <View style={{ width: 40 }} />
-            </View>
-
             {/* Form */}
             <ScrollView
               className="flex-1"
               showsVerticalScrollIndicator={false}
               keyboardShouldPersistTaps="handled"
               contentContainerStyle={{ flexGrow: 1 }}
-              style={{ direction: "rtl" }}
             >
               <View className="px-4 pt-6 pb-4">
                 {/* Card Preview */}
@@ -141,148 +143,56 @@ const AddCardScreen = ({ navigation, route }) => {
                 </View>
 
                 {/* Card Number */}
-                <View className="mb-4">
-                  <Text className="text-sm text-left font-medium text-gray-700 mb-2">
-                    رقم البطاقة
-                  </Text>
-                  <View className="relative">
-                    <TextInput
-                      className={`border-2 ${
-                        errors.cardNumber ? "border-red-500" : "border-gray-300"
-                      } rounded-xl px-4 py-4 text-right bg-white text-base`}
-                      style={{
-                        borderColor:
-                          cardNumber && !errors.cardNumber
-                            ? primaryColor
-                            : undefined,
-                      }}
-                      placeholder="1234 5678 9012 3456"
-                      placeholderTextColor="#9CA3AF"
-                      keyboardType="numeric"
-                      value={cardNumber}
-                      onChangeText={(text) =>
-                        setCardNumber(formatCardNumber(text))
-                      }
-                      maxLength={19}
-                    />
-                    {cardNumber && !errors.cardNumber && (
-                      <View
-                        className="absolute left-4 top-1/2"
-                        style={{ transform: [{ translateY: -10 }] }}
-                      >
-                        <Feather
-                          name="check-circle"
-                          size={20}
-                          color={primaryColor}
-                        />
-                      </View>
-                    )}
-                  </View>
-                  {errors.cardNumber && (
-                    <Text className="text-red-500 text-xs mt-1 text-right">
-                      {errors.cardNumber}
-                    </Text>
-                  )}
-                </View>
+                <TextInput
+                  label="رقم البطاقة"
+                  placeholder="1234 5678 9012 3456"
+                  value={cardNumber}
+                  onChangeText={(text) => setCardNumber(formatCardNumber(text))}
+                  keyboardType="numeric"
+                  maxLength={19}
+                  error={errors.cardNumber}
+                />
 
                 {/* Card Holder */}
-                <View className="mb-4">
-                  <Text className="text-sm text-left font-medium text-gray-700 mb-2">
-                    اسم حامل البطاقة
-                  </Text>
-                  <View className="relative">
-                    <TextInput
-                      className={`border-2 ${
-                        errors.cardHolder ? "border-red-500" : "border-gray-300"
-                      } rounded-xl px-4 py-4 text-right bg-white text-base`}
-                      style={{
-                        borderColor:
-                          cardHolder && !errors.cardHolder
-                            ? primaryColor
-                            : undefined,
-                      }}
-                      placeholder="محمد أحمد"
-                      placeholderTextColor="#9CA3AF"
-                      value={cardHolder}
-                      onChangeText={setCardHolder}
-                    />
-                    {cardHolder && !errors.cardHolder && (
-                      <View
-                        className="absolute left-4 top-1/2"
-                        style={{ transform: [{ translateY: -10 }] }}
-                      >
-                        <Feather
-                          name="check-circle"
-                          size={20}
-                          color={primaryColor}
-                        />
-                      </View>
-                    )}
-                  </View>
-                  {errors.cardHolder && (
-                    <Text className="text-red-500 text-xs mt-1 text-right">
-                      {errors.cardHolder}
-                    </Text>
-                  )}
-                </View>
+                <TextInput
+                  label="اسم حامل البطاقة"
+                  placeholder="محمد أحمد"
+                  value={cardHolder}
+                  onChangeText={(text) => {
+                    if (text.length <= 16) {
+                      setCardHolder(text);
+                    }
+                  }}
+                  maxLength={16}
+                  error={errors.cardHolder}
+                />
 
                 {/* Expiry and CVV */}
-                <View className="flex-row " style={{ gap: 12 }}>
-                  <View className="flex-1 ">
-                    <Text className="text-sm text-left font-medium text-gray-700 mb-2">
-                      تاريخ الانتهاء
-                    </Text>
+                <View className="flex-row" style={{ gap: 12 }}>
+                  <View className="flex-1">
                     <TextInput
-                      className={`border-2 ${
-                        errors.expiryDate ? "border-red-500" : "border-gray-300"
-                      } rounded-xl px-4 py-4 text-center bg-white text-base`}
-                      style={{
-                        borderColor:
-                          expiryDate && !errors.expiryDate
-                            ? primaryColor
-                            : undefined,
-                      }}
-                      placeholder="MM/YY"
-                      placeholderTextColor="#9CA3AF"
+                      label="CVV"
+                      placeholder="123"
+                      value={cvv}
+                      onChangeText={(text) => setCvv(text.slice(0, 3))}
                       keyboardType="numeric"
+                      maxLength={3}
+                      secureTextEntry
+                      error={errors.cvv}
+                    />
+                  </View>
+                  <View className="flex-1">
+                    <TextInput
+                      label="تاريخ الانتهاء"
+                      placeholder="MM/YY"
                       value={expiryDate}
                       onChangeText={(text) =>
                         setExpiryDate(formatExpiryDate(text))
                       }
-                      maxLength={5}
-                    />
-                    {errors.expiryDate && (
-                      <Text className="text-red-500 text-xs mt-1 text-right">
-                        {errors.expiryDate}
-                      </Text>
-                    )}
-                  </View>
-
-                  <View className="flex-1">
-                    <Text className="text-sm text-left font-medium text-gray-700 mb-2">
-                      CVV
-                    </Text>
-                    <TextInput
-                      className={`border-2 ${
-                        errors.cvv ? "border-red-500" : "border-gray-300"
-                      } rounded-xl px-4 py-4 text-center bg-white text-base`}
-                      style={{
-                        borderColor:
-                          cvv && !errors.cvv ? primaryColor : undefined,
-                      }}
-                      placeholder="123"
-                      placeholderTextColor="#9CA3AF"
                       keyboardType="numeric"
-                      value={cvv}
-                      onChangeText={(text) => setCvv(text.slice(0, 3))}
-                      maxLength={3}
-                      secureTextEntry
+                      maxLength={5}
+                      error={errors.expiryDate}
                     />
-                    {errors.cvv && (
-                      <Text className="text-red-500 text-xs mt-1 text-right">
-                        {errors.cvv}
-                      </Text>
-                    )}
                   </View>
                 </View>
 
@@ -312,8 +222,11 @@ const AddCardScreen = ({ navigation, route }) => {
             <View className="px-4 pb-6 pt-4 bg-white border-t border-gray-200">
               <TouchableOpacity
                 onPress={handleSaveCard}
+                disabled={!isFormComplete()}
                 className="rounded-xl py-4"
-                style={{ backgroundColor: primaryColor }}
+                style={{
+                  backgroundColor: isFormComplete() ? primaryColor : "#d1d5db",
+                }}
               >
                 <Text className="text-white text-center text-base font-semibold">
                   حفظ البطاقة والمتابعة
@@ -323,7 +236,7 @@ const AddCardScreen = ({ navigation, route }) => {
           </View>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 

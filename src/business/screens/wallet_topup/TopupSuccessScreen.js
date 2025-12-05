@@ -1,11 +1,7 @@
-import React, { useEffect, useRef } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  SafeAreaView,
-  Animated,
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { View, Text, TouchableOpacity, Animated } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { CommonActions } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
 import { formatAmount } from "../../../common/utils";
@@ -15,6 +11,11 @@ const TopupSuccessScreen = ({ navigation, route }) => {
 
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  // Generate transaction number only once
+  const [transactionNumber] = useState(() =>
+    Math.random().toString(36).substring(2, 10).toUpperCase()
+  );
 
   useEffect(() => {
     // Animate checkmark
@@ -34,8 +35,21 @@ const TopupSuccessScreen = ({ navigation, route }) => {
   }, []);
 
   const handleDone = () => {
-    // Navigate back to the Home tab in BusinessTabs
-    navigation.navigate("BusinessTabs", { screen: "Home" });
+    // Reset navigation stack and go back to Home tab
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [
+          {
+            name: "BusinessTabs",
+            state: {
+              routes: [{ name: "Home" }],
+              index: 0,
+            },
+          },
+        ],
+      })
+    );
   };
 
   const transactionDate = new Date().toLocaleDateString("ar-SA", {
@@ -115,9 +129,7 @@ const TopupSuccessScreen = ({ navigation, route }) => {
 
             <View className="flex-row justify-between items-center">
               <Text className="text-gray-900 font-medium">رقم العملية</Text>
-              <Text className="text-gray-600">
-                {Math.random().toString(36).substring(2, 10).toUpperCase()}
-              </Text>
+              <Text className="text-gray-600">{transactionNumber}</Text>
             </View>
           </View>
         </Animated.View>

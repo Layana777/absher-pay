@@ -4,15 +4,24 @@ import { Feather } from "@expo/vector-icons";
 import ActionButtons from "./ActionButtons";
 import SvgIcons from "../../common/components/SvgIcons";
 import { PaymentMethodSheet } from "../../common/components/wallet-topUp";
+import { useBusinessWallet } from "../../store/hooks";
 
-const WalletCard = ({
-  balance = "45,230",
-  institution = "مؤسسة النجاح التجارية",
-  crNumber = "1010567890",
-  hasSavedCard = false,
-  navigation
-}) => {
+const WalletCard = ({ navigation }) => {
+  // Get business wallet data from Redux
+  const businessWallet = useBusinessWallet();
   const [showPaymentMethodSheet, setShowPaymentMethodSheet] = useState(false);
+
+  // Extract data from business wallet
+  const balance = businessWallet?.balance
+    ? businessWallet.balance.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })
+    : "0";
+
+  const institution =
+    businessWallet?.businessInfo?.companyName || "مؤسسة تجارية";
+  const crNumber = businessWallet?.businessInfo?.commercialRegistration || "";
 
   const handleTopupPress = () => {
     setShowPaymentMethodSheet(true);
@@ -32,7 +41,9 @@ const WalletCard = ({
 
         <View className="items-end mb-6 ">
           <Text className="text-white/80 text-sm mb-1">مرحباً</Text>
-          <Text className="text-white text-xl font-bold mb-1">{institution}</Text>
+          <Text className="text-white text-xl font-bold mb-1">
+            {institution}
+          </Text>
           <Text className="text-white/60 text-xs">س.ت {crNumber}</Text>
         </View>
 
@@ -76,7 +87,7 @@ const WalletCard = ({
           <View className="items-end mb-4">
             <View className="flex-row items-center justify-center">
               <SvgIcons name={"SAR"} size={35} />
-              <Text className="text-white text-4xl font-bold">28,450</Text>
+              <Text className="text-white text-4xl font-bold">0.00</Text>
             </View>
 
             {/* Percentage Growth */}
@@ -102,7 +113,6 @@ const WalletCard = ({
         visible={showPaymentMethodSheet}
         onClose={handleCloseSheet}
         navigation={navigation}
-        hasSavedCard={hasSavedCard}
         primaryColor="#0055aa"
       />
     </>

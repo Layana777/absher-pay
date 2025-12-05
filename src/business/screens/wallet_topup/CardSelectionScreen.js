@@ -3,10 +3,10 @@ import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { CustomHeader } from "../../../common/components";
 
 const CardSelectionScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa", savedCards = [] } = route.params || {};
@@ -50,15 +50,12 @@ const CardSelectionScreen = ({ navigation, route }) => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white " style={{ direction: "ltr" }}>
-      {/* Header - Fixed */}
-      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 bg-white">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-          <Feather name="arrow-right" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text className="text-lg font-semibold">اختر البطاقة</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View className="flex-1 bg-white " style={{ direction: "ltr" }}>
+      {/* Header */}
+      <CustomHeader
+        title="اختر البطاقة"
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView className="flex-1">
         <View className="px-4 py-6">
@@ -122,19 +119,19 @@ const CardSelectionScreen = ({ navigation, route }) => {
             style={{ borderColor: primaryColor }}
           >
             <View className="flex-row items-center justify-center">
-              <View
-                className="w-12 h-12 rounded-xl items-center justify-center"
-                style={{ backgroundColor: `${primaryColor}15` }}
-              >
-                <Feather name="plus" size={24} color={primaryColor} />
-              </View>
-
               <Text
                 className="font-semibold text-base mr-3"
                 style={{ color: primaryColor }}
               >
                 إضافة بطاقة جديدة
               </Text>
+
+              <View
+                className="w-12 h-12 rounded-xl items-center justify-center"
+                style={{ backgroundColor: `${primaryColor}15` }}
+              >
+                <Feather name="plus" size={24} color={primaryColor} />
+              </View>
             </View>
           </TouchableOpacity>
 
@@ -181,7 +178,7 @@ const CardSelectionScreen = ({ navigation, route }) => {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import AmountKeypad from "../../../common/components/wallet-topUp/AmountKeypad";
 import { formatAmount } from "../../../common/utils";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { CustomHeader } from "../../../common/components";
 
 const { SARBlack } = SvgIcons;
 
@@ -52,18 +53,15 @@ const TopupAmountScreen = ({ navigation, route }) => {
   const displayAmount = formatAmount(amount);
 
   return (
-    <SafeAreaView className="flex-1 bg-backgroundRGB">
-      <View className="flex-1">
-        {/* Header */}
-        <View className="flex-row items-center px-4 py-4 border-b bg-white border-gray-200">
-          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-            <Feather name="arrow-right" size={24} color="#000" />
-          </TouchableOpacity>
-          <Text className="flex-1 text-lg font-semibold text-center mr-10">
-            إضافة رصيد
-          </Text>
-        </View>
+    <View className="flex-1 bg-backgroundRGB">
+      {/* Header */}
+      <CustomHeader
+        title="إضافة رصيد"
+        onBack={() => navigation.goBack()}
+        statusBarBackgroundColor="#F3F4F6"
+      />
 
+      <View className="flex-1">
         {/* Content */}
         <View className="flex-1 px-6 pt-8">
           {/* Payment Method Info */}
@@ -121,7 +119,7 @@ const TopupAmountScreen = ({ navigation, route }) => {
         </View>
 
         {/* Confirm Button */}
-        <View className="px-6">
+        <View className="px-6 m-5">
           <TouchableOpacity
             onPress={handleConfirm}
             disabled={!amount || parseFloat(amount) <= 0}
@@ -137,7 +135,7 @@ const TopupAmountScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
