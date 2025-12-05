@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
-import { useUser } from "../../../store/hooks";
+import { useBusinessWallet, useUser } from "../../../store/hooks";
 import { SIZES } from "../../../common/constants/sizes";
 
 const BankTransferScreen = ({ navigation }) => {
@@ -17,7 +17,15 @@ const BankTransferScreen = ({ navigation }) => {
 
   // Get user data from Redux
   const user = useUser();
-  const balance = user?.balance || user?.walletBalance || "0";
+  // Get business wallet data from Redux
+  const businessWallet = useBusinessWallet();
+  console.log("getting the business wallet balance" , businessWallet)
+  const balance = businessWallet?.balance
+    ? businessWallet.balance.toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      })
+    : "0";
   const linkedBank = {
     name: "مصرف الراجحي",
     accountNumber: "SA•••• •••• •••• 9813",

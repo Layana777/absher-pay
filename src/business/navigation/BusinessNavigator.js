@@ -1,7 +1,6 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { BusinessHomeScreen } from "../screens";
@@ -86,7 +85,7 @@ const BusinessTabNavigator = () => {
     >
       <Tab.Screen
         name="Home"
-        component={HomeStack}
+        component={BusinessHomeScreen}
         options={{
           tabBarLabel: "الرئيسية",
           tabBarIcon: ({ color, size }) => (
