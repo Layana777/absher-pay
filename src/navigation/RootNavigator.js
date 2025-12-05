@@ -11,7 +11,7 @@ import {
 import { getUserByUid, getWalletsByUserId } from "../common/services";
 import { AuthNavigator } from "../auth/navigation";
 import { BusinessNavigator } from "../business/navigation";
-// import { SingleNavigator } from '../single/navigation';
+import { SingleNavigator } from "../single/navigation";
 
 const RootNavigator = () => {
   const dispatch = useDispatch();
@@ -76,8 +76,7 @@ const RootNavigator = () => {
       case "business":
         return <BusinessNavigator />;
       case "single":
-        // return <SingleNavigator />;
-        return <AuthNavigator />; // Temporary fallback until SingleNavigator is ready
+        return <SingleNavigator />;
       default:
         return <AuthNavigator />; // Fallback
     }

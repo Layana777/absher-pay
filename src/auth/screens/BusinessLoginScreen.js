@@ -64,10 +64,12 @@ const BusinessLoginScreen = ({ navigation }) => {
     setLoading(true);
 
     try {
+      // Business login - only accepts business users (isBusiness = true)
+      // Uses email format: nationalId@absher.business
       const result = await loginUser(nationalId, password, true);
 
       if (result.success) {
-        console.log("Login successful:", result.user);
+        console.log("Business login successful:", result.user);
         // Navigate to OTP screen with user data
         navigation.navigate("OtpBusiness", {
           uid: result.uid,

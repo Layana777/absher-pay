@@ -1,19 +1,9 @@
-import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
-import { BusinessHomeScreen, SettingsScreen } from "../screens";
-import {
-  CardSelectionScreen,
-  AddCardScreen,
-  TopupAmountScreen,
-  TopupSuccessScreen,
-  TopupTransactionBusinessDetailsScreen,
-} from "../screens/wallet_topup";
+import { SingleHomeScreen } from "../screens";
 import { OtpVerificationScreen } from "../../common/screens";
-import AiBusinessChatScreen from "../screens/aiBussenis/AiBusinessChatScreen";
-import BankTransferScreen from "../screens/Dashboard/BankTransferScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -24,10 +14,10 @@ const PlaceholderScreen = ({ route }) => {
 
   return (
     <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
-      <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
+      <StatusBar barStyle="light-content" backgroundColor="#028550" />
 
       {/* Header */}
-      <View className="bg-[#0055aa] pt-12 pb-6 px-6">
+      <View className="bg-[#028550] pt-12 pb-6 px-6">
         <View className="flex-row justify-between items-center mb-4">
           <TouchableOpacity className="relative">
             <Feather name="bell" size={24} color="white" />
@@ -63,12 +53,12 @@ const PlaceholderScreen = ({ route }) => {
 };
 
 // Bottom Tab Navigator - Main screens with tabs
-const BusinessTabNavigator = () => {
+const SingleTabNavigator = () => {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#0055aa",
+        tabBarActiveTintColor: "#028550",
         tabBarInactiveTintColor: "#9ca3af",
         tabBarLabelStyle: {
           fontSize: 12,
@@ -86,7 +76,7 @@ const BusinessTabNavigator = () => {
     >
       <Tab.Screen
         name="Home"
-        component={BusinessHomeScreen}
+        component={SingleHomeScreen}
         options={{
           tabBarLabel: "الرئيسية",
           tabBarIcon: ({ color, size }) => (
@@ -96,43 +86,45 @@ const BusinessTabNavigator = () => {
       />
 
       <Tab.Screen
-        name="Payments"
+        name="Services"
         component={PlaceholderScreen}
-        initialParams={{ title: "المدفوعات", icon: "credit-card" }}
+        initialParams={{ title: "الخدمات", icon: "grid" }}
         options={{
-          tabBarLabel: "المدفوعات",
+          tabBarLabel: "الخدمات",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="credit-card" size={size} color={color} />
+            <Feather name="grid" size={size} color={color} />
           ),
         }}
       />
 
       <Tab.Screen
-        name="Support"
-        component={AiBusinessChatScreen}
+        name="Transactions"
+        component={PlaceholderScreen}
+        initialParams={{ title: "المعاملات", icon: "list" }}
         options={{
-          tabBarLabel: "المساعد",
+          tabBarLabel: "المعاملات",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="message-circle" size={size} color={color} />
+            <Feather name="list" size={size} color={color} />
           ),
         }}
       />
 
       <Tab.Screen
-        name="Reports"
+        name="Offers"
         component={PlaceholderScreen}
-        initialParams={{ title: "الإيصالات", icon: "file-text" }}
+        initialParams={{ title: "العروض", icon: "gift" }}
         options={{
-          tabBarLabel: "الإيصالات",
+          tabBarLabel: "العروض",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="file-text" size={size} color={color} />
+            <Feather name="gift" size={size} color={color} />
           ),
         }}
       />
 
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={PlaceholderScreen}
+        initialParams={{ title: "الإعدادات", icon: "settings" }}
         options={{
           tabBarLabel: "الإعدادات",
           tabBarIcon: ({ color, size }) => (
@@ -144,8 +136,8 @@ const BusinessTabNavigator = () => {
   );
 };
 
-// Main Business Navigator - Combines tabs and standalone screens
-const BusinessNavigator = () => {
+// Main Single Navigator - Combines tabs and standalone screens
+const SingleNavigator = () => {
   return (
     <Stack.Navigator
       screenOptions={{
@@ -153,29 +145,15 @@ const BusinessNavigator = () => {
       }}
     >
       {/* Main Tabs - Default screen */}
-      <Stack.Screen name="BusinessTabs" component={BusinessTabNavigator} />
+      <Stack.Screen name="SingleTabs" component={SingleTabNavigator} />
 
-      {/* Wallet Top-up Flow Screens */}
-      <Stack.Screen name="CardSelection" component={CardSelectionScreen} />
-      <Stack.Screen name="AddCard" component={AddCardScreen} />
-      <Stack.Screen name="TopupAmount" component={TopupAmountScreen} />
-      <Stack.Screen
-        name="TopupTransactionDetails"
-        component={TopupTransactionBusinessDetailsScreen}
-      />
+      {/* Standalone screens without tabs */}
       <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
-      <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
-      <Stack.Screen name="BusinessHome" component={BusinessHomeScreen} />
-      <Stack.Screen name="BankTransfer" component={BankTransferScreen} />
+      <Stack.Screen name="SingleHome" component={SingleHomeScreen} />
 
-      {/* Standalone screens without tabs - Add your screens here */}
-      {/* Example:
-      <Stack.Screen name="PaymentDetails" component={PaymentDetailsScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="TransactionHistory" component={TransactionHistoryScreen} />
-      */}
+      {/* Add more standalone screens here as needed */}
     </Stack.Navigator>
   );
 };
 
-export default BusinessNavigator;
+export default SingleNavigator;

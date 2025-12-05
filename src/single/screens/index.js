@@ -1,5 +1,5 @@
 // Export all customer screens
-// export { default as HomeScreen } from './Home/HomeScreen';
+export { default as SingleHomeScreen } from "./Dashboard/SingleHomeScreen";
 // export { default as ProductsListScreen } from './Products/ProductsListScreen';
 // export { default as ProductDetailScreen } from './Products/ProductDetailScreen';
 // export { default as CartScreen } from './Cart/CartScreen';

@@ -7,15 +7,24 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Alert,
 } from "react-native";
 import { Button } from "../../common/components/ui";
 import TextInput from "../../common/components/forms/TextInput";
 import SvgIcons from "../../common/components/SvgIcons";
+import {
+  validateNationalId,
+  validatePassword,
+  loginUser,
+} from "../../common/services";
 
 const SingleLoginScreen = ({ navigation }) => {
   const [nationalId, setNationalId] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [nationalIdError, setNationalIdError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [generalError, setGeneralError] = useState("");
 
   const handleBack = () => {
     navigation.goBack();
@@ -32,13 +41,64 @@ const SingleLoginScreen = ({ navigation }) => {
   };
 
   const handleLogin = async () => {
-    console.log("Login pressed", { nationalId, password });
+    // Clear previous errors
+    setNationalIdError("");
+    setPasswordError("");
+    setGeneralError("");
+
+    // Validate National ID
+    const nationalIdValidation = validateNationalId(nationalId);
+    if (!nationalIdValidation.isValid) {
+      setNationalIdError(nationalIdValidation.error);
+      return;
+    }
+
+    // Validate Password
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setPasswordError(passwordValidation.error);
+      return;
+    }
+
+    // Proceed with login
     setLoading(true);
-    // TODO: Implement actual login logic
-    setTimeout(() => {
+
+    try {
+      // Single login - accepts both individual AND business users
+      // Business users will access their personal wallet
+
+      // Try to login as individual user first (isBusiness = false)
+      // Uses email format: nationalId@absher.pay
+      let result = await loginUser(nationalId, password, false);
+
+      // If user not found as individual, try as business user (isBusiness = true)
+      // Uses email format: nationalId@absher.business
+      if (!result.success && result.error === "رقم الهوية أو كلمة المرور غير صحيحة") {
+        console.log("Individual user not found, trying business user...");
+        result = await loginUser(nationalId, password, true);
+
+        if (result.success) {
+          console.log("Login successful as business user accessing personal wallet:", result.user);
+        }
+      }
+
+      if (result.success) {
+        console.log("Login successful:", result.user);
+        // Navigate to OTP screen with user data
+        navigation.navigate("OtpSingle", {
+          uid: result.uid,
+          nationalId: result.user.nationalId,
+          phoneNumber: result.user.phoneNumber,
+        });
+      } else {
+        setGeneralError(result.error);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setGeneralError("حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى");
+    } finally {
       setLoading(false);
-      navigation.navigate("OtpSingle");
-    }, 2000);
+    }
   };
 
   const handleForgotPassword = () => {
@@ -102,6 +162,15 @@ const SingleLoginScreen = ({ navigation }) => {
               تسجيل الدخول
             </Text>
 
+            {/* General Error Banner */}
+            {generalError ? (
+              <View className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
+                <Text className="text-red-600 text-sm text-center">
+                  {generalError}
+                </Text>
+              </View>
+            ) : null}
+
             {/* Biometric Auth Box */}
             <View className="bg-[#028550]/10 rounded-2xl p-4 mb-6">
               <View className="flex-row items-center justify-between">
@@ -147,20 +216,38 @@ const SingleLoginScreen = ({ navigation }) => {
                 label="اسم المستخدم أو رقم الهوية"
                 placeholder="1130019514"
                 value={nationalId}
-                onChangeText={setNationalId}
+                onChangeText={(text) => {
+                  setNationalId(text);
+                  setNationalIdError("");
+                  setGeneralError("");
+                }}
                 keyboardType="numeric"
                 icon={<SvgIcons name={"Person"} size={20} />}
               />
+              {nationalIdError ? (
+                <Text className="text-red-500 text-xs mt-1 mb-2 text-right">
+                  {nationalIdError}
+                </Text>
+              ) : null}
 
               {/* Password Input */}
               <TextInput
                 label="كلمة المرور"
                 placeholder="ادخل كلمة المرور"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                  setPasswordError("");
+                  setGeneralError("");
+                }}
                 secureTextEntry
                 icon={<SvgIcons name={"Lock"} size={20} />}
               />
+              {passwordError ? (
+                <Text className="text-red-500 text-xs mt-1 mb-2 text-right">
+                  {passwordError}
+                </Text>
+              ) : null}
 
               {/* Forgot Password Link */}
               <TouchableOpacity
