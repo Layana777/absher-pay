@@ -1,11 +1,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./slices/userSlice";
 import walletReducer from "./slices/walletSlice";
+import bankAccountsReducer from "./slices/bankAccountsSlice";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     wallet: walletReducer,
+    bankAccounts: bankAccountsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

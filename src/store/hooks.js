@@ -8,6 +8,12 @@ import {
   selectWalletsInitialized,
   selectTotalBalance
 } from './slices/walletSlice';
+import {
+  selectAllBankAccounts,
+  selectSelectedBankAccount,
+  selectBankAccountsCount,
+  selectHasBankAccounts
+} from './slices/bankAccountsSlice';
 
 // Custom hooks for better TypeScript support (even in JavaScript, these are helpful)
 export const useAppDispatch = () => useDispatch();
@@ -26,3 +32,9 @@ export const useWalletsLoading = () => useAppSelector(selectWalletsLoading);
 export const useWalletsError = () => useAppSelector(selectWalletsError);
 export const useWalletsInitialized = () => useAppSelector(selectWalletsInitialized);
 export const useTotalBalance = () => useAppSelector(selectTotalBalance);
+
+// Bank Accounts hooks
+export const useBankAccounts = () => useAppSelector(selectAllBankAccounts);
+export const useSelectedBankAccount = () => useAppSelector(selectSelectedBankAccount);
+export const useBankAccountsCount = () => useAppSelector(selectBankAccountsCount);
+export const useHasBankAccounts = () => useAppSelector(selectHasBankAccounts);
