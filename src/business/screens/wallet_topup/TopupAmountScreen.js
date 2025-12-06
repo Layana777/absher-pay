@@ -1,12 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity } from "react-native";
-import { Feather } from "@expo/vector-icons";
-import AmountKeypad from "../../../common/components/wallet-topUp/AmountKeypad";
-import { formatAmount } from "../../../common/utils";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
 import SvgIcons from "../../../common/components/SvgIcons";
 import { CustomHeader } from "../../../common/components";
-
-const { SARBlack } = SvgIcons;
 
 const TopupAmountScreen = ({ navigation, route }) => {
   const {
@@ -15,28 +19,6 @@ const TopupAmountScreen = ({ navigation, route }) => {
     cardData,
   } = route.params || {};
   const [amount, setAmount] = useState("");
-
-  const quickAmounts = [50, 100, 200, 500];
-
-  const handleQuickAmount = (value) => {
-    setAmount(value.toString());
-  };
-
-  const handleKeypadPress = (value) => {
-    if (value === "delete") {
-      setAmount(amount.slice(0, -1));
-    } else if (value === ".") {
-      if (!amount.includes(".")) {
-        setAmount(amount + value);
-      }
-    } else {
-      // Limit to reasonable amount (e.g., 10000)
-      const newAmount = amount + value;
-      if (parseFloat(newAmount) <= 10000) {
-        setAmount(newAmount);
-      }
-    }
-  };
 
   const handleConfirm = () => {
     const parsedAmount = parseFloat(amount);
@@ -50,92 +32,108 @@ const TopupAmountScreen = ({ navigation, route }) => {
     }
   };
 
-  const displayAmount = formatAmount(amount);
+  const handleAmountChange = (text) => {
+    // Only allow numbers and decimal point
+    const sanitized = text.replace(/[^0-9.]/g, "");
+
+    // Prevent multiple decimal points
+    const parts = sanitized.split(".");
+    if (parts.length > 2) {
+      return;
+    }
+
+    // Limit to reasonable amount (e.g., 10000)
+    const numValue = parseFloat(sanitized);
+    if (sanitized && numValue > 10000) {
+      return;
+    }
+
+    setAmount(sanitized);
+  };
 
   return (
-    <View className="flex-1 bg-backgroundRGB">
-      {/* Header */}
-      <CustomHeader
-        title="إضافة رصيد"
-        onBack={() => navigation.goBack()}
-        statusBarBackgroundColor="#F3F4F6"
-      />
-
-      <View className="flex-1">
-        {/* Content */}
-        <View className="flex-1 px-6 pt-8">
-          {/* Payment Method Info */}
-          <View className="items-center mb-6">
-            <Text className="text-gray-600 text-sm mb-2">طريقة الدفع</Text>
-            <View className="flex-row items-center">
-              <SvgIcons name={"Apple"} size={21} />
-              <Text className="text-base font-medium mr-2">
-                {paymentMethod === "APPLE_PAY" ? "Apple Pay" : "البطاقة"}
-              </Text>
-            </View>
-          </View>
-
-          {/* Amount Display */}
-          <View className="items-center mb-8">
-            <Text className="text-gray-600 text-sm mb-2">المبلغ</Text>
-            <View className="flex-row items-center">
-              <Text className="text-5xl font-bold mr-2">{displayAmount}</Text>
-              <SvgIcons name={"SARBlack"} size={35} />
-            </View>
-          </View>
-
-          {/* Quick Amount Buttons */}
-          <View className="flex-row justify-between mb-3">
-            {quickAmounts.map((value) => (
-              <TouchableOpacity
-                key={value}
-                onPress={() => handleQuickAmount(value)}
-                className="border border-gray-300 rounded-lg px-4 py-3 flex-1 mx-1"
-                style={{
-                  borderColor:
-                    amount === value.toString() ? primaryColor : "#D1D5DB",
-                  backgroundColor:
-                    amount === value.toString() ? `${primaryColor}10` : "white",
-                }}
-              >
-                <Text
-                  className="text-center font-medium"
-                  style={{
-                    color:
-                      amount === value.toString() ? primaryColor : "#374151",
-                  }}
-                >
-                  {value}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {/* Custom Keypad */}
-          <AmountKeypad
-            onKeyPress={handleKeypadPress}
-            primaryColor={primaryColor}
+    <KeyboardAvoidingView
+      className="flex-1 bg-white"
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={0}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View className="flex-1">
+          {/* Header */}
+          <CustomHeader
+            title="إضافة مبلغ"
+            onBack={() => navigation.goBack()}
+            statusBarBackgroundColor="#F3F4F6"
           />
-        </View>
 
-        {/* Confirm Button */}
-        <View className="px-6 m-5">
-          <TouchableOpacity
-            onPress={handleConfirm}
-            disabled={!amount || parseFloat(amount) <= 0}
-            className="rounded-lg py-4"
-            style={{
-              backgroundColor:
-                amount && parseFloat(amount) > 0 ? primaryColor : "#D1D5DB",
-            }}
-          >
-            <Text className="text-white text-center text-base font-semibold">
-              تأكيد
-            </Text>
-          </TouchableOpacity>
+          {/* Content */}
+          <View className="flex-1 px-6 pt-8">
+            {/* Amount Input Section */}
+            <View className="bg-white rounded-2xl p-6 mb-6 border border-gray-100">
+              <Text className="text-gray-400 text-sm text-right mb-3">
+                ادخال المبلغ
+              </Text>
+
+              {/* Amount Display with Hidden Input */}
+              <View className="flex-row items-center justify-start mb-2">
+                <TextInput
+                  className="text-4xl font-bold text-right flex-0.3 mx-2"
+                  value={amount}
+                  onChangeText={handleAmountChange}
+                  keyboardType="decimal-pad"
+                  placeholder="00.00"
+                  placeholderTextColor="#D1D5DB"
+                  style={{ textAlign: "right" }}
+                  maxLength={10}
+                />
+                <SvgIcons name={"SARBlack"} size={29} />
+              </View>
+
+              {/* Blue vertical line indicator */}
+              <View className="self-end">
+                <View
+                  className="h-12 w-0.5 mb-2"
+                  style={{ backgroundColor: primaryColor }}
+                />
+              </View>
+            </View>
+
+            {/* Payment Method Section */}
+            <View className="bg-white rounded-2xl p-5 flex-row items-center justify-between border border-gray-100">
+              <TouchableOpacity className="bg-gray-100 rounded-lg px-6 py-2">
+                <Text className="text-gray-700 text-sm">تغيير</Text>
+              </TouchableOpacity>
+
+              <View className="flex-row items-center">
+                <Text className="text-base font-medium text-gray-900 mr-2">
+                  Apple Pay
+                </Text>
+                <View className="border border-gray-300 rounded px-2 py-1">
+                  <SvgIcons name={"Apple"} size={20} />
+                </View>
+              </View>
+            </View>
+          </View>
+
+          {/* Confirm Button */}
+          <View className="px-6 pb-8">
+            <TouchableOpacity
+              onPress={handleConfirm}
+              disabled={!amount || parseFloat(amount) <= 0}
+              className="rounded-xl py-4"
+              style={{
+                backgroundColor:
+                  amount && parseFloat(amount) > 0 ? primaryColor : "#D1D5DB",
+              }}
+            >
+              <Text className="text-white text-center text-base font-semibold">
+                استمرار
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 };
 
