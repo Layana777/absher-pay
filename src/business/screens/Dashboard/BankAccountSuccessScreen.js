@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { CommonActions } from "@react-navigation/native";
 import Button from "../../../common/components/ui/Button";
 import CustomHeader from "../../../common/components/CustomHeader";
 
@@ -8,20 +9,33 @@ const BankAccountSuccessScreen = ({ navigation, route }) => {
   const { bankName, iban } = route?.params || {};
 
   const handleGoToDashboard = () => {
-    // Navigate back to the main dashboard or business home
-    navigation.navigate("BusinessHome");
+    // Reset navigation stack to prevent going back to this screen
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "BusinessTabs" }],
+      })
+    );
   };
 
   const handleGoToTransfer = () => {
-    // Navigate to the transfer screen
-    navigation.navigate("BankTransfer");
+    // Reset navigation and go to transfer screen
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 1,
+        routes: [
+          { name: "BusinessTabs" },
+          { name: "BankTransfer" }
+        ],
+      })
+    );
   };
 
   return (
     <View className="flex-1 bg-gray-50">
       <CustomHeader
         title="تم اضافة الحساب بنجاح"
-        onBack={() => navigation.navigate("BusinessHome")}
+        onBack={handleGoToDashboard}
         backgroundColor="#0055aa"
         textColor="#FFFFFF"
         statusBarStyle="light-content"
@@ -43,9 +57,9 @@ const BankAccountSuccessScreen = ({ navigation, route }) => {
         </Text>
 
       {/* Account Details Card */}
-      <View className="bg-white rounded-2xl p-5 w-full mb-8 shadow-sm">
+      <View className="bg-white rounded-2xl p-5 w-full mb-8 shadow-sm" style={{direction: "ltr"}}>
         {/* Bank Name */}
-        <View className="flex-row-reverse justify-between items-center mb-4 pb-4 border-b border-gray-100">
+        <View className="flex-row-reverse justify-between items-center mb-4 pb-4 border-b border-gray-100" style={{direction: "ltr"}}>
           <Text className="text-gray-500 text-sm">البنك</Text>
           <Text className="text-gray-800 text-base font-semibold">
             {bankName || "مصرف الراجحي"}
@@ -53,7 +67,7 @@ const BankAccountSuccessScreen = ({ navigation, route }) => {
         </View>
 
         {/* IBAN */}
-        <View className="flex-row-reverse justify-between items-center">
+        <View className="flex-row-reverse justify-between items-center" style={{direction: "ltr"}}>
           <Text className="text-gray-500 text-sm">رقم الايبان</Text>
           <Text className="text-gray-800 text-sm font-mono">
             {iban || "SA03 8000 0000 6080 1016 7519"}

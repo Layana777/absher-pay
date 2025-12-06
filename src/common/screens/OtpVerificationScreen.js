@@ -278,14 +278,12 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     <View className="flex-1 bg-backgroundRGB">
       {/* Header */}
       <CustomHeader
-        title="OTP"
-        onBack={() => {
-          if (navigation.canGoBack()) {
-            navigation.goBack();
-          }
-        }}
-        statusBarBackgroundColor="#F3F4F6"
-        showBackButton={false}
+        title="رمز التحقق"
+        onBack={() => navigation.goBack()}
+        backgroundColor={primaryColor}
+        textColor="#FFFFFF"
+        statusBarStyle="light-content"
+        statusBarBackgroundColor={primaryColor}
       />
 
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
