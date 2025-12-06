@@ -5,32 +5,59 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
-  SafeAreaView,
+  Modal,
+  Image,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
 import SvgIcons from "../../../common/components/SvgIcons";
-import { useBusinessWallet, useUser } from "../../../store/hooks";
+import { useBusinessWallet, useUser, useBankAccounts, useSelectedBankAccount } from "../../../store/hooks";
 import { SIZES } from "../../../common/constants/sizes";
+import CustomHeader from "../../../common/components/CustomHeader";
+import Button from "../../../common/components/ui/Button";
+import LinkedBankAccountsModal from "../../components/LinkedBankAccountsModal";
+import { updateBusinessWalletBalance } from "../../../store/slices/walletSlice";
+
+// Bank logos mapping
+const bankLogos = {
+  "مصرف الراجحي": require("../../../common/assets/icons/alrajhi-logo.png"),
+  "البنك الأهلي السعودي": require("../../../common/assets/icons/snb-logo.png"),
+  "بنك الرياض": require("../../../common/assets/icons/riyad-bank-logo.png"),
+  "بنك ساب": require("../../../common/assets/icons/sabb-logo.png"),
+  "البنك السعودي الوطني": require("../../../common/assets/icons/snb-logo.png"),
+  "مصرف الإنماء": require("../../../common/assets/icons/alinma-logo.png"),
+  "بنك البلاد": require("../../../common/assets/icons/albilad-logo.png"),
+  "بنك الجزيرة": require("../../../common/assets/icons/aljazira-logo.png"),
+  "البنك الأهلي التجاري": require("../../../common/assets/icons/anb-logo.png"),
+};
 
 const BankTransferScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [amount, setAmount] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAccountsModal, setShowAccountsModal] = useState(false);
 
   // Get user data from Redux
   const user = useUser();
   // Get business wallet data from Redux
   const businessWallet = useBusinessWallet();
+  // Get bank accounts from Redux
+  const bankAccounts = useBankAccounts();
+  const selectedAccount = useSelectedBankAccount();
+
   console.log("getting the business wallet balance" , businessWallet)
+  console.log("Bank accounts from Redux:", bankAccounts);
+  console.log("Selected account:", selectedAccount);
+
   const balance = businessWallet?.balance
     ? businessWallet.balance.toLocaleString("en-US", {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       })
     : "0";
-  const linkedBank = {
-    name: "مصرف الراجحي",
-    accountNumber: "SA•••• •••• •••• 9813",
-    isVerified: true,
-  };
+
+  // Use selected account from Redux
+  const linkedBank = selectedAccount;
 
   const quickAmounts = [100, 500, 1000, 5000];
 
@@ -39,25 +66,58 @@ const BankTransferScreen = ({ navigation }) => {
   };
 
   const handleContinue = () => {
-    // TODO: Implement transfer logic
-    console.log("Transfer amount:", amount);
+    if (linkedBank) {
+      setShowConfirmModal(true);
+    } else {
+      // Navigate to add bank account if no bank is linked
+      navigation.navigate("AddBankAccount");
+    }
+  };
+
+  const handleConfirmTransfer = () => {
+    // Calculate new balance after deducting the transfer amount
+    const transferAmount = parseFloat(amount);
+    const currentBalance = businessWallet?.balance || 0;
+    const newBalance = currentBalance - transferAmount;
+
+    // Update the business wallet balance in Redux
+    dispatch(updateBusinessWalletBalance(newBalance));
+
+    console.log("Transfer confirmed:", {
+      amount: transferAmount,
+      previousBalance: currentBalance,
+      newBalance: newBalance,
+      bankAccount: linkedBank,
+    });
+
+    // Close the confirmation modal
+    setShowConfirmModal(false);
+
+    // Navigate to success screen
+    navigation.navigate("TransferSuccess", {
+      amount: amount,
+      bankName: linkedBank?.bankName,
+      iban: linkedBank?.ibanFormatted || linkedBank?.iban,
+    });
+
+    // Clear the amount input
+    setAmount("");
+  };
+
+  const handleCancelTransfer = () => {
+    setShowConfirmModal(false);
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Header */}
-      <View className="bg-[#0055aa] px-5 py-4">
-        <View className="flex-row items-center justify-between">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="p-2"
-          >
-            <Feather name="arrow-right" size={24} color="white" />
-          </TouchableOpacity>
-          <Text className="text-white text-lg font-bold">التحويل البنكي</Text>
-          <View className="w-10" />
-        </View>
-      </View>
+    <View className="flex-1 bg-gray-50">
+      <CustomHeader
+        title="التحويل البنكي"
+        onBack={() => navigation.goBack()}
+        backgroundColor="#0055aa"
+        textColor="#FFFFFF"
+        statusBarStyle="light-content"
+        statusBarBackgroundColor="#0055aa"
+      />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Current Balance Card */}
@@ -65,9 +125,9 @@ const BankTransferScreen = ({ navigation }) => {
           <Text className="text-gray-500 text-sm text-center mb-2">
             الرصيد المتاح
           </Text>
-          <View className="flex-row items-center justify-center">
-            <SvgIcons name="SAR" size={30} />
-            <Text className="text-gray-800 text-3xl font-bold mr-2">
+          <View className="flex-row items-center justify-center" style={{ direction: "ltr" }}>
+            <SvgIcons name="SARBlack" size={28} />
+            <Text className="text-gray-800 text-3xl font-bold">
               {balance}
             </Text>
           </View>
@@ -75,38 +135,73 @@ const BankTransferScreen = ({ navigation }) => {
 
         {/* Linked Bank Account Card */}
         <View className="bg-white mx-4 mt-4 rounded-2xl p-5 shadow-sm">
-          <View className="flex-row items-center justify-between mb-4">
-            <TouchableOpacity className="px-3 py-1">
-              <Text className="text-[#0055aa] text-sm font-semibold">
-                تغيير
-              </Text>
-            </TouchableOpacity>
-            <Text className="text-gray-700 text-sm font-semibold">
-              الحساب البنكي المربوط
-            </Text>
-          </View>
+          {linkedBank ? (
+            <>
+              {/* Account Details View (when user has linked account) */}
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-gray-700 text-sm font-semibold">
+                  الحساب البنكي المربوط
+                </Text>
+                <TouchableOpacity
+                  className="px-3 py-1"
+                  onPress={() => setShowAccountsModal(true)}
+                >
+                  <Text className="text-[#0055aa] text-sm font-semibold">
+                    تغيير
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-          <View className="flex-row items-center justify-between bg-gray-50 rounded-xl p-4">
-            {/* Bank Icon */}
-            <View className="bg-[#0055aa] rounded-xl w-12 h-12 items-center justify-center">
-              <Feather name="briefcase" size={24} color="white" />
-            </View>
+              <View className="flex-row-reverse items-center justify-between bg-gray-50 rounded-xl p-4" style={{ direction: "ltr" }}>
+                {/* Verified Icon */}
+                {linkedBank.isVerified && (
+                  <View className="bg-green-500 rounded-full w-6 h-6 items-center justify-center">
+                    <Feather name="check" size={10} color="white" />
+                  </View>
+                )}
 
-            {/* Bank Info */}
-            <View className="flex-1 mx-3 items-end">
-              <Text className="text-gray-800 text-base font-bold mb-1">
-                {linkedBank.name}
-              </Text>
-              <Text className="text-gray-500 text-sm">
-                {linkedBank.accountNumber}
-              </Text>
-            </View>
+                {/* Bank Info */}
+                <View className="flex-1 mx-3 items-end" style={{ direction: "ltr" }}>
+                  <Text className="text-gray-800 text-base font-bold mb-1 text-left">
+                    {linkedBank.bankName}
+                  </Text>
+                  <Text className="text-gray-500 text-sm text-right">
+                    {linkedBank.ibanFormatted || `SA•••• •••• •••• ${linkedBank.accountNumber}`}
+                  </Text>
+                </View>
 
-            {/* Verified Icon */}
-            <View className="bg-green-500 rounded-full w-8 h-8 items-center justify-center">
-              <Feather name="check" size={18} color="white" />
-            </View>
-          </View>
+                {/* Bank Icon */}
+                <View className="rounded-xl w-10 h-10 items-center justify-center overflow-hidden">
+                  {bankLogos[linkedBank.bankName] ? (
+                    <Image
+                      source={bankLogos[linkedBank.bankName]}
+                      style={{ width: 30, height: 30 }}
+                      resizeMode="contain"
+                    />
+                  ) : (
+                    <View className="bg-[#0055aa] rounded-xl w-10 h-10 items-center justify-center">
+                      <Feather name="briefcase" size={20} color="white" />
+                    </View>
+                  )}
+                </View>
+              </View>
+            </>
+          ) : (
+            <>
+              {/* No Linked Account - Show Add Button */}
+              <TouchableOpacity
+                onPress={() => navigation.navigate("AddBankAccount")}
+                className="border-2 border-dashed border-[#0055aa] rounded-xl p-4 flex-row items-center justify-center"
+              >
+                <View className="bg-blue-100 rounded-xl w-10 h-10 items-center justify-center mx-2">
+                  <Text className="text-[#0055aa] text-2xl font-light">+</Text>
+                </View>
+                <Text className="text-[#0055aa] text-sm font-bold">
+                  إضافة حساب جديد
+                </Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* Transfer Amount Card */}
@@ -147,13 +242,13 @@ const BankTransferScreen = ({ navigation }) => {
           </View>
 
           {/* Continue Button */}
-          <TouchableOpacity
+          <Button
+            title="متابعة"
             onPress={handleContinue}
-            className="bg-[#4a9eda] rounded-xl py-4 items-center"
+            variant="business-primary"
             disabled={!amount || amount === "0"}
-          >
-            <Text className="text-white text-base font-bold">متابعة</Text>
-          </TouchableOpacity>
+            className="w-full"
+          />
         </View>
 
         {/* Notice */}
@@ -163,7 +258,102 @@ const BankTransferScreen = ({ navigation }) => {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Transfer Confirmation Modal */}
+      <Modal
+        visible={showConfirmModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCancelTransfer}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl px-5 pb-8">
+            {/* Handle Bar */}
+            <View className="items-center py-3">
+              <View className="w-12 h-1 bg-gray-300 rounded-full" />
+            </View>
+
+            {/* Title */}
+            <Text className="text-gray-800 text-xl font-bold text-center mb-6">
+              تأكيد التحويل
+            </Text>
+
+            {/* Bank Account Info */}
+            <View className="bg-gray-50 rounded-xl p-4 mb-4">
+              <Text className="text-gray-500 text-xs text-right mb-2">
+                إلى الحساب البنكي
+              </Text>
+              <Text className="text-gray-800 text-base font-bold text-right">
+                {linkedBank?.ibanFormatted || linkedBank?.iban || "SA•••• •••• •••• 9012"}
+              </Text>
+            </View>
+
+            {/* Bank Name */}
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-gray-500 text-sm">{linkedBank?.bankName || "مصرف الراجحي"}</Text>
+              <Text className="text-gray-700 text-sm font-semibold">البنك</Text>
+            </View>
+
+            {/* Amount */}
+            <View className="flex-row items-center justify-between mb-4">
+              <View className="flex-row items-center" style={{ direction: "ltr" }}>
+                <SvgIcons name="SARBlack" size={24} />
+                <Text className="text-gray-800 text-2xl font-bold ml-1">
+                  {amount}
+                </Text>
+              </View>
+              <Text className="text-gray-700 text-sm font-semibold">المبلغ</Text>
+            </View>
+
+            {/* Balance After Transfer */}
+            <View className="flex-row justify-between items-center mb-6">
+              <View className="flex-row items-center" style={{ direction: "ltr" }}>
+                <SvgIcons name="SARBlack" size={20} />
+                <Text className="text-gray-800 text-base font-bold ml-1">
+                  {businessWallet?.balance
+                    ? (businessWallet.balance - parseFloat(amount || 0)).toLocaleString(
+                        "en-US",
+                        {
+                          minimumFractionDigits: 0,
+                          maximumFractionDigits: 0,
+                        }
+                      )
+                    : "0"}
+                </Text>
+              </View>
+              <Text className="text-gray-700 text-sm font-semibold">
+                الرصيد بعد التحويل
+              </Text>
+            </View>
+
+            {/* Confirm Button */}
+            <Button
+              title="تأكيد التحويل"
+              onPress={handleConfirmTransfer}
+              variant="business-primary"
+              className="w-full mb-3"
+            />
+
+            {/* Back Button */}
+            <TouchableOpacity
+              onPress={handleCancelTransfer}
+              className="py-3"
+            >
+              <Text className="text-gray-600 text-center text-base">رجوع</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Linked Bank Accounts Modal */}
+      <LinkedBankAccountsModal
+        visible={showAccountsModal}
+        onClose={() => setShowAccountsModal(false)}
+        accounts={bankAccounts}
+        selectedAccountId={selectedAccount?.id}
+        onAddAccount={() => navigation.navigate("AddBankAccount")}
+      />
+    </View>
   );
 };
 

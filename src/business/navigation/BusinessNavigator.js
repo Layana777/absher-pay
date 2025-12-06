@@ -15,6 +15,9 @@ import { OtpVerificationScreen } from "../../common/screens";
 import AiBusinessChatScreen from "../screens/aiBussenis/AiBusinessChatScreen";
 import BankTransferScreen from "../screens/Dashboard/BankTransferScreen";
 import UpcomingPayDetailsScreen from "../screens/Dashboard/UpcomingPayDetailsScreen";
+import AddBankAccountScreen from "../screens/Dashboard/AddBankAccountScreen";
+import BankAccountSuccessScreen from "../screens/Dashboard/BankAccountSuccessScreen";
+import TransferSuccessScreen from "../screens/Dashboard/TransferSuccessScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -168,6 +171,9 @@ const BusinessNavigator = () => {
       <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
       <Stack.Screen name="BusinessHome" component={BusinessHomeScreen} />
       <Stack.Screen name="BankTransfer" component={BankTransferScreen} />
+      <Stack.Screen name="AddBankAccount" component={AddBankAccountScreen} />
+      <Stack.Screen name="BankAccountSuccess" component={BankAccountSuccessScreen} />
+      <Stack.Screen name="TransferSuccess" component={TransferSuccessScreen} />
 
       {/* Payment Details Screen */}
       <Stack.Screen name="UpcomingPayDetails" component={UpcomingPayDetailsScreen} />
