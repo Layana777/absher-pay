@@ -1,5 +1,6 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import { getUserByUid, updateLastLogin } from './authService';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from './firebase';
@@ -8,6 +9,11 @@ const BIOMETRIC_ENABLED_KEY = 'biometric_enabled';
 const USER_UID_KEY = 'user_uid';
 const USER_TYPE_KEY = 'user_type'; // 'single' or 'business'
 const USER_NATIONAL_ID_KEY = 'user_national_id';
+
+// خيارات SecureStore لـ iOS
+const SECURE_STORE_OPTIONS = Platform.OS === 'ios' ? {
+  keychainAccessible: SecureStore.WHEN_UNLOCKED
+} : {};
 
 /**
  * خدمة إدارة تسجيل الدخول بالبصمة
@@ -19,8 +25,11 @@ class BiometricService {
    */
   async checkBiometricSupport() {
     try {
+      console.log('فحص دعم البصمة على', Platform.OS);
+
       // التحقق من توفر الهاردوير
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
+      console.log('hasHardware:', hasHardware);
 
       if (!hasHardware) {
         return {
@@ -31,6 +40,7 @@ class BiometricService {
 
       // التحقق من تسجيل بصمات في الجهاز
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+      console.log('isEnrolled:', isEnrolled);
 
       if (!isEnrolled) {
         return {
@@ -41,6 +51,7 @@ class BiometricService {
 
       // معرفة نوع البصمة المتاحة
       const supportedTypes = await LocalAuthentication.supportedAuthenticationTypesAsync();
+      console.log('supportedTypes:', supportedTypes);
 
       let biometricType = 'بصمة';
       if (supportedTypes.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
@@ -51,6 +62,8 @@ class BiometricService {
         biometricType = 'بصمة العين';
       }
 
+      console.log('biometricType:', biometricType);
+
       return {
         isSupported: true,
         biometricType,
@@ -60,7 +73,8 @@ class BiometricService {
       console.error('خطأ في فحص دعم البصمة:', error);
       return {
         isSupported: false,
-        message: 'حدث خطأ في التحقق من دعم البصمة'
+        message: 'حدث خطأ في التحقق من دعم البصمة',
+        error: error.message
       };
     }
   }
@@ -72,12 +86,26 @@ class BiometricService {
    */
   async authenticate(promptMessage = 'يرجى التحقق من هويتك') {
     try {
-      const result = await LocalAuthentication.authenticateAsync({
+      // خيارات مختلفة حسب المنصة
+      const options = Platform.OS === 'ios' ? {
         promptMessage,
         fallbackLabel: 'استخدام كلمة المرور',
+        cancelLabel: 'إلغاء',
         disableDeviceFallback: false,
-        cancelLabel: 'إلغاء'
-      });
+        // iOS specific
+        requireConfirmation: false
+      } : {
+        promptMessage,
+        fallbackLabel: 'استخدام كلمة المرور',
+        cancelLabel: 'إلغاء',
+        disableDeviceFallback: false
+      };
+
+      console.log('بدء التحقق من البصمة على', Platform.OS);
+
+      const result = await LocalAuthentication.authenticateAsync(options);
+
+      console.log('نتيجة التحقق:', result);
 
       if (result.success) {
         return {
@@ -85,9 +113,21 @@ class BiometricService {
           message: 'تم التحقق بنجاح'
         };
       } else {
+        let errorMessage = 'فشل التحقق من البصمة';
+
+        if (result.error === 'user_cancel') {
+          errorMessage = 'تم إلغاء العملية';
+        } else if (result.error === 'system_cancel') {
+          errorMessage = 'تم إلغاء العملية من النظام';
+        } else if (result.error === 'authentication_failed') {
+          errorMessage = 'فشل التحقق من البصمة';
+        } else if (result.error === 'lockout') {
+          errorMessage = 'تم قفل البصمة بسبب المحاولات الفاشلة';
+        }
+
         return {
           success: false,
-          message: 'فشل التحقق من البصمة',
+          message: errorMessage,
           error: result.error
         };
       }
@@ -146,13 +186,13 @@ class BiometricService {
         };
       }
 
-      // حفظ البيانات بشكل آمن
-      await SecureStore.setItemAsync(USER_UID_KEY, uid);
-      await SecureStore.setItemAsync(USER_TYPE_KEY, userType);
-      await SecureStore.setItemAsync(USER_NATIONAL_ID_KEY, userNationalId);
-      await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'true');
+      // حفظ البيانات بشكل آمن مع خيارات iOS
+      await SecureStore.setItemAsync(USER_UID_KEY, uid, SECURE_STORE_OPTIONS);
+      await SecureStore.setItemAsync(USER_TYPE_KEY, userType, SECURE_STORE_OPTIONS);
+      await SecureStore.setItemAsync(USER_NATIONAL_ID_KEY, userNationalId, SECURE_STORE_OPTIONS);
+      await SecureStore.setItemAsync(BIOMETRIC_ENABLED_KEY, 'true', SECURE_STORE_OPTIONS);
 
-      console.log('تم حفظ بيانات البصمة بنجاح:', { uid, userType, nationalId: userNationalId });
+      console.log('تم حفظ بيانات البصمة بنجاح على', Platform.OS, ':', { uid, userType, nationalId: userNationalId });
 
       return {
         success: true,
@@ -188,15 +228,24 @@ class BiometricService {
    */
   async getSavedCredentials() {
     try {
+      console.log('جلب بيانات البصمة المحفوظة من', Platform.OS);
+
       const enabled = await this.isBiometricEnabled();
 
       if (!enabled) {
+        console.log('البصمة غير مفعلة');
         return null;
       }
 
-      const uid = await SecureStore.getItemAsync(USER_UID_KEY);
-      const userType = await SecureStore.getItemAsync(USER_TYPE_KEY);
-      const nationalId = await SecureStore.getItemAsync(USER_NATIONAL_ID_KEY);
+      const uid = await SecureStore.getItemAsync(USER_UID_KEY, SECURE_STORE_OPTIONS);
+      const userType = await SecureStore.getItemAsync(USER_TYPE_KEY, SECURE_STORE_OPTIONS);
+      const nationalId = await SecureStore.getItemAsync(USER_NATIONAL_ID_KEY, SECURE_STORE_OPTIONS);
+
+      console.log('البيانات المجلوبة:', {
+        hasUid: !!uid,
+        hasUserType: !!userType,
+        hasNationalId: !!nationalId
+      });
 
       if (!uid || !userType || !nationalId) {
         console.log('لا توجد بيانات محفوظة كاملة');
@@ -304,12 +353,15 @@ class BiometricService {
    */
   async disableBiometric() {
     try {
-      await SecureStore.deleteItemAsync(BIOMETRIC_ENABLED_KEY);
-      await SecureStore.deleteItemAsync(USER_UID_KEY);
-      await SecureStore.deleteItemAsync(USER_TYPE_KEY);
-      await SecureStore.deleteItemAsync(USER_NATIONAL_ID_KEY);
+      console.log('إلغاء تفعيل البصمة على', Platform.OS);
 
-      console.log('تم إلغاء تفعيل البصمة وحذف جميع البيانات المحفوظة');
+      // حذف البيانات مع خيارات iOS
+      await SecureStore.deleteItemAsync(BIOMETRIC_ENABLED_KEY, SECURE_STORE_OPTIONS);
+      await SecureStore.deleteItemAsync(USER_UID_KEY, SECURE_STORE_OPTIONS);
+      await SecureStore.deleteItemAsync(USER_TYPE_KEY, SECURE_STORE_OPTIONS);
+      await SecureStore.deleteItemAsync(USER_NATIONAL_ID_KEY, SECURE_STORE_OPTIONS);
+
+      console.log('تم إلغاء تفعيل البصمة وحذف جميع البيانات المحفوظة بنجاح');
 
       return {
         success: true,
@@ -320,7 +372,7 @@ class BiometricService {
       return {
         success: false,
         message: 'حدث خطأ في إلغاء تفعيل البصمة',
-        error
+        error: error.message
       };
     }
   }
