@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { CommonActions } from "@react-navigation/native";
 import Button from "../../../common/components/ui/Button";
 import CustomHeader from "../../../common/components/CustomHeader";
 import { useBusinessWallet } from "../../../store/hooks";
@@ -11,7 +12,13 @@ const TransferSuccessScreen = ({ navigation, route }) => {
   const businessWallet = useBusinessWallet();
 
   const handleGoToDashboard = () => {
-    navigation.navigate("BusinessHome");
+    // Reset navigation stack to prevent going back to this screen
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: "BusinessTabs" }],
+      })
+    );
   };
 
   const balance = businessWallet?.balance
@@ -25,7 +32,7 @@ const TransferSuccessScreen = ({ navigation, route }) => {
     <View className="flex-1 bg-gray-50">
       <CustomHeader
         title="إيصال تحويل"
-        onBack={() => navigation.navigate("BusinessHome")}
+        onBack={handleGoToDashboard}
         backgroundColor="#0055aa"
         textColor="#FFFFFF"
         statusBarStyle="light-content"

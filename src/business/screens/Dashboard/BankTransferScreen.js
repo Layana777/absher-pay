@@ -75,33 +75,45 @@ const BankTransferScreen = ({ navigation }) => {
   };
 
   const handleConfirmTransfer = () => {
-    // Calculate new balance after deducting the transfer amount
-    const transferAmount = parseFloat(amount);
-    const currentBalance = businessWallet?.balance || 0;
-    const newBalance = currentBalance - transferAmount;
-
-    // Update the business wallet balance in Redux
-    dispatch(updateBusinessWalletBalance(newBalance));
-
-    console.log("Transfer confirmed:", {
-      amount: transferAmount,
-      previousBalance: currentBalance,
-      newBalance: newBalance,
-      bankAccount: linkedBank,
-    });
-
     // Close the confirmation modal
     setShowConfirmModal(false);
 
-    // Navigate to success screen
-    navigation.navigate("TransferSuccess", {
+    // Navigate to OTP verification screen
+    navigation.navigate("OtpVerification", {
       amount: amount,
-      bankName: linkedBank?.bankName,
-      iban: linkedBank?.ibanFormatted || linkedBank?.iban,
-    });
+      primaryColor: "#0055aa",
+      phoneNumber: user?.phone || "05xxxxxxxx",
+      title: "تأكيد التحويل البنكي",
+      description: "أدخل رمز التحقق المرسل إلى رقم جوالك",
+      onVerifySuccess: (otpCode) => {
+        console.log("OTP verified:", otpCode);
 
-    // Clear the amount input
-    setAmount("");
+        // Calculate new balance after deducting the transfer amount
+        const transferAmount = parseFloat(amount);
+        const currentBalance = businessWallet?.balance || 0;
+        const newBalance = currentBalance - transferAmount;
+
+        // Update the business wallet balance in Redux
+        dispatch(updateBusinessWalletBalance(newBalance));
+
+        console.log("Transfer confirmed:", {
+          amount: transferAmount,
+          previousBalance: currentBalance,
+          newBalance: newBalance,
+          bankAccount: linkedBank,
+        });
+
+        // Navigate to success screen
+        navigation.navigate("TransferSuccess", {
+          amount: amount,
+          bankName: linkedBank?.bankName,
+          iban: linkedBank?.ibanFormatted || linkedBank?.iban,
+        });
+
+        // Clear the amount input
+        setAmount("");
+      },
+    });
   };
 
   const handleCancelTransfer = () => {
@@ -279,7 +291,7 @@ const BankTransferScreen = ({ navigation }) => {
             </Text>
 
             {/* Bank Account Info */}
-            <View className="bg-gray-50 rounded-xl p-4 mb-4">
+            <View className="bg-gray-50 rounded-xl p-4 mb-4" style={{direction: "ltr"}}>
               <Text className="text-gray-500 text-xs text-right mb-2">
                 إلى الحساب البنكي
               </Text>
@@ -289,13 +301,13 @@ const BankTransferScreen = ({ navigation }) => {
             </View>
 
             {/* Bank Name */}
-            <View className="flex-row justify-between items-center mb-4">
+            <View className="flex-row justify-between items-center mb-4" style={{direction: "ltr"}}>
               <Text className="text-gray-500 text-sm">{linkedBank?.bankName || "مصرف الراجحي"}</Text>
               <Text className="text-gray-700 text-sm font-semibold">البنك</Text>
             </View>
 
             {/* Amount */}
-            <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center justify-between mb-4" style={{direction: "ltr"}}>
               <View className="flex-row items-center" style={{ direction: "ltr" }}>
                 <SvgIcons name="SARBlack" size={24} />
                 <Text className="text-gray-800 text-2xl font-bold ml-1">
@@ -306,8 +318,8 @@ const BankTransferScreen = ({ navigation }) => {
             </View>
 
             {/* Balance After Transfer */}
-            <View className="flex-row justify-between items-center mb-6">
-              <View className="flex-row items-center" style={{ direction: "ltr" }}>
+            <View className="flex-row justify-between items-center mb-6"  style={{ direction: "ltr" }}>
+              <View className="flex-row items-center">
                 <SvgIcons name="SARBlack" size={20} />
                 <Text className="text-gray-800 text-base font-bold ml-1">
                   {businessWallet?.balance
