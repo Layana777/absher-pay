@@ -26,19 +26,22 @@ const PaymentAITips = ({ primaryColor = "#0055aa" }) => {
         <View className="flex-1 ml-3">
           <View className="flex-row items-center mb-2">
             <View
-              className="w-8 h-8 rounded-full items-center justify-center ml-2"
+              className="w-8 h-8 rounded-full items-center justify-center ml-2 "
               style={{ backgroundColor: iconBgColor, direction: "ltr" }}
             >
               <Feather name={icon} size={16} color={iconColor} />
             </View>
             <Text className="text-sm font-bold text-gray-800">{title}</Text>
           </View>
-          <Text className="text-xs text-gray-600 leading-5 mb-2">
+          <Text className="text-xs text-gray-600 leading-5 mb-2 text-left">
             {description}
           </Text>
           {actionText && (
             <TouchableOpacity>
-              <Text className="text-xs font-bold" style={{ color: iconColor }}>
+              <Text
+                className="text-xs font-bold text-left"
+                style={{ color: iconColor }}
+              >
                 {actionText}
               </Text>
             </TouchableOpacity>

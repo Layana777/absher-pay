@@ -24,7 +24,7 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
   // Handle case where no payment data is provided
   if (!payment) {
     Alert.alert("خطأ", "لم يتم العثور على بيانات الدفعة", [
-      { text: "حسناً", onPress: () => navigation.goBack() }
+      { text: "حسناً", onPress: () => navigation.goBack() },
     ]);
     return null;
   }
@@ -51,8 +51,8 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         { text: "إلغاء", style: "cancel" },
         {
           text: "متابعة",
-          onPress: () => console.log("Proceeding to payment...")
-        }
+          onPress: () => console.log("Proceeding to payment..."),
+        },
       ]
     );
   };
@@ -62,30 +62,26 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
     console.log("Schedule Payment pressed");
     // TODO: Navigate to payment scheduling screen
     Alert.alert("جدولة الدفع", "سيتم إضافة خاصية جدولة الدفع قريباً", [
-      { text: "حسناً" }
+      { text: "حسناً" },
     ]);
   };
 
   // Handle Remind Later action
   const handleRemindLater = () => {
     console.log("Remind Later pressed");
-    Alert.alert(
-      "تذكير",
-      "سيتم تذكيرك بهذه الدفعة قبل موعد الاستحقاق",
-      [
-        {
-          text: "حسناً",
-          onPress: () => navigation.goBack()
-        }
-      ]
-    );
+    Alert.alert("تذكير", "سيتم تذكيرك بهذه الدفعة قبل موعد الاستحقاق", [
+      {
+        text: "حسناً",
+        onPress: () => navigation.goBack(),
+      },
+    ]);
   };
 
   // Handle Download PDF
   const handleDownloadPDF = () => {
     console.log("Download PDF pressed");
     Alert.alert("تحميل PDF", "سيتم تحميل الفاتورة بصيغة PDF", [
-      { text: "حسناً" }
+      { text: "حسناً" },
     ]);
   };
 
@@ -93,20 +89,20 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `فاتورة: ${payment.title}\nالمبلغ: ${totalAmount.toLocaleString("en-US")} ريال`,
-        title: 'مشاركة الفاتورة'
+        message: `فاتورة: ${
+          payment.title
+        }\nالمبلغ: ${totalAmount.toLocaleString("en-US")} ريال`,
+        title: "مشاركة الفاتورة",
       });
     } catch (error) {
-      console.error('Error sharing:', error);
+      console.error("Error sharing:", error);
     }
   };
 
   // Handle Set Reminder
   const handleSetReminder = () => {
     console.log("Set Reminder pressed");
-    Alert.alert("تذكير", "سيتم إضافة تذكير لهذه الدفعة", [
-      { text: "حسناً" }
-    ]);
+    Alert.alert("تذكير", "سيتم إضافة تذكير لهذه الدفعة", [{ text: "حسناً" }]);
   };
 
   return (
@@ -128,10 +124,7 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         )}
 
         {/* Payment details section */}
-        <PaymentInfoSection
-          payment={payment}
-          primaryColor={primaryColor}
-        />
+        <PaymentInfoSection payment={payment} primaryColor={primaryColor} />
 
         {/* Cost breakdown */}
         <PaymentBreakdownCard

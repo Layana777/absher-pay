@@ -11,16 +11,16 @@ import { Feather } from "@expo/vector-icons";
  */
 const PaymentWarningAlert = ({
   message = "قد تحتاج حسابًا غير أعمال - يحتفظ فقط بحساب لحراك الوزارات",
-  type = "warning"
+  type = "warning",
 }) => {
   const isWarning = type === "warning";
 
   return (
     <View
-      className="mx-4 mb-4 rounded-2xl p-4 flex-row items-start"
+      className="mx-4 mb-4 rounded-2xl p-4 flex-row items-start mt-3"
       style={{
         backgroundColor: isWarning ? "#FFF3F3" : "#F0F9FF",
-        direction: "rtl"
+        direction: "rtl",
       }}
     >
       <View className="ml-3">
@@ -31,7 +31,7 @@ const PaymentWarningAlert = ({
         />
       </View>
       <Text
-        className="flex-1 text-xs leading-5 text-right"
+        className="flex-1 text-xs leading-5 text-left mx-2"
         style={{ color: isWarning ? "#DC2626" : "#0055aa" }}
       >
         {message}
