@@ -5,6 +5,7 @@ import Button from "../../../common/components/ui/Button";
 import CustomHeader from "../../../common/components/CustomHeader";
 import { useBusinessWallet } from "../../../store/hooks";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { formatAmount } from "../../../common/utils";
 
 const TransferSuccessScreen = ({ navigation, route }) => {
   const { amount, bankName, iban } = route?.params || {};
@@ -22,7 +23,7 @@ const TransferSuccessScreen = ({ navigation, route }) => {
     : "0";
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
       <CustomHeader
         title="إيصال تحويل"
         onBack={() => navigation.navigate("BusinessHome")}
@@ -51,10 +52,13 @@ const TransferSuccessScreen = ({ navigation, route }) => {
           {/* Amount */}
           <View className="flex-row-reverse justify-between items-center mb-4 pb-4 border-b border-gray-100">
             <Text className="text-gray-500 text-sm">المبلغ المحول</Text>
-            <View className="flex-row items-center" style={{ direction: "ltr" }}>
+            <View
+              className="flex-row items-center"
+              style={{ direction: "ltr" }}
+            >
               <SvgIcons name="SARBlack" size={24} />
               <Text className="text-gray-800 text-xl font-bold ml-1">
-                {amount}
+                {formatAmount(amount)}
               </Text>
             </View>
           </View>
@@ -78,11 +82,12 @@ const TransferSuccessScreen = ({ navigation, route }) => {
           {/* New Balance */}
           <View className="flex-row-reverse justify-between items-center">
             <Text className="text-gray-500 text-sm">الرصيد الحالي</Text>
-            <View className="flex-row items-center" style={{ direction: "ltr" }}>
+            <View
+              className="flex-row items-center"
+              style={{ direction: "ltr" }}
+            >
               <SvgIcons name="SARBlack" size={20} />
-              <Text className="text-gray-800 text-lg font-bold">
-                {balance}
-              </Text>
+              <Text className="text-gray-800 text-lg font-bold">{balance}</Text>
             </View>
           </View>
         </View>

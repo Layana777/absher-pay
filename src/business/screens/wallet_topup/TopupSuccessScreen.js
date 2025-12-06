@@ -52,13 +52,13 @@ const TopupSuccessScreen = ({ navigation, route }) => {
     );
   };
 
-  const transactionDate = new Date().toLocaleDateString("ar-SA", {
+  const transactionDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 
-  const transactionTime = new Date().toLocaleTimeString("ar-SA", {
+  const transactionTime = new Date().toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
   });

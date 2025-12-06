@@ -70,7 +70,7 @@ const TopupAmountScreen = ({ navigation, route }) => {
           <View className="flex-1 px-6 pt-8">
             {/* Amount Input Section */}
             <View className="bg-white rounded-2xl p-6 mb-6 border border-gray-100">
-              <Text className="text-gray-400 text-sm text-right mb-3">
+              <Text className="text-gray-400 text-sm text-left mb-3">
                 ادخال المبلغ
               </Text>
 

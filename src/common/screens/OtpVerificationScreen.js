@@ -240,16 +240,18 @@ const OtpVerificationScreen = ({ navigation, route }) => {
       Alert.alert(
         "خطأ",
         "معلومات المعاملة غير مكتملة. يرجى المحاولة مرة أخرى.",
-        [{
-          text: "حسناً",
-          onPress: () => {
-            // Reset lastSubmittedOtp to allow retry
-            setLastSubmittedOtp("");
-            if (navigation.canGoBack()) {
-              navigation.goBack();
-            }
-          }
-        }]
+        [
+          {
+            text: "حسناً",
+            onPress: () => {
+              // Reset lastSubmittedOtp to allow retry
+              setLastSubmittedOtp("");
+              if (navigation.canGoBack()) {
+                navigation.goBack();
+              }
+            },
+          },
+        ]
       );
       return;
     }
@@ -283,7 +285,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
           }
         }}
         statusBarBackgroundColor="#F3F4F6"
-        showBackButton={true}
+        showBackButton={false}
       />
 
       <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>

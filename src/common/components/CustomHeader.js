@@ -4,13 +4,13 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
-StatusBar,
+  StatusBar,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 
 const CustomHeader = ({
   title,
-  onBack, 
+  onBack,
   showBackButton = true,
   backgroundColor = "#FFFFFF",
   textColor = "#000000",
@@ -35,17 +35,14 @@ const CustomHeader = ({
           </View>
 
           {/* Center - Title */}
-          <Text
-            className="text-lg font-semibold"
-            style={{ color: textColor }}
-          >
+          <Text className="text-lg font-semibold" style={{ color: textColor }}>
             {title}
           </Text>
 
           {/* Right Side - Back Button */}
           {showBackButton ? (
             <TouchableOpacity onPress={onBack} className="p-2">
-              <Feather name="arrow-right" size={24} color={textColor} />
+              <Feather name="arrow-left" size={24} color={textColor} />
             </TouchableOpacity>
           ) : (
             <View style={{ width: 40 }} />
