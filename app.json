@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "نحتاج إلى صلاحية الوصول إلى Face ID أو Touch ID لتمكينك من تسجيل الدخول السريع والآمن إلى التطبيق"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,10 +24,23 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "supportsRtl": true
+      "supportsRtl": true,
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "السماح لتطبيق محفظة أبشر باستخدام Face ID أو Touch ID لتسجيل الدخول الآمن"
+        }
+      ],
+      "expo-secure-store"
+    ]
   }
 }

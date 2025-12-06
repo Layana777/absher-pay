@@ -5,3 +5,4 @@ export * from './walletService';
 export * from './transactionService';
 export * from './billsService';
 export * from './bankAccountService';
+export { default as BiometricService } from './BiometricService';

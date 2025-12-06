@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,19 +11,100 @@ import { Feather } from "@expo/vector-icons";
 import { useAppSelector, useAppDispatch } from "../../../store/hooks";
 import { selectUser, clearUser } from "../../../store/slices/userSlice";
 import CustomHeader from "../../../common/components/CustomHeader";
+import BiometricService from "../../../common/services/BiometricService";
 
 const SettingsScreen = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
 
   // Toggle states
-  const [biometricEnabled, setBiometricEnabled] = useState(true);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricSupported, setBiometricSupported] = useState(false);
+  const [biometricType, setBiometricType] = useState("بصمة");
   const [paymentFacilitiesEnabled, setPaymentFacilitiesEnabled] =
     useState(true);
   const [smartPoliciesEnabled, setSmartPoliciesEnabled] = useState(true);
   const [rewardsEnabled, setRewardsEnabled] = useState(true);
   const [instantPaymentEnabled, setInstantPaymentEnabled] = useState(false);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+
+  // فحص حالة البصمة عند تحميل الشاشة
+  useEffect(() => {
+    checkBiometricStatus();
+  }, []);
+
+  const checkBiometricStatus = async () => {
+    try {
+      // فحص دعم الجهاز للبصمة
+      const support = await BiometricService.checkBiometricSupport();
+      setBiometricSupported(support.isSupported);
+
+      if (support.isSupported) {
+        setBiometricType(support.biometricType);
+
+        // فحص ما إذا كانت البصمة مفعلة
+        const enabled = await BiometricService.isBiometricEnabled();
+        setBiometricEnabled(enabled);
+      }
+    } catch (error) {
+      console.error("خطأ في فحص حالة البصمة:", error);
+    }
+  };
+
+  const handleBiometricToggle = async (value) => {
+    if (!biometricSupported) {
+      Alert.alert(
+        "غير متاح",
+        "الجهاز لا يدعم البصمة أو لم يتم تسجيل بصمات على الجهاز"
+      );
+      return;
+    }
+
+    if (value) {
+      // تفعيل البصمة
+      if (!user?.uid) {
+        Alert.alert("خطأ", "لم يتم العثور على معلومات المستخدم");
+        return;
+      }
+
+      const result = await BiometricService.enableBiometric(user.uid, "business");
+
+      if (result.success) {
+        setBiometricEnabled(true);
+        Alert.alert(
+          "تم بنجاح",
+          `تم تفعيل ${biometricType} بنجاح. يمكنك الآن استخدامها لتسجيل الدخول`
+        );
+      } else {
+        Alert.alert("فشل التفعيل", result.message);
+      }
+    } else {
+      // إلغاء البصمة
+      Alert.alert(
+        "إلغاء البصمة",
+        `هل أنت متأكد من إلغاء تفعيل ${biometricType}؟ ستحتاج لإدخال كلمة المرور في المرات القادمة`,
+        [
+          {
+            text: "إلغاء",
+            style: "cancel",
+          },
+          {
+            text: "تأكيد",
+            style: "destructive",
+            onPress: async () => {
+              const result = await BiometricService.disableBiometric();
+              if (result.success) {
+                setBiometricEnabled(false);
+                Alert.alert("تم بنجاح", `تم إلغاء تفعيل ${biometricType}`);
+              } else {
+                Alert.alert("خطأ", result.message);
+              }
+            },
+          },
+        ]
+      );
+    }
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -37,7 +118,9 @@ const SettingsScreen = () => {
         {
           text: "تسجيل الخروج",
           style: "destructive",
-          onPress: () => {
+          onPress: async () => {
+            // حذف بيانات البصمة عند تسجيل الخروج
+            await BiometricService.disableBiometric();
             dispatch(clearUser());
             // Navigate to login or auth screen
             // navigation.navigate('Auth');
@@ -143,12 +226,14 @@ const SettingsScreen = () => {
         {/* Notifications Section */}
         <SectionHeader title="الإشعارات" />
         <View className="bg-white">
-          <MenuItemWithToggle
-            icon="shield"
-            title="التحقق البيومتري"
-            value={biometricEnabled}
-            onValueChange={setBiometricEnabled}
-          />
+          {biometricSupported && (
+            <MenuItemWithToggle
+              icon="shield"
+              title={`التحقق ب${biometricType}`}
+              value={biometricEnabled}
+              onValueChange={handleBiometricToggle}
+            />
+          )}
           <MenuItemWithToggle
             icon="bell"
             title="تسهيلات المدفوعات"
