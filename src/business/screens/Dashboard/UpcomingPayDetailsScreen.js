@@ -148,13 +148,18 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         {/* Overdue penalty alert */}
         {enrichedPayment.penaltyInfo && (
           <PaymentWarningAlert
-            message={`غرامة تأخير: ${enrichedPayment.penaltyInfo.lateFee.toFixed(2)} ريال (${enrichedPayment.penaltyInfo.daysOverdue} أيام)`}
+            message={`غرامة تأخير: ${enrichedPayment.penaltyInfo.lateFee.toFixed(
+              2
+            )} ريال (${enrichedPayment.penaltyInfo.daysOverdue} أيام)`}
             type="warning"
           />
         )}
 
         {/* Payment details section */}
-        <PaymentInfoSection payment={enrichedPayment} primaryColor={primaryColor} />
+        <PaymentInfoSection
+          payment={enrichedPayment}
+          primaryColor={primaryColor}
+        />
 
         {/* Cost breakdown */}
         <PaymentBreakdownCard
