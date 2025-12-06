@@ -4,11 +4,12 @@ import { Feather } from "@expo/vector-icons";
 
 /**
  * Payment Breakdown Card Component
- * Shows cost breakdown including base amount, VAT, service fees, and total
+ * Shows cost breakdown including base amount, VAT, service fees, penalty, and total
  *
  * @param {number} amount - Base payment amount
  * @param {number} vatAmount - VAT amount (calculated as amount * 0.15)
  * @param {number} serviceFee - Service fee amount (default: 0)
+ * @param {number} penaltyAmount - Penalty amount for overdue bills (default: 0)
  * @param {number} totalAmount - Total amount to pay
  * @param {string} primaryColor - Primary brand color (default: "#0055aa")
  */
@@ -16,6 +17,7 @@ const PaymentBreakdownCard = ({
   amount,
   vatAmount,
   serviceFee = 0,
+  penaltyAmount = 0,
   totalAmount,
   primaryColor = "#0055aa",
 }) => {
@@ -60,6 +62,11 @@ const PaymentBreakdownCard = ({
       <View className="bg-gray-50 rounded-2xl p-4 mb-3">
         {/* Base Amount */}
         <BreakdownRow label="المبلغ الأساسي" value={amount} />
+
+        {/* Penalty (if applicable) */}
+        {penaltyAmount > 0 && (
+          <BreakdownRow label="غرامة التأخير" value={penaltyAmount} isSubdued />
+        )}
 
         {/* VAT (15% for Saudi Arabia)
         <BreakdownRow label="ضريبة القيمة المضافة (%15)" value={vatAmount} isSubdued /> */}

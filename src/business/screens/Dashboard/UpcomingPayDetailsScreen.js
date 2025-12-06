@@ -15,7 +15,7 @@ import {
  *
  * @param {Object} navigation - React Navigation object
  * @param {Object} route - Route params containing payment data
- * @param {Object} route.params.payment - Payment object
+ * @param {Object} route.params.payment - Payment object (can include billData)
  * @param {string} route.params.primaryColor - Primary brand color
  */
 const UpcomingPayDetailsScreen = ({ navigation, route }) => {
@@ -29,11 +29,33 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
     return null;
   }
 
-  // Calculate payment breakdown (Saudi VAT is 15%)
-  const vatRate = 0.15;
-  const vatAmount = Math.round(payment.amount * vatRate);
-  const serviceFee = 0; // Can be adjusted based on payment type
-  const totalAmount = payment.amount + vatAmount + serviceFee;
+  // Extract bill data if available
+  const billData = payment.billData || null;
+
+  // Use bill amount if available, otherwise use payment amount
+  const baseAmount = billData?.amount || payment.amount;
+  const penaltyAmount = billData?.penaltyInfo?.lateFee || 0;
+  const amountWithPenalty = baseAmount + penaltyAmount;
+
+  // Calculate payment breakdown
+  // Note: Government bills typically don't have VAT, but keeping for compatibility
+  const vatRate = 0;
+  const vatAmount = 0;
+  const serviceFee = 0;
+  const totalAmount = amountWithPenalty + vatAmount + serviceFee;
+
+  // Prepare payment object with bill information
+  const enrichedPayment = {
+    ...payment,
+    amount: totalAmount,
+    // Add bill-specific fields for display
+    referenceNumber: billData?.referenceNumber || "N/A",
+    dueDate: billData?.dueDate || Date.now(),
+    ministry: billData?.ministryName?.ar || "غير محدد",
+    category: billData?.category || "عام",
+    status: billData?.status || "unpaid",
+    penaltyInfo: billData?.penaltyInfo || null,
+  };
 
   // Handle Pay Now action
   const handlePayNow = () => {
@@ -110,28 +132,37 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Header with main payment info */}
         <UpcomingPayHeaderDetails
-          payment={payment}
+          payment={enrichedPayment}
           primaryColor={primaryColor}
           onBack={() => navigation.goBack()}
         />
 
         {/* Warning Alert for urgent payments */}
-        {payment.isUrgent && (
+        {enrichedPayment.isUrgent && (
           <PaymentWarningAlert
             message="قد تحتاج حساباً أعمال أو تأخير سداد لحراك الوزارات"
             type="warning"
           />
         )}
 
+        {/* Overdue penalty alert */}
+        {enrichedPayment.penaltyInfo && (
+          <PaymentWarningAlert
+            message={`غرامة تأخير: ${enrichedPayment.penaltyInfo.lateFee.toFixed(2)} ريال (${enrichedPayment.penaltyInfo.daysOverdue} أيام)`}
+            type="warning"
+          />
+        )}
+
         {/* Payment details section */}
-        <PaymentInfoSection payment={payment} primaryColor={primaryColor} />
+        <PaymentInfoSection payment={enrichedPayment} primaryColor={primaryColor} />
 
         {/* Cost breakdown */}
         <PaymentBreakdownCard
-          amount={payment.amount}
+          amount={baseAmount}
           vatAmount={vatAmount}
           serviceFee={serviceFee}
           totalAmount={totalAmount}
+          penaltyAmount={penaltyAmount}
           primaryColor={primaryColor}
         />
 
@@ -152,7 +183,7 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
           onSchedule={handleSchedulePayment}
           onRemindLater={handleRemindLater}
           primaryColor={primaryColor}
-          isUrgent={payment.isUrgent}
+          isUrgent={enrichedPayment.isUrgent}
         />
 
         {/* Bottom padding for scrolling */}

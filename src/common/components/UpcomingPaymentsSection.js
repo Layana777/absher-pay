@@ -1,57 +1,90 @@
-import React from "react";
-import { View, Text, TouchableOpacity, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import UpcomingPaymentCard from "./UpcomingPaymentCard";
+import { getUserBills, getDaysUntilDue } from "../services/billsService";
+
+/**
+ * Map bill data to payment card format
+ */
+const mapBillToPayment = (bill) => {
+  const daysUntilDue = getDaysUntilDue(bill);
+  const isUrgent = daysUntilDue <= 7 && daysUntilDue >= 0;
+
+  // Format description based on days until due
+  let description = "";
+  if (daysUntilDue < 0) {
+    description = `متأخر ${Math.abs(daysUntilDue)} يوم`;
+  } else if (daysUntilDue === 0) {
+    description = "مستحق اليوم";
+  } else if (daysUntilDue <= 7) {
+    description = `${daysUntilDue} أيام متبقية`;
+  } else {
+    description = `${daysUntilDue} يوم`;
+  }
+
+  return {
+    id: bill.id,
+    title: bill.serviceName.ar,
+    description,
+    amount: bill.penaltyInfo?.totalWithPenalty || bill.amount,
+    icon: bill.category || "file-text",
+    iconColor: isUrgent ? "#dc2626" : "#0055aa",
+    iconBgColor: isUrgent ? "bg-red-50" : "bg-blue-50",
+    isUrgent,
+    // Store original bill data for details screen
+    billData: bill,
+  };
+};
 
 /**
  * Reusable Upcoming Payments Section Component
- * @param {Array} payments - Array of payment objects
+ * @param {string} userId - User ID to fetch bills for
+ * @param {Array} payments - Array of payment objects (optional, will fetch if not provided)
  * @param {Function} onViewAll - Callback when "View All" is pressed
  * @param {Function} onPaymentPress - Callback when a payment card is pressed
  * @param {string} title - Section title (default: "المدفوعات القادمة")
  * @param {boolean} showViewAll - Whether to show "View All" button (default: true)
  */
 const UpcomingPaymentsSection = ({
+  userId,
   payments = [],
   onViewAll,
   onPaymentPress,
   title = "المدفوعات القادمة",
   showViewAll = true,
 }) => {
-  // Default sample data if no payments provided
-  const defaultPayments = [
-    {
-      id: "1",
-      title: "تجديد إقامة العمالة",
-      description: "  ذا اسبوع • 13 ",
-      amount: 6500,
-      icon: "users",
-      iconColor: "#dc2626",
-      iconBgColor: "bg-red-50",
-      isUrgent: true,
-    },
-    {
-      id: "2",
-      title: "رسوم الغرفة",
-      description: "15 يوم • 3 أيام",
-      amount: 2800,
-      icon: "file-text",
-      iconColor: "#0055aa",
-      iconBgColor: "bg-blue-50",
-      isUrgent: false,
-    },
-    {
-      id: "3",
-      title: "تجديد السجل التجاري",
-      description: "22 يوم",
-      amount: 1200,
-      icon: "file",
-      iconColor: "#0055aa",
-      iconBgColor: "bg-blue-50",
-      isUrgent: false,
-    },
-  ];
+  const [bills, setBills] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const displayPayments = payments.length > 0 ? payments : defaultPayments;
+  useEffect(() => {
+    // Only fetch if no payments provided and userId is available
+    if (payments.length === 0 && userId) {
+      fetchUpcomingBills();
+    }
+  }, [userId]);
+
+  const fetchUpcomingBills = async () => {
+    try {
+      setLoading(true);
+      const allBills = await getUserBills(userId);
+
+      // Filter for unpaid and upcoming bills, sort by due date, limit to 3
+      const upcomingBills = allBills
+        .filter((bill) => bill.status === "unpaid" || bill.status === "upcoming")
+        .sort((a, b) => a.dueDate - b.dueDate)
+        .slice(0, 3)
+        .map(mapBillToPayment);
+
+      setBills(upcomingBills);
+    } catch (error) {
+      console.error("Error fetching bills:", error);
+      setBills([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const displayPayments = payments.length > 0 ? payments : bills;
 
   return (
     <View className=" p-8 mb-6" style={{ direction: "rtl" }}>
@@ -67,14 +100,28 @@ const UpcomingPaymentsSection = ({
         )}
       </View>
 
+      {/* Loading State */}
+      {loading && (
+        <View className="py-8 items-center">
+          <ActivityIndicator size="large" color="#0055aa" />
+        </View>
+      )}
+
       {/* Payment Cards */}
-      {displayPayments.map((payment) => (
+      {!loading && displayPayments.length > 0 && displayPayments.map((payment) => (
         <UpcomingPaymentCard
           key={payment.id}
           payment={payment}
           onPress={() => onPaymentPress && onPaymentPress(payment)}
         />
       ))}
+
+      {/* Empty State */}
+      {!loading && displayPayments.length === 0 && (
+        <View className="py-8 items-center">
+          <Text className="text-gray-500 text-center">لا توجد فواتير قادمة</Text>
+        </View>
+      )}
     </View>
   );
 };
