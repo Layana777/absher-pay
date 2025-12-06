@@ -14,9 +14,10 @@ import { useDispatch } from "react-redux";
 import CustomHeader from "../../../common/components/CustomHeader";
 import Button from "../../../common/components/ui/Button";
 import SvgIcons from "../../../common/components/SvgIcons";
-import { useBusinessWallet } from "../../../store/hooks";
+import { useBusinessWallet, useUser } from "../../../store/hooks";
 import { SIZES } from "../../../common/constants/sizes";
 import { addBankAccount } from "../../../store/slices/bankAccountsSlice";
+import { createBankAccount } from "../../../common/services/bankAccountService";
 
 // Saudi Banks List with logos
 const SAUDI_BANKS = [
@@ -72,11 +73,13 @@ const SAUDI_BANKS = [
 
 const AddBankAccountScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const user = useUser();
   const [selectedBank, setSelectedBank] = useState(null);
   const [iban, setIban] = useState("");
   const [accountOwner, setAccountOwner] = useState("");
   const [showBankModal, setShowBankModal] = useState(false);
   const [ibanError, setIbanError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   // Get business wallet data
   const businessWallet = useBusinessWallet();
@@ -177,31 +180,52 @@ const AddBankAccountScreen = ({ navigation }) => {
     setIbanError(error);
   };
 
-  const handleSave = () => {
-    // Clean IBAN by removing spaces before saving
-    const cleanIban = iban.replace(/\s/g, '');
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
 
-    // Prepare bank account data
-    const bankAccountData = {
-      bankName: selectedBank?.name,
-      bankNameEn: selectedBank?.nameEn,
-      bankLogo: selectedBank?.logo,
-      iban: cleanIban,
-      ibanFormatted: iban, // Keep formatted version for display
-      accountOwner,
-      accountNumber: cleanIban.substring(cleanIban.length - 4), // Last 4 digits
-    };
+      // Clean IBAN by removing spaces before saving
+      const cleanIban = iban.replace(/\s/g, '');
 
-    // Dispatch action to add bank account to Redux store
-    dispatch(addBankAccount(bankAccountData));
+      // Prepare bank account data
+      const bankAccountData = {
+        bankName: selectedBank?.name,
+        bankNameEn: selectedBank?.nameEn,
+        bankLogo: selectedBank?.logo,
+        iban: cleanIban,
+        ibanFormatted: iban, // Keep formatted version for display
+        accountOwner,
+        accountNumber: cleanIban.substring(cleanIban.length - 4), // Last 4 digits
+        isVerified: true,
+        isSelected: true, // Mark as selected by default
+      };
 
-    console.log("Bank account added to Redux:", bankAccountData);
+      // Save to Firebase
+      const firebaseResult = await createBankAccount(user?.uid, bankAccountData);
 
-    // Navigate to success screen with bank details
-    navigation.navigate("BankAccountSuccess", {
-      bankName: selectedBank?.name,
-      iban: iban, // Keep formatted version for display
-    });
+      if (firebaseResult.success) {
+        console.log("Bank account saved to Firebase:", firebaseResult.data);
+
+        // Dispatch action to add bank account to Redux store
+        dispatch(addBankAccount(firebaseResult.data));
+
+        console.log("Bank account added to Redux:", firebaseResult.data);
+
+        // Navigate to success screen with bank details
+        navigation.navigate("BankAccountSuccess", {
+          bankName: selectedBank?.name,
+          iban: iban, // Keep formatted version for display
+        });
+      } else {
+        console.error("Failed to save bank account to Firebase:", firebaseResult.error);
+        alert("حدث خطأ أثناء حفظ الحساب البنكي. يرجى المحاولة مرة أخرى.");
+      }
+    } catch (error) {
+      console.error("Error saving bank account:", error);
+      alert("حدث خطأ أثناء حفظ الحساب البنكي. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const selectBank = (bank) => {
@@ -346,10 +370,10 @@ const AddBankAccountScreen = ({ navigation }) => {
 
           {/* Save Button */}
           <Button
-            title="حفظ التغييرات"
+            title={isLoading ? "جاري الحفظ..." : "حفظ التغييرات"}
             onPress={handleSave}
             variant="business-primary"
-            disabled={!selectedBank || !iban || !accountOwner || iban.replace(/\s/g, '').length !== 24 || !!ibanError}
+            disabled={isLoading || !selectedBank || !iban || !accountOwner || iban.replace(/\s/g, '').length !== 24 || !!ibanError}
             style={{ width: '100%' }}
           />
         </View>
@@ -450,12 +474,13 @@ const AddBankAccountScreen = ({ navigation }) => {
                     height: 44,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    direction:"rtl"
                   }}>
                     {item.logo ? (
                       <Image
                         source={item.logo}
-                        style={{ width: 32, height: 32 }}
+                        style={{ width: 32, height: 32, direction:"rtl" }}
                         resizeMode="contain"
                       />
                     ) : (

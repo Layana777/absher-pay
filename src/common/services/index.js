@@ -4,3 +4,4 @@ export * from './authService';
 export * from './walletService';
 export * from './transactionService';
 export * from './billsService';
+export * from './bankAccountService';

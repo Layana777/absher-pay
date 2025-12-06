@@ -65,6 +65,15 @@ const bankAccountsSlice = createSlice({
       }
     },
 
+    // Set bank accounts from Firebase
+    setBankAccounts: (state, action) => {
+      state.accounts = action.payload;
+
+      // Set the first account with isSelected: true as selected, or first account if none selected
+      const selectedAccount = state.accounts.find(acc => acc.isSelected) || state.accounts[0] || null;
+      state.selectedAccount = selectedAccount;
+    },
+
     // Clear all bank accounts
     clearBankAccounts: (state) => {
       state.accounts = [];
@@ -78,6 +87,7 @@ export const {
   removeBankAccount,
   selectBankAccount,
   updateBankAccount,
+  setBankAccounts,
   clearBankAccounts,
 } = bankAccountsSlice.actions;
 

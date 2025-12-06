@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,10 @@ import CustomHeader from "../../../common/components/CustomHeader";
 import Button from "../../../common/components/ui/Button";
 import LinkedBankAccountsModal from "../../components/LinkedBankAccountsModal";
 import { updateBusinessWalletBalance } from "../../../store/slices/walletSlice";
+import { setBankAccounts } from "../../../store/slices/bankAccountsSlice";
+import { createTransaction } from "../../../common/services/transactionService";
+import { updateWalletBalance } from "../../../common/services/walletService";
+import { getBankAccountsByUserId } from "../../../common/services/bankAccountService";
 
 // Bank logos mapping
 const bankLogos = {
@@ -61,6 +65,28 @@ const BankTransferScreen = ({ navigation }) => {
 
   const quickAmounts = [100, 500, 1000, 5000];
 
+  // Fetch bank accounts from Firebase on mount
+  useEffect(() => {
+    const loadBankAccounts = async () => {
+      if (!user?.uid) return;
+
+      try {
+        const result = await getBankAccountsByUserId(user.uid);
+
+        if (result.success && result.data) {
+          console.log("Bank accounts loaded from Firebase:", result.data);
+          dispatch(setBankAccounts(result.data));
+        } else {
+          console.log("No bank accounts found in Firebase");
+        }
+      } catch (error) {
+        console.error("Error loading bank accounts from Firebase:", error);
+      }
+    };
+
+    loadBankAccounts();
+  }, [user?.uid, dispatch]);
+
   const handleQuickAmount = (value) => {
     setAmount(value.toString());
   };
@@ -85,33 +111,81 @@ const BankTransferScreen = ({ navigation }) => {
       phoneNumber: user?.phone || "05xxxxxxxx",
       title: "تأكيد التحويل البنكي",
       description: "أدخل رمز التحقق المرسل إلى رقم جوالك",
-      onVerifySuccess: (otpCode) => {
+      onVerifySuccess: async (otpCode) => {
         console.log("OTP verified:", otpCode);
 
-        // Calculate new balance after deducting the transfer amount
-        const transferAmount = parseFloat(amount);
-        const currentBalance = businessWallet?.balance || 0;
-        const newBalance = currentBalance - transferAmount;
+        try {
+          // Calculate new balance after deducting the transfer amount
+          const transferAmount = parseFloat(amount);
+          const currentBalance = businessWallet?.balance || 0;
+          const newBalance = currentBalance - transferAmount;
 
-        // Update the business wallet balance in Redux
-        dispatch(updateBusinessWalletBalance(newBalance));
+          // Prepare bank transfer details for Firebase
+          const bankTransferDetails = {
+            bankName: linkedBank?.bankName,
+            iban: linkedBank?.iban,
+            ibanFormatted: linkedBank?.ibanFormatted,
+            accountNumber: linkedBank?.accountNumber,
+            accountOwner: linkedBank?.accountOwner,
+          };
 
-        console.log("Transfer confirmed:", {
-          amount: transferAmount,
-          previousBalance: currentBalance,
-          newBalance: newBalance,
-          bankAccount: linkedBank,
-        });
+          // Create transfer-out transaction in Firebase
+          const transactionData = {
+            userId: user?.uid,
+            type: "transfer_out",
+            category: "transfer",
+            amount: -Math.abs(parseFloat(transferAmount.toFixed(2))),
+            balanceBefore: parseFloat(currentBalance.toFixed(2)),
+            balanceAfter: parseFloat((currentBalance - transferAmount).toFixed(2)),
+            bankTransferDetails,
+            estimatedArrival: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+            descriptionAr: `تحويل بنكي إلى ${linkedBank?.bankName}`,
+            descriptionEn: `Bank Transfer to ${linkedBank?.bankName}`,
+          };
 
-        // Navigate to success screen
-        navigation.navigate("TransferSuccess", {
-          amount: amount,
-          bankName: linkedBank?.bankName,
-          iban: linkedBank?.ibanFormatted || linkedBank?.iban,
-        });
+          const transactionResult = await createTransaction(
+            businessWallet?.id,
+            transactionData
+          );
 
-        // Clear the amount input
-        setAmount("");
+          if (transactionResult.success) {
+            console.log("Transaction saved to Firebase:", transactionResult.data);
+
+            // Update the business wallet balance in Redux
+            dispatch(updateBusinessWalletBalance(newBalance));
+
+            // Sync wallet balance to Firebase
+            await updateWalletBalance(businessWallet?.id, newBalance);
+
+            console.log("Transfer confirmed:", {
+              amount: transferAmount,
+              previousBalance: currentBalance,
+              newBalance: newBalance,
+              bankAccount: linkedBank,
+              transactionId: transactionResult.data.id,
+              referenceNumber: transactionResult.data.referenceNumber,
+            });
+
+            // Navigate to success screen
+            navigation.navigate("TransferSuccess", {
+              amount: amount,
+              bankName: linkedBank?.bankName,
+              iban: linkedBank?.ibanFormatted || linkedBank?.iban,
+              transactionId: transactionResult.data.id,
+              referenceNumber: transactionResult.data.referenceNumber,
+            });
+
+            // Clear the amount input
+            setAmount("");
+          } else {
+            console.error("Failed to save transaction:", transactionResult.error);
+            // You might want to show an error message to the user here
+            alert("حدث خطأ أثناء حفظ المعاملة. يرجى المحاولة مرة أخرى.");
+          }
+        } catch (error) {
+          console.error("Error processing transfer:", error);
+          alert("حدث خطأ أثناء معالجة التحويل. يرجى المحاولة مرة أخرى.");
+        }
       },
     });
   };
