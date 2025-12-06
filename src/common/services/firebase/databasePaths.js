@@ -14,4 +14,9 @@ export const DB_PATHS = {
   WALLET_TRANSACTIONS: (walletId) => `transactions/${walletId}`,
   TRANSACTION: (walletId, transactionId) => `transactions/${walletId}/${transactionId}`,
   USER_TRANSACTIONS: (userId) => `transactions/user/${userId}`,
+
+  // Bank Accounts
+  BANK_ACCOUNTS: 'bankAccounts',
+  USER_BANK_ACCOUNTS: (userId) => `bankAccounts/${userId}`,
+  BANK_ACCOUNT: (userId, accountId) => `bankAccounts/${userId}/${accountId}`,
 };

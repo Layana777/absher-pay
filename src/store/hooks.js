@@ -12,7 +12,8 @@ import {
   selectAllBankAccounts,
   selectSelectedBankAccount,
   selectBankAccountsCount,
-  selectHasBankAccounts
+  selectHasBankAccounts,
+  setBankAccounts
 } from './slices/bankAccountsSlice';
 
 // Custom hooks for better TypeScript support (even in JavaScript, these are helpful)

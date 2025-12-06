@@ -9,7 +9,7 @@ import SvgIcons from "../../../common/components/SvgIcons";
 import { formatAmount } from "../../../common/utils";
 
 const TransferSuccessScreen = ({ navigation, route }) => {
-  const { amount, bankName, iban } = route?.params || {};
+  const { amount, bankName, iban, transactionId, referenceNumber } = route?.params || {};
   const businessWallet = useBusinessWallet();
 
   const handleGoToDashboard = () => {
@@ -87,7 +87,7 @@ const TransferSuccessScreen = ({ navigation, route }) => {
           </View>
 
           {/* New Balance */}
-          <View className="flex-row-reverse justify-between items-center">
+          <View className="flex-row-reverse justify-between items-center mb-4 pb-4 border-b border-gray-100">
             <Text className="text-gray-500 text-sm">الرصيد الحالي</Text>
             <View
               className="flex-row items-center"
@@ -97,6 +97,26 @@ const TransferSuccessScreen = ({ navigation, route }) => {
               <Text className="text-gray-800 text-lg font-bold">{balance}</Text>
             </View>
           </View>
+
+          {/* Reference Number */}
+          {referenceNumber && (
+            <View className="flex-row-reverse justify-between items-center mb-4 pb-4 border-b border-gray-100">
+              <Text className="text-gray-500 text-sm">رقم المرجع</Text>
+              <Text className="text-gray-800 text-sm font-mono font-semibold">
+                {referenceNumber}
+              </Text>
+            </View>
+          )}
+
+          {/* Transaction ID */}
+          {transactionId && (
+            <View className="flex-row-reverse justify-between items-center">
+              <Text className="text-gray-500 text-sm">رقم المعاملة</Text>
+              <Text className="text-gray-800 text-xs font-mono">
+                {transactionId.slice(-12)}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Buttons */}
