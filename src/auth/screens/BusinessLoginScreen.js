@@ -163,7 +163,7 @@ const BusinessLoginScreen = ({ navigation }) => {
                 {/* Text Section */}
                 <View className="flex-1 mx-4">
                   <Text className="text-sm text-gray-700 text-right leading-5">
-                    تسجيل الدخول بالهوية الوطنية{"\n"}
+                    تسجيل الدخول بالبصمة{"\n"}
                     آمن وسريع عبر الضغط
                   </Text>
                 </View>
@@ -180,7 +180,7 @@ const BusinessLoginScreen = ({ navigation }) => {
 
               {/* Digital ID Login Button */}
               <Button
-                title="الدخول بالهوية الرقمية"
+                title="الدخول   بالبصمه "
                 onPress={handleDigitalIdLogin}
                 variant="business-primary"
                 size="small"
