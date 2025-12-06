@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { formatDate } from "../../../common/utils";
 
 /**
  * Payment Information Section Component
@@ -18,27 +19,6 @@ import { Feather } from "@expo/vector-icons";
  */
 const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
   const billData = payment.billData || {};
-
-  // Format dates
-  const formatDate = (timestamp) => {
-    if (!timestamp) return "غير محدد";
-    const date = new Date(timestamp);
-    return date.toLocaleDateString("ar-SA", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  };
-
-  const formatHijriDate = (timestamp) => {
-    if (!timestamp) return "غير محدد";
-    // For now, return placeholder - you can add proper Hijri conversion later
-    const date = new Date(timestamp);
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear() - 622; // Approximate Hijri year
-    return `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")} هـ`;
-  };
 
   const getDaysUntilDue = () => {
     if (!payment.dueDate) return 0;
@@ -60,7 +40,9 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
 
   const serviceName = billData.serviceName?.ar || payment.title || "غير محدد";
   const issueDate = billData.issueDate || Date.now();
-  const employeeCount = billData.additionalInfo?.employeeCount || billData.additionalInfo?.employees?.length;
+  const employeeCount =
+    billData.additionalInfo?.employeeCount ||
+    billData.additionalInfo?.employees?.length;
 
   // Status text mapping
   const statusMap = {
@@ -194,9 +176,6 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
               <Text className="text-gray-800 font-bold text-sm text-right">
                 {formatDate(issueDate)}
               </Text>
-              <Text className="text-gray-500 text-xs mt-1 text-right">
-                {formatHijriDate(issueDate)}
-              </Text>
             </View>
             <View
               className="w-10 h-10 rounded-full items-center justify-center"
@@ -216,9 +195,6 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
               </Text>
               <Text className="text-gray-800 font-bold text-sm text-right">
                 {formatDate(payment.dueDate)}
-              </Text>
-              <Text className="text-gray-500 text-xs mt-1 text-right">
-                {formatHijriDate(payment.dueDate)}
               </Text>
             </View>
             <View
@@ -246,7 +222,11 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
               <Text
                 className="font-bold text-base text-right"
                 style={{
-                  color: isOverdue ? "#DC2626" : isUrgent ? "#F59E0B" : "#6B7280",
+                  color: isOverdue
+                    ? "#DC2626"
+                    : isUrgent
+                    ? "#F59E0B"
+                    : "#6B7280",
                 }}
               >
                 {isOverdue

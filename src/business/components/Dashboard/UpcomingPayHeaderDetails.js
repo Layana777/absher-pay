@@ -45,7 +45,7 @@ const UpcomingPayHeaderDetails = ({
     <>
       <StatusBar barStyle="light-content" backgroundColor={primaryColor} />
       <View
-        className="rounded-b-3xl pb-8"
+        className="rounded-b-3xl pb-8 mb-4"
         style={{
           backgroundColor: primaryColor,
           direction: "rtl",
