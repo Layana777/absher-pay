@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import {
   validatePassword,
   loginUser,
 } from "../../common/services";
+import BiometricService from "../../common/services/BiometricService";
 
 const SingleLoginScreen = ({ navigation }) => {
   const [nationalId, setNationalId] = useState("");
@@ -26,13 +27,73 @@ const SingleLoginScreen = ({ navigation }) => {
   const [passwordError, setPasswordError] = useState("");
   const [generalError, setGeneralError] = useState("");
 
+  // حالات البصمة
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricSupported, setBiometricSupported] = useState(false);
+  const [biometricType, setBiometricType] = useState("بصمة");
+
+  // التحقق من دعم البصمة وحالتها عند تحميل الشاشة
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
+
+  const checkBiometricAvailability = async () => {
+    try {
+      // فحص دعم الجهاز للبصمة
+      const support = await BiometricService.checkBiometricSupport();
+      setBiometricSupported(support.isSupported);
+
+      if (support.isSupported) {
+        setBiometricType(support.biometricType);
+
+        // فحص ما إذا كانت البصمة مفعلة
+        const enabled = await BiometricService.isBiometricEnabled();
+        setBiometricEnabled(enabled);
+      }
+    } catch (error) {
+      console.error("خطأ في فحص البصمة:", error);
+    }
+  };
+
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleBiometricLogin = () => {
-    console.log("Biometric login pressed");
-    // TODO: Implement biometric authentication
+  const handleBiometricLogin = async () => {
+    try {
+      setLoading(true);
+
+      // تسجيل الدخول بالبصمة مع Firebase
+      const result = await BiometricService.loginWithBiometric(
+        "تسجيل الدخول إلى محفظة أبشر أفراد"
+      );
+
+      if (result.success && result.credentials) {
+        const { uid, nationalId } = result.credentials;
+        const userData = result.userData; // بيانات Firebase الكاملة
+
+        console.log("تسجيل دخول ناجح بالبصمة من Firebase:", {
+          uid,
+          nationalId,
+          phoneNumber: userData?.phoneNumber,
+        });
+
+        // الانتقال مباشرة إلى صفحة OTP مع البيانات الكاملة
+        navigation.navigate("OtpSingle", {
+          uid,
+          nationalId,
+          phoneNumber: userData?.phoneNumber,
+          fromBiometric: true,
+        });
+      } else {
+        Alert.alert("فشل تسجيل الدخول", result.message || "حدث خطأ في تسجيل الدخول بالبصمة");
+      }
+    } catch (error) {
+      console.error("خطأ في تسجيل الدخول بالبصمة:", error);
+      Alert.alert("خطأ", "حدث خطأ غير متوقع");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDigitalIdLogin = () => {
@@ -84,7 +145,8 @@ const SingleLoginScreen = ({ navigation }) => {
 
       if (result.success) {
         console.log("Login successful:", result.user);
-        // Navigate to OTP screen with user data
+
+        // الانتقال مباشرة إلى OTP (سيتم طلب تفعيل البصمة بعد OTP)
         navigation.navigate("OtpSingle", {
           uid: result.uid,
           nationalId: result.user.nationalId,
@@ -171,36 +233,73 @@ const SingleLoginScreen = ({ navigation }) => {
               </View>
             ) : null}
 
-            {/* Biometric Auth Box */}
-            <View className="bg-[#028550]/10 rounded-2xl p-4 mb-6">
-              <View className="flex-row items-center justify-between">
-                {/* Text Section */}
-                <View className="flex-1 mx-4">
-                  <Text className="text-sm text-gray-700 text-right leading-5">
-                    تسجيل الدخول بالهوية الوطنية{"\n"}
-                    آمن وسريع عبر الضغط
-                  </Text>
+            {/* Biometric Auth Box - يظهر فقط إذا كانت البصمة مفعلة */}
+            {biometricEnabled && biometricSupported && (
+              <View className="bg-[#028550]/10 rounded-2xl p-4 mb-6">
+                <View className="flex-row items-center justify-between">
+                  {/* Text Section */}
+                  <View className="flex-1 mx-4">
+                    <Text className="text-sm text-gray-700 text-right leading-5">
+                      تسجيل الدخول ب{biometricType}{"\n"}
+                      آمن وسريع عبر الضغط
+                    </Text>
+                  </View>
+
+                  {/* Fingerprint Button */}
+                  <TouchableOpacity
+                    onPress={handleBiometricLogin}
+                    className="w-16 h-16 bg-[#028550] rounded-[15px] items-center justify-center"
+                    activeOpacity={0.8}
+                    disabled={loading}
+                  >
+                    <SvgIcons name="FingerPrintWhite" size={32} />
+                  </TouchableOpacity>
                 </View>
 
-                {/* Fingerprint Button */}
-                <TouchableOpacity
+                {/* Biometric Login Button */}
+                <Button
+                  title={`الدخول ب${biometricType}`}
                   onPress={handleBiometricLogin}
-                  className="w-16 h-16 bg-[#028550] rounded-[15px] items-center justify-center"
-                  activeOpacity={0.8}
-                >
-                  <SvgIcons name="FingerPrintWhite" size={32} />
-                </TouchableOpacity>
+                  variant="single-primary"
+                  size="small"
+                  className="mt-4"
+                  disabled={loading}
+                />
               </View>
+            )}
 
-              {/* Digital ID Login Button */}
-              <Button
-                title="الدخول بالهوية الرقمية"
-                onPress={handleDigitalIdLogin}
-                variant="single-primary"
-                size="small"
-                className="mt-4"
-              />
-            </View>
+            {/* Digital ID Login Box - يظهر فقط إذا كانت البصمة غير مفعلة */}
+            {!biometricEnabled && (
+              <View className="bg-[#028550]/10 rounded-2xl p-4 mb-6">
+                <View className="flex-row items-center justify-between">
+                  {/* Text Section */}
+                  <View className="flex-1 mx-4">
+                    <Text className="text-sm text-gray-700 text-right leading-5">
+                      تسجيل الدخول بالهوية الرقمية{"\n"}
+                      آمن وسريع عبر الضغط
+                    </Text>
+                  </View>
+
+                  {/* Digital ID Icon */}
+                  <TouchableOpacity
+                    onPress={handleDigitalIdLogin}
+                    className="w-16 h-16 bg-[#028550] rounded-[15px] items-center justify-center"
+                    activeOpacity={0.8}
+                  >
+                    <SvgIcons name="FingerPrintWhite" size={32} />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Digital ID Login Button */}
+                <Button
+                  title="الدخول بالهوية الرقمية"
+                  onPress={handleDigitalIdLogin}
+                  variant="single-primary"
+                  size="small"
+                  className="mt-4"
+                />
+              </View>
+            )}
 
             {/* Divider */}
             <View className="flex-row items-center my-6">
