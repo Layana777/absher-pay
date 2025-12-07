@@ -66,8 +66,9 @@ const BusinessHomeScreen = ({ navigation }) => {
   // Handle view all payments
   const handleViewAllPayments = () => {
     console.log("View all payments pressed");
-    // TODO: Navigate to payments list screen
-    // navigation.navigate("PaymentsList");
+    navigation.navigate("AllPayments", {
+      primaryColor: "#0055aa"
+    });
   };
 
   // Handle payment card press
