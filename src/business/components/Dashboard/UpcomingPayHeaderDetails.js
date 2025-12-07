@@ -22,6 +22,8 @@ import { formatAmount } from "../../../common/utils";
  * @param {string} payment.icon - Feather icon name
  * @param {string} payment.iconColor - Icon color hex
  * @param {string} payment.iconBgColor - Icon background Tailwind class
+ * @param {string} payment.ministryIconName - Ministry icon name for SvgIcons
+ * @param {number} payment.ministryIconSize - Size of ministry icon
  * @param {boolean} payment.isUrgent - Urgency flag
  * @param {string} primaryColor - Primary brand color (default: "#0055aa")
  * @param {Function} onBack - Back button callback
@@ -35,9 +37,7 @@ const UpcomingPayHeaderDetails = ({
     title,
     description,
     amount,
-    icon = "file-text",
-    iconColor = "#0055aa",
-    iconBgColor = "bg-blue-50",
+    ministryIconName = "MOI",
     isUrgent = false,
   } = payment;
 
@@ -52,10 +52,10 @@ const UpcomingPayHeaderDetails = ({
       {/* Icon Section */}
       <View className="items-center mb-6 mt-4">
         <View
-          className="w-16 h-16 rounded-2xl items-center justify-center mb-3"
+          className="w-20 h-20 rounded-2xl items-center justify-center mb-3"
           style={{ backgroundColor: "rgba(255, 255, 255, 0.25)" }}
         >
-          <Feather name={icon} size={30} color="white" />
+          <SvgIcons name={ministryIconName} size={40} />
         </View>
       </View>
       <View className="absolute top-[39%] right-[-18%] w-40 h-40 rounded-full opacity-10 bg-white" />
@@ -64,9 +64,7 @@ const UpcomingPayHeaderDetails = ({
         <Text className="text-white text-lg font-bold mb-2 text-center">
           {title}
         </Text>
-        <Text className="text-white/70 text-xs text-center">
-          {description}
-        </Text>
+        <Text className="text-white/70 text-xs text-center">{description}</Text>
       </View>
 
       {/* Amount Display with Badge */}
@@ -94,9 +92,7 @@ const UpcomingPayHeaderDetails = ({
               color="white"
               style={{ marginLeft: 6 }}
             />
-            <Text className="text-white text-xs font-bold">
-              {description}
-            </Text>
+            <Text className="text-white text-xs font-bold">{description}</Text>
           </View>
         )}
       </View>

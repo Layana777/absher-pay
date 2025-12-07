@@ -13,6 +13,7 @@ import SvgIcons from "../../common/components/SvgIcons";
  * @param {string} payment.icon - Feather icon name
  * @param {string} payment.iconColor - Icon color
  * @param {string} payment.iconBgColor - Icon background color
+ * @param {string} payment.ministryIconName - Ministry icon name for SvgIcons
  * @param {boolean} payment.isUrgent - Whether payment is urgent
  * @param {Function} onPress - Callback when card is pressed
  */
@@ -24,6 +25,7 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
     icon = "file-text",
     iconColor = "#0055aa",
     iconBgColor = "bg-blue-50",
+    ministryIconName = "MOI",
     isUrgent = false,
   } = payment;
 
@@ -41,7 +43,7 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
           <View
             className={`w-12 h-12 ${iconBgColor} rounded-xl items-center justify-center`}
           >
-            <SvgIcons name={"MOI"} size={30} />
+            <SvgIcons name={ministryIconName} size={40} />
           </View>
           <View className="flex-1 mr-3" style={{ direction: "ltr" }}>
             <Text className="text-gray-800 font-bold text-base mb-1 text-right">

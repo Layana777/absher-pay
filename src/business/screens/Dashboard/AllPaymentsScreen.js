@@ -22,6 +22,7 @@ import {
   getDaysUntilDue,
 } from "../../../common/services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../../../common/services/firebase/governmentServicesData";
+import { getMinistryIconName } from "../../../common/utils/ministryIconMapper";
 
 const AllPaymentsScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
@@ -162,6 +163,9 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       aiSuggestion: bill.penaltyInfo
         ? `متأخر ${bill.penaltyInfo.daysOverdue} يوم - غرامة ${bill.penaltyInfo.lateFee} ريال`
         : "لا يوجد",
+      // Ministry icon configuration
+      ministryIconName: getMinistryIconName(bill.serviceType),
+      ministryIconSize: 50, // Size for detail screen header
       // Keep original bill data for payment processing
       originalBill: bill,
     };
