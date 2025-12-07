@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { formatDate } from "../../../common/utils";
 
 /**
  * Payment Information Section Component
@@ -8,17 +9,50 @@ import { Feather } from "@expo/vector-icons";
  *
  * @param {Object} payment - Payment data object
  * @param {string} payment.category - Payment category
- * @param {string} payment.dueDate - Due date string
+ * @param {number} payment.dueDate - Due date timestamp
+ * @param {number} payment.issueDate - Issue date timestamp (optional)
  * @param {string} payment.referenceNumber - Payment reference number
+ * @param {string} payment.ministry - Ministry name
+ * @param {string} payment.status - Bill status
+ * @param {Object} payment.billData - Original bill data with additional info
  * @param {string} primaryColor - Primary brand color (default: "#0055aa")
  */
 const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
+  const billData = payment.billData || {};
+
+  const getDaysUntilDue = () => {
+    if (!payment.dueDate) return 0;
+    const now = Date.now();
+    const days = Math.ceil((payment.dueDate - now) / (1000 * 60 * 60 * 24));
+    return days;
+  };
+
+  const daysUntilDue = getDaysUntilDue();
+  const isOverdue = daysUntilDue < 0;
+
+  // Extract data
   const {
-    category = "وزارة الموارد البشرية والتنمية الاجتماعية",
-    dueDate = payment.isUrgent ? "خلال 3 أيام" : "خلال 15 يوم",
     referenceNumber = `BIZ-T-${Date.now().toString().slice(-6)}`,
+    ministry = "غير محدد",
+    status = "unpaid",
     isUrgent = false,
   } = payment;
+
+  const serviceName = billData.serviceName?.ar || payment.title || "غير محدد";
+  const issueDate = billData.issueDate || Date.now();
+  const employeeCount =
+    billData.additionalInfo?.employeeCount ||
+    billData.additionalInfo?.employees?.length;
+
+  // Status text mapping
+  const statusMap = {
+    paid: { text: "مدفوع", color: "#10B981" },
+    unpaid: { text: "غير مدفوع", color: "#F59E0B" },
+    overdue: { text: "متأخر", color: "#EF4444" },
+    upcoming: { text: "قادم", color: "#6366F1" },
+  };
+
+  const statusInfo = statusMap[status] || statusMap.unpaid;
 
   return (
     <View
@@ -59,62 +93,45 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
           </Text>
         </View>
 
-        {/* Due Date */}
+        {/* Bill Status */}
         <View className="bg-gray-50 rounded-2xl p-4">
-          <View className="flex-row items-center justify-between ">
+          <View className="flex-row items-center justify-between">
             <View className="flex-1 m-2">
-              <Text className="text-gray-500 text-xs mb-2 text-right ">
-                تاريخ الإستحقاق
+              <Text className="text-gray-500 text-xs mb-2 text-right">
+                حالة الفاتورة
               </Text>
-              <Text className="text-gray-800 font-bold text-base text-right ">
-                1147/03/01 هـ
+              <Text
+                className="text-base font-bold text-right"
+                style={{ color: statusInfo.color }}
+              >
+                {statusInfo.text}
               </Text>
             </View>
             <View
               className="w-10 h-10 rounded-full items-center justify-center"
-              style={{ backgroundColor: isUrgent ? "#FEE2E2" : "#F3F4F6" }}
+              style={{ backgroundColor: `${statusInfo.color}15` }}
             >
               <Feather
-                name="calendar"
+                name={status === "paid" ? "check-circle" : "alert-circle"}
                 size={18}
-                color={isUrgent ? "#DC2626" : "#6B7280"}
+                color={statusInfo.color}
               />
             </View>
           </View>
         </View>
 
-        {/* Remaining Time */}
-        <View className="bg-gray-50 rounded-2xl p-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 m-1">
-              <Text className="text-gray-500 text-xs mb-2 text-right ">
-                ميعاد الإستحقاق
-              </Text>
-              <Text className="text-gray-800 font-bold text-base text-right ">
-                خلال {isUrgent ? "3" : "15"} يوم
-              </Text>
-            </View>
-            <View
-              className="w-10 h-10 rounded-full items-center justify-center"
-              style={{ backgroundColor: "#F3F4F6" }}
-            >
-              <Feather name="clock" size={18} color="#6B7280" />
-            </View>
-          </View>
-        </View>
-
-        {/* Category */}
+        {/* Ministry */}
         <View className="bg-gray-50 rounded-2xl p-4">
           <View className="flex-row items-center justify-between">
             <View className="flex-1 m-2">
-              <Text className="text-gray-500 text-xs mb-2 text-right ">
-                نوع الفاتورة
+              <Text className="text-gray-500 text-xs mb-2 text-right">
+                الجهة الحكومية
               </Text>
               <Text
-                className="text-gray-800 font-bold text-sm text-right "
+                className="text-gray-800 font-bold text-sm text-right"
                 numberOfLines={2}
               >
-                {category}
+                {ministry}
               </Text>
             </View>
             <View
@@ -126,21 +143,129 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
           </View>
         </View>
 
-        {/* Workers Info */}
-        {payment.isUrgent && (
+        {/* Service Type */}
+        <View className="bg-gray-50 rounded-2xl p-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 m-2">
+              <Text className="text-gray-500 text-xs mb-2 text-right">
+                نوع الخدمة
+              </Text>
+              <Text
+                className="text-gray-800 font-bold text-sm text-right"
+                numberOfLines={2}
+              >
+                {serviceName}
+              </Text>
+            </View>
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center"
+              style={{ backgroundColor: `${primaryColor}15` }}
+            >
+              <Feather name="file-text" size={18} color={primaryColor} />
+            </View>
+          </View>
+        </View>
+
+        {/* Issue Date */}
+        <View className="bg-gray-50 rounded-2xl p-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 m-2">
+              <Text className="text-gray-500 text-xs mb-2 text-right">
+                تاريخ الإصدار
+              </Text>
+              <Text className="text-gray-800 font-bold text-sm text-right">
+                {formatDate(issueDate)}
+              </Text>
+            </View>
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center"
+              style={{ backgroundColor: "#F3F4F6" }}
+            >
+              <Feather name="calendar" size={18} color="#6B7280" />
+            </View>
+          </View>
+        </View>
+
+        {/* Due Date */}
+        <View className="bg-gray-50 rounded-2xl p-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 m-2">
+              <Text className="text-gray-500 text-xs mb-2 text-right">
+                تاريخ الاستحقاق
+              </Text>
+              <Text className="text-gray-800 font-bold text-sm text-right">
+                {formatDate(payment.dueDate)}
+              </Text>
+            </View>
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center"
+              style={{
+                backgroundColor: isUrgent || isOverdue ? "#FEE2E2" : "#F3F4F6",
+              }}
+            >
+              <Feather
+                name="calendar"
+                size={18}
+                color={isUrgent || isOverdue ? "#DC2626" : "#6B7280"}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Remaining Time */}
+        <View className="bg-gray-50 rounded-2xl p-4">
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1 m-2">
+              <Text className="text-gray-500 text-xs mb-2 text-right">
+                {isOverdue ? "تأخر الدفع" : "الوقت المتبقي"}
+              </Text>
+              <Text
+                className="font-bold text-base text-right"
+                style={{
+                  color: isOverdue
+                    ? "#DC2626"
+                    : isUrgent
+                    ? "#F59E0B"
+                    : "#6B7280",
+                }}
+              >
+                {isOverdue
+                  ? `متأخر ${Math.abs(daysUntilDue)} يوم`
+                  : daysUntilDue === 0
+                  ? "مستحق اليوم"
+                  : `${daysUntilDue} يوم متبقي`}
+              </Text>
+            </View>
+            <View
+              className="w-10 h-10 rounded-full items-center justify-center"
+              style={{
+                backgroundColor: isOverdue ? "#FEE2E2" : "#F3F4F6",
+              }}
+            >
+              <Feather
+                name="clock"
+                size={18}
+                color={isOverdue ? "#DC2626" : "#6B7280"}
+              />
+            </View>
+          </View>
+        </View>
+
+        {/* Employee Count (for business bills) */}
+        {employeeCount && (
           <View
             className="rounded-2xl p-4 flex-row items-center"
             style={{ backgroundColor: `${primaryColor}08` }}
           >
             <View className="flex-1 m-1">
               <Text
-                className="text-sm font-bold mb-1 text-right "
+                className="text-sm font-bold mb-1 text-right"
                 style={{ color: primaryColor }}
               >
-                13 عامل
+                {employeeCount} عامل
               </Text>
               <Text
-                className="text-xs text-right "
+                className="text-xs text-right"
                 style={{ color: primaryColor }}
               >
                 عدد المستفيدين من الخدمة
@@ -151,6 +276,70 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
               style={{ backgroundColor: primaryColor }}
             >
               <Feather name="users" size={18} color="white" />
+            </View>
+          </View>
+        )}
+
+        {/* Additional Info for specific services */}
+        {billData.additionalInfo?.plateNumber && (
+          <View className="bg-gray-50 rounded-2xl p-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 m-2">
+                <Text className="text-gray-500 text-xs mb-2 text-right">
+                  رقم اللوحة
+                </Text>
+                <Text className="text-gray-800 font-bold text-base text-right">
+                  {billData.additionalInfo.plateNumber}
+                </Text>
+              </View>
+              <View
+                className="w-10 h-10 rounded-full items-center justify-center"
+                style={{ backgroundColor: `${primaryColor}15` }}
+              >
+                <Feather name="truck" size={18} color={primaryColor} />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {billData.additionalInfo?.iqamaNumber && (
+          <View className="bg-gray-50 rounded-2xl p-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 m-2">
+                <Text className="text-gray-500 text-xs mb-2 text-right">
+                  رقم الإقامة
+                </Text>
+                <Text className="text-gray-800 font-bold text-base text-right">
+                  {billData.additionalInfo.iqamaNumber}
+                </Text>
+              </View>
+              <View
+                className="w-10 h-10 rounded-full items-center justify-center"
+                style={{ backgroundColor: `${primaryColor}15` }}
+              >
+                <Feather name="credit-card" size={18} color={primaryColor} />
+              </View>
+            </View>
+          </View>
+        )}
+
+        {billData.additionalInfo?.passportNumber && (
+          <View className="bg-gray-50 rounded-2xl p-4">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1 m-2">
+                <Text className="text-gray-500 text-xs mb-2 text-right">
+                  رقم الجواز
+                </Text>
+                <Text className="text-gray-800 font-bold text-base text-right">
+                  {billData.additionalInfo.passportNumber}
+                </Text>
+              </View>
+              <View
+                className="w-10 h-10 rounded-full items-center justify-center"
+                style={{ backgroundColor: `${primaryColor}15` }}
+              >
+                <Feather name="book" size={18} color={primaryColor} />
+              </View>
             </View>
           </View>
         )}

@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { formatAmount } from "../../../common/utils";
 
 /**
  * Header component for payment details screen
@@ -44,7 +45,7 @@ const UpcomingPayHeaderDetails = ({
     <>
       <StatusBar barStyle="light-content" backgroundColor={primaryColor} />
       <View
-        className="rounded-b-3xl pb-8"
+        className="rounded-b-3xl pb-8 mb-4"
         style={{
           backgroundColor: primaryColor,
           direction: "rtl",
@@ -64,7 +65,7 @@ const UpcomingPayHeaderDetails = ({
 
             {/* Back Button */}
             <TouchableOpacity onPress={onBack} className="p-2">
-              <Feather name="arrow-right" size={24} color="white" />
+              <Feather name="arrow-left" size={24} color="white" />
             </TouchableOpacity>
           </View>
         </SafeAreaView>
@@ -97,7 +98,7 @@ const UpcomingPayHeaderDetails = ({
           >
             <View className="flex-row items-center">
               <Text className="text-white text-3xl font-bold ml-2">
-                {amount.toLocaleString("en-US")}
+                {formatAmount(amount)}
               </Text>
               <Text className="text-white text-m">
                 <SvgIcons name={"SAR"} size={30} />

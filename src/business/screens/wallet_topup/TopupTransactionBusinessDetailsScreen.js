@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, ScrollView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
-import { formatAmount } from "../../../common/utils";
+import { formatAmount, formatDateLong, formatTime } from "../../../common/utils";
 import { CustomHeader } from "../../../common/components";
 import { useUser, useBusinessWallet } from "../../../store/hooks";
 
@@ -25,15 +25,8 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
   const totalAmount = amount;
 
   const currentDate = new Date();
-  const transactionDate = currentDate.toLocaleDateString("ar-SA", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-  const transactionTime = currentDate.toLocaleTimeString("ar-SA", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const transactionDate = formatDateLong(currentDate);
+  const transactionTime = formatTime(currentDate);
 
   const handleConfirm = () => {
     // Use uid for user ID (Firebase Auth UID)

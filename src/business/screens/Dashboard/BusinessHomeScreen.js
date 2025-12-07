@@ -114,6 +114,7 @@ const BusinessHomeScreen = ({ navigation }) => {
         */}
         
         <UpcomingPaymentsSection
+          userId={user?.uid}
           onViewAll={handleViewAllPayments}
           onPaymentPress={handlePaymentPress}
         />

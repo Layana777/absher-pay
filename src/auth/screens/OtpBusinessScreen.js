@@ -7,6 +7,7 @@ import {
   Keyboard,
   TouchableWithoutFeedback,
   StatusBar,
+  Alert,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import AbsherPay from "../../common/assets/icons/logo-white-abhser.svg";
@@ -19,13 +20,15 @@ import {
   createPersonalWallet,
   createBusinessWallet,
   getWalletsByUserId,
+  BiometricService,
 } from "../../common/services";
 import { useResendTimer } from "../../common/hooks";
 import WalletLoadingScreen from "../../common/components/WalletLoadingScreen";
+import BiometricPromptDialog from "../../common/components/BiometricPromptDialog";
 
 const OtpBusinessScreen = ({ navigation, route }) => {
   const dispatch = useDispatch();
-  const { uid, nationalId, phoneNumber } = route.params || {};
+  const { uid, nationalId, phoneNumber, fromBiometric } = route.params || {};
   const [otp, setOtp] = useState(["", "", "", ""]);
   const inputRefs = useRef([]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +37,10 @@ const OtpBusinessScreen = ({ navigation, route }) => {
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletCreationStep, setWalletCreationStep] = useState("");
   const { timer, canResend, resetTimer } = useResendTimer(60);
+
+  // حالات البصمة
+  const [showBiometricPrompt, setShowBiometricPrompt] = useState(false);
+  const [biometricType, setBiometricType] = useState("بصمة");
 
   const handleOtpChange = (value, index) => {
     // Only allow numbers
@@ -67,6 +74,44 @@ const OtpBusinessScreen = ({ navigation, route }) => {
   const handleSkip = () => {
     navigation.goBack();
     // Or navigate to next screen
+  };
+
+  const handleEnableBiometric = async () => {
+    try {
+      const result = await BiometricService.saveBiometricCredentials(
+        uid,
+        "business",
+        nationalId
+      );
+
+      if (result.success) {
+        Alert.alert(
+          "تم بنجاح",
+          "تم تفعيل البصمة بنجاح. يمكنك الآن استخدامها لتسجيل الدخول",
+          [
+            {
+              text: "حسناً",
+              onPress: () => {
+                setShowBiometricPrompt(false);
+                // Redux سينتقل تلقائياً
+              },
+            },
+          ]
+        );
+      } else {
+        Alert.alert("خطأ", result.message);
+        setShowBiometricPrompt(false);
+      }
+    } catch (error) {
+      console.error("خطأ في تفعيل البصمة:", error);
+      Alert.alert("خطأ", "حدث خطأ في تفعيل البصمة");
+      setShowBiometricPrompt(false);
+    }
+  };
+
+  const handleRejectBiometric = () => {
+    setShowBiometricPrompt(false);
+    // Redux سينتقل تلقائياً
   };
 
   const handleAutoSubmit = async () => {
@@ -168,6 +213,21 @@ const OtpBusinessScreen = ({ navigation, route }) => {
         user: userData,
         wallets: { personal: personalWalletData, business: businessWalletData },
       });
+
+      // 8. طلب تفعيل البصمة (فقط إذا لم يكن من البصمة)
+      if (!fromBiometric) {
+        const promptResult = await BiometricService.promptEnableBiometric(
+          uid,
+          "business"
+        );
+
+        if (promptResult.shouldPrompt) {
+          setBiometricType(promptResult.biometricType);
+          setShowBiometricPrompt(true);
+          // لا تنتقل تلقائياً - انتظر قرار المستخدم
+          return;
+        }
+      }
 
       // Redux state update will trigger RootNavigator to automatically
       // switch to BusinessNavigator (no manual navigation needed)
@@ -332,6 +392,15 @@ const OtpBusinessScreen = ({ navigation, route }) => {
             </Text>
           </View>
         </View>
+
+        {/* Biometric Prompt Dialog */}
+        <BiometricPromptDialog
+          visible={showBiometricPrompt}
+          biometricType={biometricType}
+          onAccept={handleEnableBiometric}
+          onReject={handleRejectBiometric}
+          variant="business"
+        />
       </View>
     </TouchableWithoutFeedback>
   );

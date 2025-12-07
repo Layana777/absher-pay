@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { CommonActions } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../common/components/SvgIcons";
-import { formatAmount } from "../../../common/utils";
+import { formatAmount, formatDateLong, formatTime } from "../../../common/utils";
 
 const TopupSuccessScreen = ({ navigation, route }) => {
   const { amount, primaryColor = "#0055aa" } = route.params || {};
@@ -52,16 +52,8 @@ const TopupSuccessScreen = ({ navigation, route }) => {
     );
   };
 
-  const transactionDate = new Date().toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-
-  const transactionTime = new Date().toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const transactionDate = formatDateLong(new Date(), "en-US");
+  const transactionTime = formatTime(new Date(), "en-US");
 
   return (
     <SafeAreaView className="flex-1 bg-backgroundRGB">

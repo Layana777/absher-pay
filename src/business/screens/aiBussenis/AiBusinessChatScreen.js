@@ -60,7 +60,7 @@ const AiBusinessChatScreen = ({ navigation }) => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
       <StatusBar
         barStyle="light-content"
         backgroundColor={COLORS.businessPrimary}
