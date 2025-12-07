@@ -18,6 +18,9 @@ import SARBlack from "../assets/icons/SARBlack.svg";
 import Apple from "../assets/icons/Apple.svg";
 import SARGreen from "../assets/icons/SAR-green.svg";
 import SARBlue from "../assets/icons/SAR-blue.svg";
+import Traffic from "../assets/icons/Traffic.svg";
+import MinistryOfHumanResources from "../assets/icons/ministryOfHumanResources.svg";
+import MOI from "../assets/icons/MOI.svg";
 
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
@@ -58,6 +61,12 @@ const SvgIcons = ({ name, size, color, style }) => {
       return <SARGreen height={size} width={size} />;
     case "SARBlue":
       return <SARBlue height={size} width={size} />;
+    case "Traffic":
+      return <Traffic height={size} width={size} />;
+    case "MinistryOfHumanResources":
+      return <MinistryOfHumanResources height={size} width={size} />;
+    case "MOI":
+      return <MOI height={size} width={size} />;
 
     default:
       return null;
