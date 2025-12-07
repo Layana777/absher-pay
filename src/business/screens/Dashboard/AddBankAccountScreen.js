@@ -627,6 +627,7 @@ const AddBankAccountScreen = ({ navigation }) => {
         </View>
       </Modal>
     </View>
+    </>
   );
 };
 
