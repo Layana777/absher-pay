@@ -1,229 +1,418 @@
-import React, { useState } from "react";
-import { View, Text, ScrollView, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { CustomHeader } from "../../../common/components";
 import UpcomingPaymentCard from "../../../common/components/UpcomingPaymentCard";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { useUser, useBusinessWallet } from "../../../store/hooks";
+import {
+  getUserBills,
+  getBillsByStatus,
+  getBillsByServiceType,
+  processBulkBillPayment,
+  calculateBulkTotal,
+  isBillOverdue,
+  getDaysUntilDue,
+} from "../../../common/services/billsService";
+import GOVERNMENT_SERVICES_DATA from "../../../common/services/firebase/governmentServicesData";
 
 const AllPaymentsScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
 
-  // الحالة النشطة للفلاتر
+  // Redux state
+  const user = useUser();
+  const businessWallet = useBusinessWallet();
+
+  // Local state
+  const [allBills, setAllBills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeStatusFilter, setActiveStatusFilter] = useState("الكل");
   const [activeServiceFilter, setActiveServiceFilter] = useState("الكل");
+  const [totalDueAmount, setTotalDueAmount] = useState(0);
 
-  // بيانات وهمية للمدفوعات (reusable data)
-  const allPayments = [
-    {
-      id: "1",
-      title: "تجديد إقامة العمالة",
-      description: "آخر دفعة: 6,500 ريال | التاريخ: 12 نوفمبر 2024",
-      amount: 6500,
-      icon: "users",
-      iconColor: "#8B5CF6",
-      iconBgColor: "bg-purple-50",
-      isUrgent: false,
-      dueDate: "12 نوفمبر 2024",
-      status: "مستحق",
-      category: "الكل",
-      serviceType: "تجديد الإقامة",
-      aiSuggestion: "متوقع بنفس قيمة آخر دفعة",
-    },
-    {
-      id: "2",
-      title: "رسوم البلدية السنوية",
-      description: "آخر دفعة: 2,800 ريال | التاريخ: 5 ديسمبر 2024",
-      amount: 2800,
-      icon: "home",
-      iconColor: "#10B981",
-      iconBgColor: "bg-green-50",
-      isUrgent: false,
-      dueDate: "5 ديسمبر 2024",
-      status: "متوقع",
-      category: "متوقع",
-      serviceType: "رسوم البلدية",
-      aiSuggestion: "متوقع خلال 15 يوم أو أقل",
-    },
-    {
-      id: "3",
-      title: "مخالفات المركبات",
-      description: "آخر دفعة: 450 ريال | التاريخ: 18 ديسمبر 2024",
-      amount: 450,
-      icon: "truck",
-      iconColor: "#EF4444",
-      iconBgColor: "bg-red-50",
-      isUrgent: false,
-      dueDate: "18 ديسمبر 2024",
-      status: "متأخر",
-      category: "متأخر",
-      serviceType: "مخالفات المركبات",
-      aiSuggestion: "لا يوجد",
-    },
-    {
-      id: "4",
-      title: "تجديد جوازات العمالة",
-      description: "آخر دفعة: 3,200 ريال | التاريخ: 28 أكتوبر 2024",
-      amount: 3200,
-      icon: "file-text",
-      iconColor: "#8B5CF6",
-      iconBgColor: "bg-purple-50",
-      isUrgent: false,
-      dueDate: "28 أكتوبر 2024",
-      status: "مستحق",
-      category: "مستحق",
-      serviceType: "تجديد الإقامة",
-      aiSuggestion: "متأخر 5 أيام",
-    },
-    {
-      id: "5",
-      title: "رسوم جمركية",
-      description: "آخر دفعة: 8,900 ريال | التاريخ: 3 ديسمبر 2024",
-      amount: 8900,
-      icon: "package",
-      iconColor: "#F97316",
-      iconBgColor: "bg-orange-50",
-      isUrgent: false,
-      dueDate: "3 ديسمبر 2024",
-      status: "الكل",
-      category: "الكل",
-      serviceType: "رسوم جمركية",
-      aiSuggestion: "حسب الشحنات",
-    },
-  ];
-
-  // الفلاتر المتاحة
+  // Status filters mapping (Arabic to Firebase status)
   const statusFilters = ["الكل", "مستحق", "متوقع", "متأخر"];
+  const statusMapping = {
+    الكل: "all",
+    مستحق: "unpaid",
+    متوقع: "upcoming",
+    متأخر: "overdue",
+  };
+
+  // Fixed service filters from GOVERNMENT_SERVICES_DATA (Arabic only)
   const serviceFilters = [
     "الكل",
-    "تجديد الإقامة",
-    "رسوم البلدية",
-    "مخالفات المركبات",
-    "رسوم جمركية",
+    ...Object.values(GOVERNMENT_SERVICES_DATA).map((service) => service.nameAr),
   ];
 
+  // Helper to map Arabic service name to service type key
+  const getServiceTypeKey = (arabicName) => {
+    if (arabicName === "الكل") return "all";
+    const entry = Object.entries(GOVERNMENT_SERVICES_DATA).find(
+      ([_, service]) => service.nameAr === arabicName
+    );
+    return entry ? entry[0] : null;
+  };
+
+  // Helper function to map Firebase status to Arabic
+  const getArabicStatus = (bill) => {
+    if (isBillOverdue(bill)) return "متأخر";
+    if (bill.status === "upcoming") return "متوقع";
+    if (bill.status === "unpaid") return "مستحق";
+    return "الكل";
+  };
+
+  // Helper function to get service name in Arabic
+  const getServiceNameAr = (serviceType, serviceSubType) => {
+    const service = GOVERNMENT_SERVICES_DATA[serviceType];
+
+    // If subType exists, return its Arabic name
+    if (service?.subTypes?.[serviceSubType]?.nameAr) {
+      return service.subTypes[serviceSubType].nameAr;
+    }
+
+    // If no subType, return main service Arabic name
+    if (service?.nameAr) {
+      return service.nameAr;
+    }
+
+    // Absolute fallback (should rarely happen)
+    return serviceType;
+  };
+
+  // Helper function to get icon for service
+  const getServiceIcon = (serviceType) => {
+    const iconMap = {
+      passports: "file-text",
+      traffic: "truck",
+      civil_affairs: "file",
+      human_resources: "users",
+      commerce: "briefcase",
+      justice: "scale",
+    };
+    return iconMap[serviceType] || "file-text";
+  };
+
+  // Helper function to get color for service
+  const getServiceColor = (serviceType) => {
+    const colorMap = {
+      passports: { icon: "#8B5CF6", bg: "bg-purple-50" },
+      traffic: { icon: "#EF4444", bg: "bg-red-50" },
+      civil_affairs: { icon: "#3B82F6", bg: "bg-blue-50" },
+      human_resources: { icon: "#8B5CF6", bg: "bg-purple-50" },
+      commerce: { icon: "#F97316", bg: "bg-orange-50" },
+      justice: { icon: "#10B981", bg: "bg-green-50" },
+    };
+    return colorMap[serviceType] || { icon: "#6B7280", bg: "bg-gray-50" };
+  };
+
+  // Helper function to format date
+  const formatDate = (timestamp) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("ar-SA", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  // Transform Firebase bill to UpcomingPaymentCard format
+  const transformBillToPayment = (bill) => {
+    console.log("Transforming bill:", bill)
+    const serviceSubTypeNameAr = getServiceNameAr(
+      bill.serviceName.ar,
+      bill.serviceSubType
+
+    );
+    const colors = getServiceColor(bill.serviceType);
+    const arabicStatus = getArabicStatus(bill);
+    const displayAmount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
+
+    // Calculate days remaining
+    const daysRemaining = getDaysUntilDue(bill);
+    const daysText = daysRemaining > 0
+      ? `${daysRemaining} يوم متبقي`
+      : daysRemaining === 0
+      ? 'اليوم آخر موعد'
+      : `متأخر ${Math.abs(daysRemaining)} يوم`;
+
+    return {
+      id: bill.id,
+      title: serviceSubTypeNameAr,
+      description: daysText,
+      amount: displayAmount,
+      icon: getServiceIcon(bill.serviceType),
+      iconColor: colors.icon,
+      iconBgColor: colors.bg,
+      isUrgent: isBillOverdue(bill),
+      dueDate: formatDate(bill.dueDate),
+      status: arabicStatus,
+      category: arabicStatus,
+      serviceType: serviceSubTypeNameAr,
+      aiSuggestion: bill.penaltyInfo
+        ? `متأخر ${bill.penaltyInfo.daysOverdue} يوم - غرامة ${bill.penaltyInfo.lateFee} ريال`
+        : "لا يوجد",
+      // Keep original bill data for payment processing
+      originalBill: bill,
+    };
+  };
+
+  // Fetch bills from Firebase
+  const fetchBills = async () => {
+    if (!user?.uid || !businessWallet?.id) {
+      setError("لا يوجد مستخدم أو محفظة نشطة");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch all bills for the user
+      const bills = await getUserBills(user.uid, {});
+
+      // Filter to only business wallet bills
+      const businessBills = bills.filter(
+        (bill) =>
+          bill.walletId === businessWallet.id &&
+          bill.isBusiness === true &&
+          bill.status !== "paid" // Exclude paid bills
+      );
+
+      setAllBills(businessBills);
+
+      // Calculate total due amount (unpaid + overdue)
+      const dueBills = businessBills.filter(
+        (bill) => bill.status === "unpaid" || isBillOverdue(bill)
+      );
+      const total = calculateBulkTotal(dueBills);
+      setTotalDueAmount(total);
+    } catch (err) {
+      console.error("Error fetching bills:", err);
+      setError("حدث خطأ أثناء تحميل الفواتير");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch bills on component mount
+  useEffect(() => {
+    fetchBills();
+  }, [user?.uid, businessWallet?.id]);
+
   // فلترة المدفوعات حسب الفلاتر النشطة
-  const filteredPayments = allPayments.filter((payment) => {
-    const matchesStatus =
-      activeStatusFilter === "الكل" || payment.status === activeStatusFilter;
-    const matchesService =
-      activeServiceFilter === "الكل" ||
-      payment.serviceType === activeServiceFilter;
-    return matchesStatus && matchesService;
-  });
+  const filteredPayments = allBills
+    .filter((bill) => {
+      // Filter by status
+      if (activeStatusFilter !== "الكل") {
+        const arabicStatus = getArabicStatus(bill);
+        if (arabicStatus !== activeStatusFilter) return false;
+      }
+
+      // Filter by service type using serviceType field
+      if (activeServiceFilter !== "الكل") {
+        const selectedServiceTypeKey = getServiceTypeKey(activeServiceFilter);
+        if (
+          selectedServiceTypeKey &&
+          bill.serviceType !== selectedServiceTypeKey
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    })
+    .map(transformBillToPayment);
 
   // معالج الضغط على كرت المدفوعة
   const handlePaymentPress = (payment) => {
     console.log("Payment pressed:", payment);
-    // يمكن الانتقال لشاشة تفاصيل الدفعة
     navigation.navigate("UpcomingPayDetails", {
       payment,
       primaryColor,
     });
   };
 
+  // Handle Pay All button
+  const handlePayAll = async () => {
+    if (!user?.uid || !businessWallet?.id) {
+      Alert.alert("خطأ", "لا يوجد مستخدم أو محفظة نشطة");
+      return;
+    }
+
+    // Get all unpaid and overdue bills
+    const billsToPay = allBills.filter(
+      (bill) => bill.status === "unpaid" || isBillOverdue(bill)
+    );
+
+    if (billsToPay.length === 0) {
+      Alert.alert("تنبيه", "لا توجد فواتير مستحقة للدفع");
+      return;
+    }
+
+    const total = calculateBulkTotal(billsToPay);
+
+    Alert.alert(
+      "تأكيد الدفع",
+      `هل تريد دفع جميع الفواتير المستحقة؟\n\nعدد الفواتير: ${
+        billsToPay.length
+      }\nالمبلغ الإجمالي: ${total.toLocaleString()} ريال`,
+      [
+        {
+          text: "إلغاء",
+          style: "cancel",
+        },
+        {
+          text: "دفع",
+          onPress: async () => {
+            try {
+              setLoading(true);
+
+              const billIds = billsToPay.map((bill) => bill.id);
+              const result = await processBulkBillPayment(
+                user.uid,
+                billIds,
+                businessWallet.id,
+                { method: "wallet" }
+              );
+
+              Alert.alert(
+                "نجح الدفع",
+                `تم دفع ${
+                  result.billCount
+                } فاتورة بمبلغ ${result.totalAmount.toLocaleString()} ريال`,
+                [
+                  {
+                    text: "موافق",
+                    onPress: () => {
+                      // Refresh bills after payment
+                      fetchBills();
+                    },
+                  },
+                ]
+              );
+            } catch (err) {
+              console.error("Error processing payment:", err);
+              Alert.alert(
+                "خطأ",
+                "حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى"
+              );
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <>
       <CustomHeader title="مركز المدفوعات" onBack={() => navigation.goBack()} />
       <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
+        {/* Loading State */}
+        {loading && (
+          <View className="flex-1 justify-center items-center">
+            <ActivityIndicator size="large" color={primaryColor} />
+            <Text className="text-gray-600 mt-4">جاري تحميل الفواتير...</Text>
+          </View>
+        )}
+
+        {/* Error State */}
+        {!loading && error && (
+          <View className="flex-1 justify-center items-center px-6">
+            <Feather name="alert-circle" size={48} color="#EF4444" />
+            <Text className="text-gray-700 text-center mt-4 text-lg">
+              {error}
+            </Text>
+            <TouchableOpacity
+              className="mt-6 px-6 py-3 rounded-lg"
+              style={{ backgroundColor: primaryColor }}
+              onPress={fetchBills}
+            >
+              <Text className="text-white font-semibold">إعادة المحاولة</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Main ScrollView - Everything scrolls together */}
-        <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-          {/* الجزء العلوي بالكامل - كرت + فلاتر بخلفية واحدة */}
-          <View className="bg-[#ffffff] p-3 mb-6 pb-4 rounded-b-[30px]">
-            {/* إجمالي المدفوعات المستحقة */}
-            <View className="px-4 pt-6 pb-4">
-              <View
-                className="rounded-3xl p-9"
-                style={{ backgroundColor: primaryColor }}
-              >
-                <Text className="text-white text-sm mb-2 text-center opacity-90">
-                  إجمالي المدفوعات المستحقة
-                </Text>
-
+        {!loading && !error && (
+          <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+            {/* الجزء العلوي بالكامل - كرت + فلاتر بخلفية واحدة */}
+            <View className="bg-[#ffffff] p-3 mb-6 pb-4 rounded-b-[30px]">
+              {/* إجمالي المدفوعات المستحقة */}
+              <View className="px-4 pt-6 pb-4">
                 <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    direction: "ltr",
-                    padding: 13,
-                  }}
+                  className="rounded-3xl p-9"
+                  style={{ backgroundColor: primaryColor }}
                 >
-                  <SvgIcons name="SAR" size={28} />
-                  <Text className="text-white text-4xl font-bold text-center">
-                    1000
+                  <Text className="text-white text-sm mb-2 text-center opacity-90">
+                    إجمالي المدفوعات المستحقة
                   </Text>
-                </View>
 
-                <TouchableOpacity
-                  className="bg-white rounded-xl py-3"
-                  onPress={() => console.log("دفع الكل")}
-                >
-                  <Text
-                    className="text-center font-semibold"
-                    style={{ color: primaryColor }}
-                  >
-                    دفع الكل
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* فلتر نوع الخدمة */}
-            <View className="mb-6" style={{ direction: "rtl" }}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 16 }}
-              >
-                {serviceFilters.map((filter, index) => (
-                  <TouchableOpacity
-                    key={filter}
-                    onPress={() => setActiveServiceFilter(filter)}
-                    className="px-6 py-2 rounded-lg"
+                  <View
                     style={{
-                      backgroundColor:
-                        activeServiceFilter === filter ? primaryColor : "white",
-                      marginLeft: index < serviceFilters.length - 1 ? 8 : 0,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      direction: "ltr",
+                      padding: 13,
                     }}
                   >
+                    <SvgIcons name="SAR" size={28} />
+                    <Text className="text-white text-4xl font-bold text-center">
+                      {totalDueAmount.toLocaleString()}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    className="bg-white rounded-xl py-3"
+                    onPress={handlePayAll}
+                    disabled={totalDueAmount === 0}
+                    style={{ opacity: totalDueAmount === 0 ? 0.5 : 1 }}
+                  >
                     <Text
-                      className={`font-semibold ${
-                        activeServiceFilter === filter
-                          ? "text-white"
-                          : "text-gray-700"
-                      }`}
+                      className="text-center font-semibold"
+                      style={{ color: primaryColor }}
                     >
-                      {filter}
+                      دفع الكل
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+                </View>
+              </View>
 
-            {/* فلتر الحالة */}
-            <View className="mb-5" style={{ direction: "rtl" }}>
-              <View className="flex-row items-center bg-[#f8f8f8] rounded-lg py-2">
+              {/* فلتر نوع الخدمة */}
+              <View className="mb-6" style={{ direction: "rtl" }}>
                 <ScrollView
                   horizontal
                   showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingHorizontal: 3 }}
+                  contentContainerStyle={{ paddingHorizontal: 16 }}
                 >
-                  {statusFilters.map((filter, index) => (
+                  {serviceFilters.map((filter, index) => (
                     <TouchableOpacity
                       key={filter}
-                      onPress={() => setActiveStatusFilter(filter)}
+                      onPress={() => setActiveServiceFilter(filter)}
                       className="px-6 py-2 rounded-lg"
                       style={{
                         backgroundColor:
-                          activeStatusFilter === filter
+                          activeServiceFilter === filter
                             ? primaryColor
                             : "white",
-                        marginLeft: index < statusFilters.length - 1 ? 8 : 0,
+                        marginLeft: index < serviceFilters.length - 1 ? 8 : 0,
                       }}
                     >
                       <Text
                         className={`font-semibold ${
-                          activeStatusFilter === filter
+                          activeServiceFilter === filter
                             ? "text-white"
                             : "text-gray-700"
                         }`}
@@ -234,30 +423,66 @@ const AllPaymentsScreen = ({ navigation, route }) => {
                   ))}
                 </ScrollView>
               </View>
-            </View>
-          </View>
 
-          {/* قائمة المدفوعات */}
-          <View className="px-4 pb-6">
-            {filteredPayments.map((payment) => (
-              <UpcomingPaymentCard
-                key={payment.id}
-                payment={payment}
-                onPress={() => handlePaymentPress(payment)}
-              />
-            ))}
-
-            {/* رسالة فارغة */}
-            {filteredPayments.length === 0 && (
-              <View className="items-center justify-center py-12">
-                <Feather name="inbox" size={48} color="#D1D5DB" />
-                <Text className="text-gray-500 text-base mt-4">
-                  لا توجد مدفوعات في هذا القسم
-                </Text>
+              {/* فلتر الحالة */}
+              <View className="mb-5" style={{ direction: "rtl" }}>
+                <View className="flex-row items-center bg-[#f8f8f8] rounded-lg py-2">
+                  <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingHorizontal: 3 }}
+                  >
+                    {statusFilters.map((filter, index) => (
+                      <TouchableOpacity
+                        key={filter}
+                        onPress={() => setActiveStatusFilter(filter)}
+                        className="px-6 py-2 rounded-lg"
+                        style={{
+                          backgroundColor:
+                            activeStatusFilter === filter
+                              ? primaryColor
+                              : "white",
+                          marginLeft: index < statusFilters.length - 1 ? 8 : 0,
+                        }}
+                      >
+                        <Text
+                          className={`font-semibold ${
+                            activeStatusFilter === filter
+                              ? "text-white"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {filter}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
               </View>
-            )}
-          </View>
-        </ScrollView>
+            </View>
+
+            {/* قائمة المدفوعات */}
+            <View className="px-4 pb-6">
+              {filteredPayments.map((payment) => (
+                <UpcomingPaymentCard
+                  key={payment.id}
+                  payment={payment}
+                  onPress={() => handlePaymentPress(payment)}
+                />
+              ))}
+
+              {/* رسالة فارغة */}
+              {filteredPayments.length === 0 && (
+                <View className="items-center justify-center py-12">
+                  <Feather name="inbox" size={48} color="#D1D5DB" />
+                  <Text className="text-gray-500 text-base mt-4">
+                    لا توجد مدفوعات في هذا القسم
+                  </Text>
+                </View>
+              )}
+            </View>
+          </ScrollView>
+        )}
       </View>
     </>
   );
