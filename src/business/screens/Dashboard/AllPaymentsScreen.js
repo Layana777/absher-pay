@@ -127,11 +127,13 @@ const AllPaymentsScreen = ({ navigation, route }) => {
   // Transform Firebase bill to UpcomingPaymentCard format
   const transformBillToPayment = (bill) => {
     console.log("Transforming bill:", bill)
-    const serviceSubTypeNameAr = getServiceNameAr(
-      bill.serviceName.ar,
-      bill.serviceSubType
 
+    // Get service name using the helper function
+    const serviceSubTypeNameAr = getServiceNameAr(
+      bill.serviceType,
+      bill.serviceSubType
     );
+
     const colors = getServiceColor(bill.serviceType);
     const arabicStatus = getArabicStatus(bill);
     const displayAmount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
@@ -146,7 +148,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
     return {
       id: bill.id,
-      title: serviceSubTypeNameAr,
+      title: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
       description: daysText,
       amount: displayAmount,
       icon: getServiceIcon(bill.serviceType),
@@ -156,7 +158,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       dueDate: formatDate(bill.dueDate),
       status: arabicStatus,
       category: arabicStatus,
-      serviceType: serviceSubTypeNameAr,
+      serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
       aiSuggestion: bill.penaltyInfo
         ? `متأخر ${bill.penaltyInfo.daysOverdue} يوم - غرامة ${bill.penaltyInfo.lateFee} ريال`
         : "لا يوجد",
