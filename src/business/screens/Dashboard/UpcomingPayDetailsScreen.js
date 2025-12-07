@@ -153,6 +153,8 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
           onRemindLater={handleRemindLater}
           primaryColor={primaryColor}
           isUrgent={payment.isUrgent}
+          serviceName={payment.title}
+          amount={`${totalAmount.toLocaleString("en-US")} ريال`}
         />
 
         {/* Bottom padding for scrolling */}

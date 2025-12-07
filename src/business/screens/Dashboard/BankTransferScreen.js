@@ -220,7 +220,7 @@ const BankTransferScreen = ({ navigation }) => {
         </View>
 
         {/* Linked Bank Account Card */}
-        <View className="bg-white mx-4 mt-4 rounded-2xl p-5 shadow-sm">
+        <View className="bg-white mx-4 mt-4 rounded-2xl p-5 shadow-sm" style={{direction:"rtl"}}>
           {linkedBank ? (
             <>
               {/* Account Details View (when user has linked account) */}
@@ -233,12 +233,17 @@ const BankTransferScreen = ({ navigation }) => {
                   onPress={() => setShowAccountsModal(true)}
                 >
                   <Text className="text-[#0055aa] text-sm font-semibold">
-                    تغيير
+                    عرض الكل
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              <View className="flex-row-reverse items-center justify-between bg-gray-50 rounded-xl p-4" style={{ direction: "ltr" }}>
+              <TouchableOpacity
+                className="flex-row-reverse items-center justify-between bg-gray-50 rounded-xl p-4"
+                style={{ direction: "rtl" }}
+                onPress={() => setShowAccountsModal(true)}
+                activeOpacity={0.7}
+              >
                 {/* Verified Icon */}
                 {linkedBank.isVerified && (
                   <View className="bg-green-500 rounded-full w-6 h-6 items-center justify-center">
@@ -270,7 +275,7 @@ const BankTransferScreen = ({ navigation }) => {
                     </View>
                   )}
                 </View>
-              </View>
+              </TouchableOpacity>
             </>
           ) : (
             <>

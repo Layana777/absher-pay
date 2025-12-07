@@ -18,6 +18,7 @@ import UpcomingPayDetailsScreen from "../screens/Dashboard/UpcomingPayDetailsScr
 import AddBankAccountScreen from "../screens/Dashboard/AddBankAccountScreen";
 import BankAccountSuccessScreen from "../screens/Dashboard/BankAccountSuccessScreen";
 import TransferSuccessScreen from "../screens/Dashboard/TransferSuccessScreen";
+import FinancialAnalysisScreen from "../screens/Dashboard/FinancialAnalysisScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -177,6 +178,9 @@ const BusinessNavigator = () => {
 
       {/* Payment Details Screen */}
       <Stack.Screen name="UpcomingPayDetails" component={UpcomingPayDetailsScreen} />
+
+      {/* Financial Analysis Screen */}
+      <Stack.Screen name="FinancialAnalysis" component={FinancialAnalysisScreen} />
 
       {/* Standalone screens without tabs - Add your screens here */}
       {/* Example:

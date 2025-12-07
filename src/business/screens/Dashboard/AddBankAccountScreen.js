@@ -442,12 +442,29 @@ const AddBankAccountScreen = ({ navigation }) => {
                     justifyContent: 'space-between'
                   }}
                 >
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    {selectedBank?.id === item.id && (
-                      <Feather name="check" size={20} color="#0055aa" />
+                  <View style={{
+                    backgroundColor: 'white',
+                    borderRadius: 18,
+                    borderWidth: 1,
+                    borderColor: '#e5e7eb',
+                    width: 36,
+                    height: 36,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    direction:"rtl"
+                  }}>
+                    {item.logo ? (
+                      <Image
+                        source={item.logo}
+                        style={{ width: 24, height: 24, direction:"rtl" }}
+                        resizeMode="contain"
+                      />
+                    ) : (
+                      <Feather name="briefcase" size={16} color="#0055aa" />
                     )}
                   </View>
-                  <View style={{ flex: 1, alignItems: 'flex-end', marginLeft: 12 }}>
+                  <View style={{ flex: 1, alignItems: 'flex-end', marginLeft: 12, marginRight: 12 }}>
                     <Text style={{
                       color: '#1f2937',
                       fontSize: 16,
@@ -465,26 +482,9 @@ const AddBankAccountScreen = ({ navigation }) => {
                       {item.nameEn}
                     </Text>
                   </View>
-                  <View style={{
-                    backgroundColor: 'white',
-                    borderRadius: 12,
-                    borderWidth: 1,
-                    borderColor: '#e5e7eb',
-                    width: 44,
-                    height: 44,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                    direction:"rtl"
-                  }}>
-                    {item.logo ? (
-                      <Image
-                        source={item.logo}
-                        style={{ width: 32, height: 32, direction:"rtl" }}
-                        resizeMode="contain"
-                      />
-                    ) : (
-                      <Feather name="briefcase" size={20} color="#0055aa" />
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    {selectedBank?.id === item.id && (
+                      <Feather name="check" size={20} color="#0055aa" />
                     )}
                   </View>
                 </TouchableOpacity>

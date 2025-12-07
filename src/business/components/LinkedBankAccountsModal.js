@@ -62,61 +62,45 @@ const LinkedBankAccountsModal = ({ visible, onClose, accounts, onAddAccount, sel
 
   const renderBankAccount = ({ item }) => {
     const isSelected = item.id === selectedAccountId;
-    const isDeleting = deletingAccountId === item.id;
 
     return (
       <View className="px-5 py-4 border-b border-gray-100">
-        <View className="flex-row-reverse items-center justify-between">
-          {/* Selection Area */}
-          <TouchableOpacity
-            onPress={() => handleSelectAccount(item)}
-            className="flex-row-reverse items-center flex-1"
-          >
-            {/* Selection Indicator */}
-            <View className="w-6">
-              {isSelected && (
-                <View className="bg-[#0055aa] rounded-full w-6 h-6 items-center justify-center">
-                  <Feather name="check" size={16} color="white" />
-                </View>
-              )}
-            </View>
+        <TouchableOpacity
+          onPress={() => handleSelectAccount(item)}
+          className="flex-row-reverse items-center"
+          style={{direction:"rtl"}}
+        >
+          {/* Selection Indicator */}
+          <View className="w-6">
+            {isSelected && (
+              <View className="bg-[#0055aa] rounded-full w-6 h-6 items-center justify-center">
+                <Feather name="check" size={16} color="white" />
+              </View>
+            )}
+          </View>
 
-            {/* Account Info */}
-            <View className="flex-1 items-end mr-3" style={{direction:"ltr"}}>
-              <Text className="text-gray-800 text-base font-bold mb-1 text-right">
-                {item.bankName}
-              </Text>
-              <Text className="text-gray-500 text-sm text-right mb-1">
-                {item.ibanFormatted || item.iban}
-              </Text>
-              <Text className="text-gray-400 text-xs text-right">
-                {item.accountOwner}
-              </Text>
-            </View>
+          {/* Account Info */}
+          <View className="flex-1 items-end mr-3" style={{direction:"ltr"}}>
+            <Text className="text-gray-800 text-base font-bold mb-1 text-right">
+              {item.bankName}
+            </Text>
+            <Text className="text-gray-500 text-sm text-right mb-1">
+              {item.ibanFormatted || item.iban}
+            </Text>
+            <Text className="text-gray-400 text-xs text-right">
+              {item.accountOwner}
+            </Text>
+          </View>
 
-            {/* Bank Icon/Logo */}
-            <View className="rounded-xl w-12 h-12 items-center justify-center ml-3">
-              {item.bankLogo ? (
-                <Image source={item.bankLogo} style={{ width: 32, height: 32 }} resizeMode="contain" />
-              ) : (
-                <Feather name="briefcase" size={24} color="#0055aa" />
-              )}
-            </View>
-          </TouchableOpacity>
-
-          {/* Delete Button */}
-          <TouchableOpacity
-            onPress={() => handleDeleteAccount(item)}
-            disabled={isDeleting}
-            className="bg-red-50 rounded-lg p-2 ml-2"
-          >
-            <Feather
-              name={isDeleting ? "loader" : "trash-2"}
-              size={20}
-              color="#ef4444"
-            />
-          </TouchableOpacity>
-        </View>
+          {/* Bank Icon/Logo */}
+          <View className="rounded-xl w-12 h-12 items-center justify-center ml-3" style={{direction:"rtl"}}>
+            {item.bankLogo ? (
+              <Image source={item.bankLogo} style={{ width: 32, height: 32 }} resizeMode="contain" />
+            ) : (
+              <Feather name="briefcase" size={24} color="#0055aa" />
+            )}
+          </View>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -163,18 +147,47 @@ const LinkedBankAccountsModal = ({ visible, onClose, accounts, onAddAccount, sel
             </View>
           )}
 
-          {/* Add Account Button */}
+          {/* Action Buttons */}
           <View className="px-5 pt-3 pb-8 border-t border-gray-200">
+            {/* Add Account Button */}
             <TouchableOpacity
               onPress={() => {
                 onClose();
                 onAddAccount();
               }}
-              className="bg-[#0055aa] rounded-xl py-4 flex-row-reverse items-center justify-center"
+              className="bg-[#0055aa] rounded-xl py-4 flex-row-reverse items-center justify-center mb-3"
             >
               <Text className="text-white text-base font-semibold">
                 إضافة حساب جديد
               </Text>
+            </TouchableOpacity>
+
+            {/* Delete Selected Account Button */}
+            <TouchableOpacity
+              onPress={() => {
+                const selectedAccount = accounts.find(acc => acc.id === selectedAccountId);
+                if (selectedAccount) {
+                  handleDeleteAccount(selectedAccount);
+                }
+              }}
+              disabled={!selectedAccountId || deletingAccountId !== null}
+              className={`${
+                !selectedAccountId || deletingAccountId !== null
+                  ? "bg-gray-100 border-2 border-gray-300"
+                  : "bg-white border-2 border-red-500"
+              } rounded-xl py-4 flex-row-reverse items-center justify-center`}
+            >
+              {deletingAccountId !== null ? (
+                <Feather name="loader" size={20} color="#ef4444" />
+              ) : (
+                <Text className={`${
+                  !selectedAccountId || deletingAccountId !== null
+                    ? "text-gray-400"
+                    : "text-red-500"
+                } text-base font-semibold`}>
+                  حذف الحساب
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
