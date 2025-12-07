@@ -70,7 +70,9 @@ const UpcomingPaymentsSection = ({
 
       // Filter for unpaid and upcoming bills, sort by due date, limit to 3
       const upcomingBills = allBills
-        .filter((bill) => bill.status === "unpaid" || bill.status === "upcoming")
+        .filter(
+          (bill) => bill.status === "unpaid" || bill.status === "upcoming"
+        )
         .sort((a, b) => a.dueDate - b.dueDate)
         .slice(0, 3)
         .map(mapBillToPayment);
@@ -108,18 +110,22 @@ const UpcomingPaymentsSection = ({
       )}
 
       {/* Payment Cards */}
-      {!loading && displayPayments.length > 0 && displayPayments.map((payment) => (
-        <UpcomingPaymentCard
-          key={payment.id}
-          payment={payment}
-          onPress={() => onPaymentPress && onPaymentPress(payment)}
-        />
-      ))}
+      {!loading &&
+        displayPayments.length > 0 &&
+        displayPayments.map((payment) => (
+          <UpcomingPaymentCard
+            key={payment.id}
+            payment={payment}
+            onPress={() => onPaymentPress && onPaymentPress(payment)}
+          />
+        ))}
 
       {/* Empty State */}
       {!loading && displayPayments.length === 0 && (
         <View className="py-8 items-center">
-          <Text className="text-gray-500 text-center">لا توجد فواتير قادمة</Text>
+          <Text className="text-gray-500 text-center">
+            لا توجد فواتير قادمة
+          </Text>
         </View>
       )}
     </View>

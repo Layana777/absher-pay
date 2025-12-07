@@ -23,6 +23,8 @@ import {
   BillPaymentSuccessScreen,
 } from "../screens/BillPayment";
 import FinancialAnalysisScreen from "../screens/Dashboard/FinancialAnalysisScreen";
+import TransactionsListScreen from "../screens/Transactions/TransactionsListScreen";
+import TransactionDetailsScreen from "../screens/Transactions/TransactionDetailsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -106,9 +108,9 @@ const BusinessTabNavigator = () => {
 
       <Tab.Screen
         name="Payments"
-        component={PlaceholderScreen}
-        initialParams={{ title: "المدفوعات", icon: "credit-card" }}
+        component={TransactionsListScreen}
         options={{
+          headerShown: false,
           tabBarLabel: "المدفوعات",
           tabBarIcon: ({ color, size }) => (
             <Feather name="credit-card" size={size} color={color} />
@@ -189,6 +191,9 @@ const BusinessNavigator = () => {
 
       {/* Financial Analysis Screen */}
       <Stack.Screen name="FinancialAnalysis" component={FinancialAnalysisScreen} />
+
+      {/* Transaction Details Screen */}
+      <Stack.Screen name="TransactionDetails" component={TransactionDetailsScreen} />
 
       {/* Standalone screens without tabs - Add your screens here */}
       {/* Example:
