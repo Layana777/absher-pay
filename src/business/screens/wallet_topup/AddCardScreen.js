@@ -8,20 +8,25 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { CustomHeader } from "../../../common/components";
 import TextInput from "../../../common/components/forms/TextInput";
 import { detectCardType } from "../../../common/utils/cardUtils";
+import { saveCard, getBankNameFromCard } from "../../../common/services";
+import { useUser } from "../../../store/hooks";
 
 const AddCardScreen = ({ navigation, route }) => {
-  const { primaryColor = "#0055aa" } = route.params || {};
-
+  const { primaryColor = "#0055aa", onCardAdded } = route.params || {};
+  const user = useUser(); // جلب بيانات المستخدم من Redux
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
   const [expiryDate, setExpiryDate] = useState("");
   const [cvv, setCvv] = useState("");
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const formatCardNumber = (text) => {
     const cleaned = text.replace(/\s/g, "");
@@ -71,24 +76,100 @@ const AddCardScreen = ({ navigation, route }) => {
     );
   };
 
-  const handleSaveCard = () => {
-    if (validateForm()) {
+
+  const handleSaveCard = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    if (!user?.uid) {
+      Alert.alert("خطأ", "يجب تسجيل الدخول أولاً");
+      return;
+    }
+
+    try {
+      setSaving(true);
+      Keyboard.dismiss();
+
       const cleanCardNumber = cardNumber.replace(/\s/g, "");
       const lastFourDigits = cleanCardNumber.slice(-4);
       const cardType = detectCardType(cleanCardNumber);
+      const bankName = getBankNameFromCard(cleanCardNumber);
 
-      navigation.navigate("TopupAmount", {
-        paymentMethod: "CARD",
-        primaryColor: primaryColor,
-        cardData: {
-          cardNumber: cleanCardNumber,
-          lastFourDigits: lastFourDigits,
-          cardType: cardType,
-          cardHolder,
-          expiryDate,
-          cvv,
-        },
-      });
+      // تحديد نوع البطاقة بالعربية
+      let arabicCardType = "مدى";
+      if (cardType === "visa") arabicCardType = "فيزا";
+      else if (cardType === "mastercard") arabicCardType = "ماستركارد";
+      else if (cardType === "amex") arabicCardType = "أمريكان إكسبريس";
+
+      // تحضير بيانات البطاقة للحفظ
+      const cardData = {
+        cardNumber: lastFourDigits, // نحفظ فقط آخر 4 أرقام للأمان
+        bankName: bankName,
+        cardType: cardType,
+        type: arabicCardType,
+        holderName: cardHolder,
+        expiryDate: expiryDate,
+        isDefault: false, // يمكن للمستخدم تعيينها كافتراضية لاحقاً
+      };
+
+      console.log('💾 حفظ البطاقة في Firebase:', cardData);
+
+      // حفظ البطاقة في Firebase
+      const result = await saveCard(user.uid, cardData);
+
+      if (result.success) {
+        Alert.alert(
+          "تم بنجاح",
+          "تم حفظ البطاقة بنجاح",
+          [
+            {
+              text: "متابعة للدفع",
+              onPress: () => {
+                // استدعاء callback إذا كان موجود
+                if (onCardAdded) {
+                  onCardAdded();
+                }
+
+                // الانتقال لشاشة المبلغ
+                navigation.navigate("TopupAmount", {
+                  paymentMethod: "CARD",
+                  primaryColor: primaryColor,
+                  cardData: {
+                    cardNumber: lastFourDigits,
+                    lastFourDigits: lastFourDigits,
+                    cardType: cardType,
+                    bankName: bankName,
+                    type: arabicCardType,
+                    cardId: result.cardId,
+                    holderName: cardHolder,
+                    expiryDate: expiryDate,
+                    cvv: cvv, // CVV لا يُحفظ في Firebase - فقط للاستخدام الفوري
+                  },
+                });
+              }
+            },
+            {
+              text: "العودة للبطاقات",
+              style: "cancel",
+              onPress: () => {
+                // استدعاء callback إذا كان موجود
+                if (onCardAdded) {
+                  onCardAdded();
+                }
+                navigation.goBack();
+              }
+            }
+          ]
+        );
+      } else {
+        Alert.alert("خطأ", result.message || "حدث خطأ في حفظ البطاقة");
+      }
+    } catch (error) {
+      console.error('❌ خطأ في حفظ البطاقة:', error);
+      Alert.alert("خطأ", "حدث خطأ غير متوقع في حفظ البطاقة");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -158,6 +239,7 @@ const AddCardScreen = ({ navigation, route }) => {
                   keyboardType="numeric"
                   maxLength={19}
                   error={errors.cardNumber}
+                  editable={!saving}
                 />
 
                 {/* Card Holder */}
@@ -172,6 +254,7 @@ const AddCardScreen = ({ navigation, route }) => {
                   }}
                   maxLength={16}
                   error={errors.cardHolder}
+                  editable={!saving}
                 />
 
                 {/* Expiry and CVV */}
@@ -186,6 +269,7 @@ const AddCardScreen = ({ navigation, route }) => {
                       maxLength={3}
                       secureTextEntry
                       error={errors.cvv}
+                      editable={!saving}
                     />
                   </View>
                   <View className="flex-1">
@@ -199,6 +283,7 @@ const AddCardScreen = ({ navigation, route }) => {
                       keyboardType="numeric"
                       maxLength={5}
                       error={errors.expiryDate}
+                      editable={!saving}
                     />
                   </View>
                 </View>
@@ -216,8 +301,13 @@ const AddCardScreen = ({ navigation, route }) => {
                       style={{ marginLeft: 8, marginTop: 2 }}
                     />
                     <View className="flex-1">
-                      <Text className="text-xs text-gray-600 text-right">
-                        بياناتك محمية بأعلى معايير الأمان والتشفير
+                      <Text className="text-xs text-gray-600 text-right font-semibold mb-1">
+                        أمان البيانات
+                      </Text>
+                      <Text className="text-xs text-gray-500 text-right">
+                        • نحفظ فقط آخر 4 أرقام من البطاقة{"\n"}
+                        • CVV لا يُحفظ أبداً (للاستخدام الفوري فقط){"\n"}
+                        • جميع البيانات مشفرة في Firebase
                       </Text>
                     </View>
                   </View>
@@ -229,15 +319,25 @@ const AddCardScreen = ({ navigation, route }) => {
             <View className="px-4 pb-6 pt-4 bg-white border-t border-gray-200">
               <TouchableOpacity
                 onPress={handleSaveCard}
-                disabled={!isFormComplete()}
+                disabled={!isFormComplete() || saving}
                 className="rounded-xl py-4"
                 style={{
-                  backgroundColor: isFormComplete() ? primaryColor : "#d1d5db",
+                  backgroundColor:
+                    isFormComplete() && !saving ? primaryColor : "#d1d5db",
                 }}
               >
-                <Text className="text-white text-center text-base font-semibold">
-                  حفظ البطاقة والمتابعة
-                </Text>
+                {saving ? (
+                  <View className="flex-row items-center justify-center">
+                    <ActivityIndicator size="small" color="white" />
+                    <Text className="text-white text-center text-base font-semibold mr-2">
+                      جاري الحفظ...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text className="text-white text-center text-base font-semibold">
+                    حفظ البطاقة والمتابعة
+                  </Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
