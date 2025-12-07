@@ -1,5 +1,6 @@
 // Dashboard Components Exports
 export { default as UpcomingPayHeaderDetails } from "./UpcomingPayHeaderDetails";
+export { default as UpcomingPayNavBar } from "./UpcomingPayNavBar";
 export { default as PaymentInfoSection } from "./PaymentInfoSection";
 export { default as PaymentBreakdownCard } from "./PaymentBreakdownCard";
 export { default as PaymentActionButtons } from "./PaymentActionButtons";

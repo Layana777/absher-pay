@@ -11,6 +11,7 @@ import {
 import { Feather } from "@expo/vector-icons";
 import {
   UpcomingPayHeaderDetails,
+  UpcomingPayNavBar,
   PaymentInfoSection,
   PaymentBreakdownCard,
   PaymentActionButtons,
@@ -171,7 +172,13 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
 
   return (
     <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+        {/* Sticky Navigation Header */}
+        <UpcomingPayNavBar
+          primaryColor={primaryColor}
+          onBack={() => navigation.goBack()}
+        />
+
         {/* Header with main payment info */}
         <UpcomingPayHeaderDetails
           payment={enrichedPayment}
