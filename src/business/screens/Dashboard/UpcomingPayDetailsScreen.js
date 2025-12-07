@@ -7,6 +7,7 @@ import {
   PaymentWarningAlert,
   PaymentSecondaryActions,
   PaymentAITips,
+  PaymentAdditionalInfoSection,
 } from "../../components/Dashboard";
 
 /**
@@ -158,6 +159,13 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         {/* Payment details section */}
         <PaymentInfoSection
           payment={enrichedPayment}
+          primaryColor={primaryColor}
+        />
+
+        {/* Additional Information Section */}
+        <PaymentAdditionalInfoSection
+          billData={billData}
+          serviceType={billData?.serviceType}
           primaryColor={primaryColor}
         />
 

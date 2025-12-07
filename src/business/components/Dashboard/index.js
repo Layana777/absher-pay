@@ -6,3 +6,4 @@ export { default as PaymentActionButtons } from "./PaymentActionButtons";
 export { default as PaymentWarningAlert } from "./PaymentWarningAlert";
 export { default as PaymentSecondaryActions } from "./PaymentSecondaryActions";
 export { default as PaymentAITips } from "./PaymentAITips";
+export { default as PaymentAdditionalInfoSection } from "./PaymentAdditionalInfoSection";
