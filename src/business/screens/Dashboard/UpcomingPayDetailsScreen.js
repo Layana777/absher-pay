@@ -26,6 +26,7 @@ import {
   createScheduledBill,
   getDateOnlyTimestamp,
 } from "../../../common/services/scheduledBillsService";
+import { generateBillPDF } from "../../../common/services/PDFService";
 
 /**
  * Upcoming Payment Details Screen
@@ -207,11 +208,9 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
   };
 
   // Handle Download PDF
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     console.log("Download PDF pressed");
-    Alert.alert("تحميل PDF", "سيتم تحميل الفاتورة بصيغة PDF", [
-      { text: "حسناً" },
-    ]);
+    await generateBillPDF(enrichedPayment);
   };
 
   // Handle Share
