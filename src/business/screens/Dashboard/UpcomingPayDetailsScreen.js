@@ -22,6 +22,7 @@ import {
 } from "../../components/Dashboard";
 import Button from "../../../common/components/ui/Button";
 import { getWalletById } from "../../../common/services/walletService";
+import { createScheduledBill, getDateOnlyTimestamp } from "../../../common/services/scheduledBillsService";
 
 /**
  * Upcoming Payment Details Screen
@@ -123,12 +124,66 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
   };
 
   // Handle Schedule Payment action
-  const handleSchedulePayment = () => {
-    console.log("Schedule Payment pressed");
-    // TODO: Navigate to payment scheduling screen
-    Alert.alert("جدولة الدفع", "سيتم إضافة خاصية جدولة الدفع قريباً", [
-      { text: "حسناً" },
-    ]);
+  const handleSchedulePayment = async (paymentDate) => {
+    console.log("📅 Schedule Payment pressed for date:", paymentDate);
+    console.log("📅 Payment date type:", typeof paymentDate);
+    console.log("📅 Payment date ISO:", paymentDate instanceof Date ? paymentDate.toISOString() : "Not a Date object");
+
+    try {
+      // Prepare scheduled bill data
+      // Convert date to midnight timestamp (date only, no time)
+      const scheduledDateTimestamp = getDateOnlyTimestamp(paymentDate);
+      console.log("📅 Converted to timestamp:", scheduledDateTimestamp);
+      console.log("📅 Timestamp as date:", new Date(scheduledDateTimestamp).toISOString());
+
+      const scheduledBillData = {
+        walletId: enrichedPayment.billData.walletId,
+        billId: enrichedPayment.billData.id,
+        billReferenceNumber: enrichedPayment.referenceNumber,
+        serviceName: payment.title,
+        ministryName: enrichedPayment.billData.ministryName,
+        scheduledAmount: totalAmount,
+        scheduledDate: scheduledDateTimestamp,
+        metadata: {
+          baseAmount,
+          penaltyAmount,
+          vatAmount,
+          serviceFee,
+          serviceType: enrichedPayment.billData.serviceType,
+          category: enrichedPayment.billData.category
+        }
+      };
+
+      // Save scheduled bill to database
+      const scheduledBill = await createScheduledBill(
+        enrichedPayment.billData.userId || walletData?.userId,
+        scheduledBillData
+      );
+
+      console.log("✅ Scheduled bill saved:", scheduledBill.id);
+
+      // Format date for display in success screen
+      const day = String(paymentDate.getDate()).padStart(2, '0');
+      const month = String(paymentDate.getMonth() + 1).padStart(2, '0');
+      const year = paymentDate.getFullYear();
+      const formattedDateForDisplay = `${day}-${month}-${year}`;
+
+      // Navigate to success screen
+      navigation.navigate("ScheduleSuccess", {
+        scheduledBillId: scheduledBill.id,
+        billNumber: enrichedPayment.referenceNumber,
+        paymentDate: formattedDateForDisplay,
+        serviceName: payment.title,
+        amount: `${totalAmount.toLocaleString("en-US")} ريال`,
+      });
+    } catch (error) {
+      console.error("❌ Error scheduling payment:", error);
+      Alert.alert(
+        "خطأ",
+        "حدث خطأ أثناء جدولة الدفع. يرجى المحاولة مرة أخرى.",
+        [{ text: "حسناً" }]
+      );
+    }
   };
 
   // Handle Remind Later action

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { View, TouchableOpacity, Text, Modal, Platform } from "react-native";
+import { View, TouchableOpacity, Text, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DatePickerWheels from "../DatePickerWheels";
 
 /**
  * Payment Action Buttons Component
@@ -31,19 +31,23 @@ const PaymentActionButtons = ({
 
   const handleScheduleClick = () => {
     setShowScheduleModal(true);
+    setShowDatePicker(false);
   };
 
-  const handleDateChange = (event, date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
+  const handleDateChange = (date) => {
+    console.log("📅 Date selected from picker:", date);
+    console.log("📅 Date ISO:", date.toISOString());
+    setSelectedDate(date);
+  };
 
-    if (date) {
-      setSelectedDate(date);
-      // Format date as YYYY-MM-DD
-      const formattedDate = date.toISOString().split('T')[0];
-      setPaymentDate(formattedDate);
-    }
+  const handleDateDone = () => {
+    // Format date as DD-MM-YYYY for display only
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const year = selectedDate.getFullYear();
+    const formattedDate = `${day}-${month}-${year}`;
+    setPaymentDate(formattedDate);
+    setShowDatePicker(false);
   };
 
   const handleCalendarPress = () => {
@@ -51,12 +55,18 @@ const PaymentActionButtons = ({
   };
 
   const handleConfirmSchedule = () => {
-    if (onSchedule) {
-      onSchedule(paymentDate);
+    if (onSchedule && paymentDate) {
+      console.log("📅 Confirming schedule with date:", selectedDate);
+      console.log("📅 Date ISO:", selectedDate.toISOString());
+      console.log("📅 Date timestamp:", selectedDate.getTime());
+      // Pass the actual Date object, not the formatted string
+      onSchedule(selectedDate);
+      // Close modal and reset states
+      setShowScheduleModal(false);
+      setPaymentDate("");
+      setSelectedDate(new Date());
+      setShowDatePicker(false);
     }
-    setShowScheduleModal(false);
-    setPaymentDate("");
-    setSelectedDate(new Date());
   };
 
   const handleCancelSchedule = () => {
@@ -158,63 +168,79 @@ const PaymentActionButtons = ({
             </View>
 
             {/* Payment Date */}
-            <TouchableOpacity
-              onPress={handleCalendarPress}
-              className="flex-row items-center justify-between mb-6 py-3 px-4 bg-gray-50 rounded-xl"
-              style={{direction: "ltr"}}
-            >
-              <View className="flex-row items-center">
-                <Feather name="calendar" size={20} color="#0055aa" style={{ marginLeft: 8 }} />
-                <Text className="text-gray-800 text-base font-bold">
-                  {paymentDate}
-                </Text>
-              </View>
-              <Text className="text-gray-700 text-sm font-semibold">تاريخ الدفع</Text>
-            </TouchableOpacity>
-
-            {/* Date Picker */}
-            {showDatePicker && (
-              <DateTimePicker
-                value={selectedDate}
-                mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-              />
-            )}
-
-            {/* iOS Date Picker Done Button */}
-            {showDatePicker && Platform.OS === 'ios' && (
+            {!showDatePicker ? (
               <TouchableOpacity
-                onPress={() => setShowDatePicker(false)}
-                className="bg-gray-100 rounded-xl py-2 mb-4"
+                onPress={handleCalendarPress}
+                className="mb-6 py-3 px-4 bg-gray-50 rounded-xl"
               >
-                <Text className="text-center text-gray-700 font-semibold">تم</Text>
+                <View className="flex-row items-center" style={{direction: "rtl"}}>
+                  <Text className="text-gray-700 text-sm font-semibold">تاريخ الدفع</Text>
+                  <View className="flex-1 items-center">
+                    <Text className="text-gray-800 text-base font-bold">
+                      {paymentDate || ""}
+                    </Text>
+                  </View>
+                  <Feather name="calendar" size={20} color="#0055aa" />
+                </View>
               </TouchableOpacity>
+            ) : (
+              <View className="mb-6">
+                <View className="flex-row items-center justify-between mb-2 px-2">
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    className="w-8 h-8 items-center justify-center"
+                  >
+                    <Feather name="x" size={18} color="#6B7280" />
+                  </TouchableOpacity>
+                  <Text className="text-gray-700 text-sm font-semibold">اختر التاريخ</Text>
+                  <View style={{ width: 32 }} />
+                </View>
+                <DatePickerWheels
+                  onDateChange={handleDateChange}
+                  initialDate={selectedDate}
+                  minimumDate={new Date()}
+                />
+
+                {/* Done Button */}
+                <TouchableOpacity
+                  onPress={handleDateDone}
+                  className="rounded-xl py-3 mt-4"
+                  style={{ backgroundColor: primaryColor }}
+                >
+                  <Text className="text-white text-base font-semibold text-center">
+                    تم
+                  </Text>
+                </TouchableOpacity>
+              </View>
             )}
 
-            {/* Confirm Button */}
-            <TouchableOpacity
-              onPress={handleConfirmSchedule}
-              disabled={!paymentDate}
-              className="rounded-xl py-4 mb-3"
-              style={{
-                backgroundColor: primaryColor,
-                opacity: paymentDate ? 1 : 0.5
-              }}
-            >
-              <Text className="text-white text-base font-semibold text-center">
-                تأكيد
-              </Text>
-            </TouchableOpacity>
+            {/* Confirm and Back Buttons - Only show when date picker is hidden */}
+            {!showDatePicker && (
+              <>
+                {/* Confirm Button */}
+                <TouchableOpacity
+                  onPress={handleConfirmSchedule}
+                  disabled={!paymentDate}
+                  className="rounded-xl py-4 mb-3"
+                  style={{
+                    backgroundColor: primaryColor,
+                    opacity: paymentDate ? 1 : 0.5
+                  }}
+                >
+                  <Text className="text-white text-base font-semibold text-center">
+                    تأكيد
+                  </Text>
+                </TouchableOpacity>
 
-            {/* Back Button */}
-            <TouchableOpacity
-              onPress={handleCancelSchedule}
-              className="py-3"
-            >
-              <Text className="text-gray-600 text-center text-base">رجوع</Text>
-            </TouchableOpacity>
+                {/* Back Button */}
+                <TouchableOpacity
+                  onPress={handleCancelSchedule}
+                  className="py-3"
+                >
+                  <Text className="text-gray-600 text-center text-base">رجوع</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
       </Modal>
