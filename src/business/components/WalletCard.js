@@ -1,15 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import ActionButtons from "./ActionButtons";
 import SvgIcons from "../../common/components/SvgIcons";
 import { PaymentMethodSheet } from "../../common/components/wallet-topUp";
 import { useBusinessWallet } from "../../store/hooks";
+import { getMonthlyTotalPayments } from "../../common/services/transactionService";
 
-const WalletCard = ({ navigation,  onTransferPress }) => {
+const WalletCard = ({ navigation, onTransferPress }) => {
   // Get business wallet data from Redux
   const businessWallet = useBusinessWallet();
   const [showPaymentMethodSheet, setShowPaymentMethodSheet] = useState(false);
+  const [monthlyTotal, setMonthlyTotal] = useState(0);
+
+  useEffect(() => {
+    const fetchMonthlyTotal = async () => {
+      if (businessWallet?.id) {
+        const result = await getMonthlyTotalPayments(businessWallet.id);
+        if (result.success) {
+          setMonthlyTotal(result.data);
+        }
+      }
+    };
+
+    fetchMonthlyTotal();
+  }, [businessWallet?.id]);
 
   // Extract data from business wallet
   const balance = businessWallet?.balance
@@ -75,7 +90,7 @@ const WalletCard = ({ navigation,  onTransferPress }) => {
             size="small"
             onPrimaryPress={handleTopupPress}
             onSecondaryPress={onTransferPress}
-        />
+          />
         </View>
 
         {/* Monthly Total Section */}
@@ -88,7 +103,12 @@ const WalletCard = ({ navigation,  onTransferPress }) => {
           <View className="items-end mb-4">
             <View className="flex-row items-center justify-center">
               <SvgIcons name={"SAR"} size={35} />
-              <Text className="text-white text-4xl font-bold">0.00</Text>
+              <Text className="text-white text-4xl font-bold">
+                {monthlyTotal.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </Text>
             </View>
 
             {/* Percentage Growth */}
