@@ -24,6 +24,7 @@ import {
 
 // Redux Hooks
 import { useBusinessWallet } from "../../../store/hooks";
+import Svg from "react-native-svg";
 
 // Constants
 const ITEMS_PER_PAGE = 50;
@@ -123,7 +124,11 @@ const TransactionCard = ({ transaction, onPress, isLast }) => {
         <View className="items-end ml-2">
           <View className="flex-row items-center" style={{ direction: "ltr" }}>
             <View className="mx-1">
-              <SvgIcons name={"SARBlack"} size={16} />
+              {isPositive ? (
+                <SvgIcons name={"SARTGreen"} size={16} />
+              ) : (
+                <SvgIcons name={"SARTred"} size={16} />
+              )}
             </View>
             <Text
               className={`text-lg font-bold ${

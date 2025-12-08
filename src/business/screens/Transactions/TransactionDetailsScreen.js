@@ -362,11 +362,13 @@ const TransactionDetailsScreen = ({ navigation, route }) => {
 
           {/* Amount Display */}
           <View className="items-center mb-4">
-            <View
-              className="flex-row items-center"
-              style={{ direction: "ltr" }}
-            >
-              <SvgIcons name={"SARBlack"} size={30} />
+            <View className="flex-row items-center">
+              {isPositive ? (
+                <SvgIcons name={"SARTGreen"} size={35} />
+              ) : (
+                <SvgIcons name={"SARTred"} size={35} />
+              )}
+              :
               <Text
                 className={`text-4xl font-bold mx-1 ${
                   isPositive ? "text-green-500" : "text-red-500"

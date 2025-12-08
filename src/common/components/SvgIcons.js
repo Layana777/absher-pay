@@ -23,7 +23,8 @@ import MinistryOfHumanResources from "../assets/icons/ministryOfHumanResources.s
 import MOI from "../assets/icons/MOI.svg";
 import Justice from "../assets/icons/justice.svg";
 import Commerce from "../assets/icons/commerce.svg";
-
+import SARTGreen from "../assets/icons/SARTGreen.svg";
+import SARTred from "../assets/icons/SARTred.svg";
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
     case "wallet":
@@ -73,6 +74,10 @@ const SvgIcons = ({ name, size, color, style }) => {
       return <Justice height={size} width={size} />;
     case "Commerce":
       return <Commerce height={size} width={size} />;
+    case "SARTGreen":
+      return <SARTGreen height={size} width={size} />;
+    case "SARTred":
+      return <SARTred height={size} width={size} />;
 
     default:
       return null;
