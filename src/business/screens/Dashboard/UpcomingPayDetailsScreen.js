@@ -306,15 +306,17 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         <PaymentAITips primaryColor={primaryColor} />
 
         {/* Action Buttons - Inside ScrollView */}
-        <PaymentActionButtons
-          onPayNow={handlePayNow}
-          onSchedule={handleSchedulePayment}
-          onRemindLater={handleRemindLater}
-          primaryColor={primaryColor}
-          isUrgent={enrichedPayment.isUrgent}
-          serviceName={payment.title}
-          amount={`${totalAmount.toLocaleString("en-US")} ريال`}
-        />
+        {enrichedPayment.status !== "paid" && (
+          <PaymentActionButtons
+            onPayNow={handlePayNow}
+            onSchedule={handleSchedulePayment}
+            onRemindLater={handleRemindLater}
+            primaryColor={primaryColor}
+            isUrgent={enrichedPayment.isUrgent}
+            serviceName={payment.title}
+            amount={`${totalAmount.toLocaleString("en-US")} ريال`}
+          />
+        )}
 
         {/* Bottom padding for scrolling */}
         <View className="h-6" />
