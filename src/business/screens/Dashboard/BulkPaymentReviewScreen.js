@@ -24,7 +24,6 @@ import { getMinistryIconName } from "../../../common/utils/ministryIconMapper";
 const BulkPaymentReviewScreen = ({ navigation, route }) => {
   const {
     billsToPay = [],
-    totalAmount = 0,
     userId,
     walletId,
     primaryColor = "#0055aa",
@@ -35,6 +34,10 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
 
   const [loading, setLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // Track selected bills (initially all bills are selected)
+  const [selectedBillIds, setSelectedBillIds] = useState(
+    billsToPay.map((bill) => bill.id)
+  );
 
   // Helper function to get service name in Arabic
   const getServiceNameAr = (serviceType, serviceSubType) => {
@@ -98,6 +101,40 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
     return "الكل";
   };
 
+  // Toggle bill selection
+  const toggleBillSelection = (billId) => {
+    setSelectedBillIds((prev) => {
+      if (prev.includes(billId)) {
+        // Deselect
+        return prev.filter((id) => id !== billId);
+      } else {
+        // Select
+        return [...prev, billId];
+      }
+    });
+  };
+
+  // Select all bills
+  const selectAllBills = () => {
+    setSelectedBillIds(billsToPay.map((bill) => bill.id));
+  };
+
+  // Deselect all bills
+  const deselectAllBills = () => {
+    setSelectedBillIds([]);
+  };
+
+  // Get selected bills
+  const selectedBills = billsToPay.filter((bill) =>
+    selectedBillIds.includes(bill.id)
+  );
+
+  // Calculate total for selected bills
+  const selectedTotalAmount = selectedBills.reduce((total, bill) => {
+    const amount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
+    return total + amount;
+  }, 0);
+
   // Transform Firebase bill to UpcomingPaymentCard format
   const transformBillToPayment = (bill) => {
     // Get service name using the helper function
@@ -157,10 +194,15 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
       return;
     }
 
+    if (selectedBills.length === 0) {
+      Alert.alert("تنبيه", "يرجى اختيار فاتورة واحدة على الأقل للدفع");
+      return;
+    }
+
     // Navigate to OTP screen for bulk payment
     navigation.navigate("BillPaymentOtp", {
-      billsToPay, // Pass all bills for bulk payment
-      totalAmount,
+      billsToPay: selectedBills, // Pass only selected bills
+      totalAmount: selectedTotalAmount,
       walletId,
       userId,
       primaryColor,
@@ -217,12 +259,44 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
           className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
         >
-          <Text
-            className="text-gray-700 font-bold text-lg mb-8 m-4"
-            style={{ textAlign: "right" }}
+          {/* Header with Select All/Deselect All */}
+          <View
+            className="flex-row justify-between items-center mb-4 mt-4"
+            style={{ direction: "rtl" }}
           >
-            الفواتير المستحقة
-          </Text>
+            <Text className="text-gray-700 font-bold text-lg">
+              الفواتير المستحقة ({selectedBills.length}/{billsToPay.length})
+            </Text>
+            <View className="flex-row gap-2">
+              {selectedBills.length === billsToPay.length ? (
+                <TouchableOpacity
+                  onPress={deselectAllBills}
+                  className="px-3 py-1 rounded-lg"
+                  style={{ backgroundColor: `${primaryColor}15` }}
+                >
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: primaryColor }}
+                  >
+                    إلغاء الكل
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  onPress={selectAllBills}
+                  className="px-3 py-1 rounded-lg"
+                  style={{ backgroundColor: `${primaryColor}15` }}
+                >
+                  <Text
+                    className="text-sm font-semibold"
+                    style={{ color: primaryColor }}
+                  >
+                    تحديد الكل
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
 
           {billsToPay.map((bill) => {
             const payment = transformBillToPayment(bill);
@@ -242,15 +316,23 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
                 ? "#F59E0B"
                 : "#6B7280";
 
-            return (
-              <View key={payment.id} className="mb-3">
-                {/* UpcomingPaymentCard */}
-                {/* <UpcomingPaymentCard payment={payment} onPress={() => {}} /> */}
+            const isSelected = selectedBillIds.includes(bill.id);
 
+            return (
+              <TouchableOpacity
+                key={payment.id}
+                className="mb-3"
+                onPress={() => toggleBillSelection(bill.id)}
+                activeOpacity={0.7}
+              >
                 {/* Additional Details Below Card */}
                 <View
                   className="bg-white rounded-xl px-4 pb-6 shadow-lg mt-1"
-                  style={{ direction: "rtl" }}
+                  style={{
+                    direction: "rtl",
+                    borderWidth: 2,
+                    borderColor: isSelected ? primaryColor : "transparent",
+                  }}
                 >
                   {/* Service Name with Ministry Icon */}
                   <View className="flex-row items-center mb-2 pt-3 border-t border-gray-100">
@@ -320,7 +402,7 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
                     </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           })}
 
@@ -336,17 +418,51 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
             borderTopRightRadius: 20,
           }}
         >
+          {/* Selected Amount Summary */}
+          {selectedBills.length > 0 && (
+            <View
+              className="mb-3 p-3 rounded-xl"
+              style={{ backgroundColor: `${primaryColor}10`, direction: "rtl" }}
+            >
+              <View className="flex-row justify-between items-center">
+                <Text className="text-gray-700 text-sm">
+                  {selectedBills.length} فاتورة محددة
+                </Text>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    direction: "ltr",
+                  }}
+                >
+                  <SvgIcons name="SARBlack" size={14} />
+                  <Text
+                    className="text-base font-bold ml-1"
+                    style={{ color: primaryColor }}
+                  >
+                    {selectedTotalAmount.toLocaleString()}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
           <TouchableOpacity
             className="rounded-xl py-4"
-            style={{ backgroundColor: loading ? "#9CA3AF" : primaryColor }}
+            style={{
+              backgroundColor:
+                loading || selectedBills.length === 0 ? "#9CA3AF" : primaryColor,
+            }}
             onPress={handlePayNow}
-            disabled={loading}
+            disabled={loading || selectedBills.length === 0}
           >
             {loading ? (
               <ActivityIndicator color="white" />
             ) : (
               <Text className="text-white text-center font-bold text-lg">
-                ادفع الآن
+                {selectedBills.length === 0
+                  ? "اختر فاتورة على الأقل"
+                  : "ادفع الآن"}
               </Text>
             )}
           </TouchableOpacity>
@@ -410,7 +526,7 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
                   <View className="flex-row justify-between items-center mb-3">
                     <Text className="text-gray-600 text-sm">عدد الفواتير</Text>
                     <Text className="text-gray-800 text-sm font-bold">
-                      {billsToPay.length} فاتورة
+                      {selectedBills.length} فاتورة
                     </Text>
                   </View>
                   <View className="h-px bg-gray-200 my-2" />
@@ -418,13 +534,21 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
                     <Text className="text-gray-900 text-base font-bold">
                       المبلغ الإجمالي
                     </Text>
-                    <Text
-                      className="text-xl font-bold"
-                      style={{ color: primaryColor }}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        direction: "ltr",
+                      }}
                     >
-                      {totalAmount.toLocaleString()}{" "}
                       <SvgIcons name="SARBlack" size={15} />
-                    </Text>
+                      <Text
+                        className="text-xl font-bold ml-1"
+                        style={{ color: primaryColor }}
+                      >
+                        {selectedTotalAmount.toLocaleString()}
+                      </Text>
+                    </View>
                   </View>
                 </View>
 
