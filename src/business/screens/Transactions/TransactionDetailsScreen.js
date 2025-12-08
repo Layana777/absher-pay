@@ -13,6 +13,7 @@ import * as Clipboard from "expo-clipboard";
 // Components
 import CustomHeader from "../../../common/components/CustomHeader";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { generateTransactionPDF } from "../../../common/services/PDFService";
 
 // Constants
 const PRIMARY_COLOR = "#0055aa";
@@ -225,10 +226,10 @@ const TransactionDetailsScreen = ({ navigation, route }) => {
   };
 
   /**
-   * Handle image button press
+   * Handle PDF button press
    */
-  const handleImagePress = () => {
-    Alert.alert("الإيصال غير متوفر", "لا يوجد إيصال لهذه المعاملة");
+  const handlePDFPress = async () => {
+    await generateTransactionPDF(transaction);
   };
 
   /**
@@ -411,15 +412,15 @@ const TransactionDetailsScreen = ({ navigation, route }) => {
 
           {/* Quick Action Buttons */}
           <View className="flex-row px-6 gap-4 mb-6">
-            {/* Image Button */}
+            {/* PDF Button */}
             <TouchableOpacity
               className="flex-1 bg-white rounded-2xl p-4 border border-gray-200 flex-row items-center justify-center"
-              onPress={handleImagePress}
+              onPress={handlePDFPress}
               activeOpacity={0.7}
             >
-              <Feather name="image" size={20} color="#6B7280" />
+              <Feather name="file-text" size={20} color="#6B7280" />
               <Text className="text-gray-700 text-sm font-semibold mx-2">
-                صورة
+                PDF
               </Text>
             </TouchableOpacity>
 

@@ -40,7 +40,8 @@
           "faceIDPermission": "السماح لتطبيق محفظة أبشر باستخدام Face ID أو Touch ID لتسجيل الدخول الآمن"
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-asset"
     ]
   }
 }
