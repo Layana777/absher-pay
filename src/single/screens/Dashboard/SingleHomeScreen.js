@@ -65,7 +65,7 @@ const SingleHomeScreen = ({ navigation }) => {
         {/* Wallet Card Component */}
         <WalletCard
           navigation={navigation}
-          onTransferPress={() => console.log("Transfer pressed")}
+          onTransferPress={() => navigation.navigate("SingleBankTransfer")}
         />
       </ScrollView>
     </View>

@@ -11,6 +11,10 @@ import {
   CardSelectionScreen,
   AddCardScreen,
 } from "../screens/wallet_topup";
+import SingleBankTransferScreen from "../screens/transformation/SingleBankTransferScreen";
+import SingleTransferReceiptScreen from "../screens/transformation/SingleTransferReceiptScreen";
+import SingleAddBankAccountScreen from "../screens/transformation/SingleAddBankAccountScreen";
+import SingleBankAccountSuccessScreen from "../screens/transformation/SingleBankAccountSuccessScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -164,6 +168,12 @@ const SingleNavigator = () => {
       <Stack.Screen name="TopupAmount" component={TopupAmountScreen} />
       <Stack.Screen name="TopupTransactionDetails" component={TopupTransactionDetailsScreen} />
       <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
+
+      {/* Bank Transfer Flow Screens */}
+      <Stack.Screen name="SingleBankTransfer" component={SingleBankTransferScreen} />
+      <Stack.Screen name="SingleTransferReceipt" component={SingleTransferReceiptScreen} />
+      <Stack.Screen name="AddBankAccount" component={SingleAddBankAccountScreen} />
+      <Stack.Screen name="SingleBankAccountSuccess" component={SingleBankAccountSuccessScreen} />
     </Stack.Navigator>
   );
 };

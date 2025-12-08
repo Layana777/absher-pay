@@ -54,6 +54,7 @@ const TopupTransactionBusinessDetailsScreen = ({ navigation, route }) => {
       primaryColor,
       userId,
       walletId,
+      accountType: 'business', // Specify account type for SAR icon
       phoneNumber: user?.phoneNumber || "05xxxxxxxx",
       paymentDetails: {
         lastFourDigits: lastFourDigits,

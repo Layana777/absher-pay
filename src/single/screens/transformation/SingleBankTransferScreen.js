@@ -11,12 +11,12 @@ import {
 import { Feather } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
 import SvgIcons from "../../../common/components/SvgIcons";
-import { useBusinessWallet, useUser, useBankAccounts, useSelectedBankAccount } from "../../../store/hooks";
+import { usePersonalWallet, useUser, useBankAccounts, useSelectedBankAccount } from "../../../store/hooks";
 import { SIZES } from "../../../common/constants/sizes";
 import CustomHeader from "../../../common/components/CustomHeader";
 import Button from "../../../common/components/ui/Button";
-import LinkedBankAccountsModal from "../../components/LinkedBankAccountsModal";
-import { updateBusinessWalletBalance } from "../../../store/slices/walletSlice";
+import LinkedBankAccountsModal from "../../../business/components/LinkedBankAccountsModal";
+import { updatePersonalWalletBalance } from "../../../store/slices/walletSlice";
 import { setBankAccounts } from "../../../store/slices/bankAccountsSlice";
 import { createTransaction } from "../../../common/services/transactionService";
 import { updateWalletBalance } from "../../../common/services/walletService";
@@ -35,7 +35,7 @@ const bankLogos = {
   "البنك الأهلي التجاري": require("../../../common/assets/icons/anb-logo.png"),
 };
 
-const BankTransferScreen = ({ navigation }) => {
+const SingleBankTransferScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const [amount, setAmount] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -43,18 +43,18 @@ const BankTransferScreen = ({ navigation }) => {
 
   // Get user data from Redux
   const user = useUser();
-  // Get business wallet data from Redux
-  const businessWallet = useBusinessWallet();
+  // Get personal wallet data from Redux
+  const personalWallet = usePersonalWallet();
   // Get bank accounts from Redux
   const bankAccounts = useBankAccounts();
   const selectedAccount = useSelectedBankAccount();
 
-  console.log("getting the business wallet balance" , businessWallet)
+  console.log("getting the personal wallet balance" , personalWallet)
   console.log("Bank accounts from Redux:", bankAccounts);
   console.log("Selected account:", selectedAccount);
 
-  const balance = businessWallet?.balance
-    ? businessWallet.balance.toLocaleString("en-US", {
+  const balance = personalWallet?.balance
+    ? personalWallet.balance.toLocaleString("en-US", {
         minimumFractionDigits: 0,
         maximumFractionDigits: 0,
       })
@@ -107,8 +107,8 @@ const BankTransferScreen = ({ navigation }) => {
     // Navigate to OTP verification screen
     navigation.navigate("OtpVerification", {
       amount: amount,
-      primaryColor: "#0055aa",
-      accountType: 'business', // Specify account type for SAR icon
+      primaryColor: "#028550",
+      accountType: 'personal', // Specify account type for SAR icon
       phoneNumber: user?.phone || "05xxxxxxxx",
       title: "تأكيد التحويل البنكي",
       description: "أدخل رمز التحقق المرسل إلى رقم جوالك",
@@ -118,7 +118,7 @@ const BankTransferScreen = ({ navigation }) => {
         try {
           // Calculate new balance after deducting the transfer amount
           const transferAmount = parseFloat(amount);
-          const currentBalance = businessWallet?.balance || 0;
+          const currentBalance = personalWallet?.balance || 0;
           const newBalance = currentBalance - transferAmount;
 
           // Prepare bank transfer details for Firebase
@@ -145,18 +145,18 @@ const BankTransferScreen = ({ navigation }) => {
           };
 
           const transactionResult = await createTransaction(
-            businessWallet?.id,
+            personalWallet?.id,
             transactionData
           );
 
           if (transactionResult.success) {
             console.log("Transaction saved to Firebase:", transactionResult.data);
 
-            // Update the business wallet balance in Redux
-            dispatch(updateBusinessWalletBalance(newBalance));
+            // Update the personal wallet balance in Redux
+            dispatch(updatePersonalWalletBalance(newBalance));
 
             // Sync wallet balance to Firebase
-            await updateWalletBalance(businessWallet?.id, newBalance);
+            await updateWalletBalance(personalWallet?.id, newBalance);
 
             console.log("Transfer confirmed:", {
               amount: transferAmount,
@@ -168,7 +168,7 @@ const BankTransferScreen = ({ navigation }) => {
             });
 
             // Navigate to success screen
-            navigation.navigate("TransferSuccess", {
+            navigation.navigate("SingleTransferReceipt", {
               amount: amount,
               bankName: linkedBank?.bankName,
               iban: linkedBank?.ibanFormatted || linkedBank?.iban,
@@ -200,10 +200,10 @@ const BankTransferScreen = ({ navigation }) => {
       <CustomHeader
         title="التحويل البنكي"
         onBack={() => navigation.goBack()}
-        backgroundColor="#0055aa"
+        backgroundColor="#028550"
         textColor="#FFFFFF"
         statusBarStyle="light-content"
-        statusBarBackgroundColor="#0055aa"
+        statusBarBackgroundColor="#028550"
       />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
@@ -233,7 +233,7 @@ const BankTransferScreen = ({ navigation }) => {
                   className="px-3 py-1"
                   onPress={() => setShowAccountsModal(true)}
                 >
-                  <Text className="text-[#0055aa] text-sm font-semibold">
+                  <Text className="text-[#028550] text-sm font-semibold">
                     عرض الكل
                   </Text>
                 </TouchableOpacity>
@@ -271,7 +271,7 @@ const BankTransferScreen = ({ navigation }) => {
                       resizeMode="contain"
                     />
                   ) : (
-                    <View className="bg-[#0055aa] rounded-xl w-10 h-10 items-center justify-center">
+                    <View className="bg-[#028550] rounded-xl w-10 h-10 items-center justify-center">
                       <Feather name="briefcase" size={20} color="white" />
                     </View>
                   )}
@@ -283,12 +283,12 @@ const BankTransferScreen = ({ navigation }) => {
               {/* No Linked Account - Show Add Button */}
               <TouchableOpacity
                 onPress={() => navigation.navigate("AddBankAccount")}
-                className="border-2 border-dashed border-[#0055aa] rounded-xl p-4 flex-row items-center justify-center"
+                className="border-2 border-dashed border-[#028550] rounded-xl p-4 flex-row items-center justify-center"
               >
-                <View className="bg-blue-100 rounded-xl w-10 h-10 items-center justify-center mx-2">
-                  <Text className="text-[#0055aa] text-2xl font-light">+</Text>
+                <View className="bg-green-100 rounded-xl w-10 h-10 items-center justify-center mx-2">
+                  <Text className="text-[#028550] text-2xl font-light">+</Text>
                 </View>
-                <Text className="text-[#0055aa] text-sm font-bold">
+                <Text className="text-[#028550] text-sm font-bold">
                   إضافة حساب جديد
                 </Text>
               </TouchableOpacity>
@@ -337,15 +337,15 @@ const BankTransferScreen = ({ navigation }) => {
           <Button
             title="متابعة"
             onPress={handleContinue}
-            variant="business-primary"
+            variant="single-primary"
             disabled={!amount || amount === "0"}
             className="w-full"
           />
         </View>
 
         {/* Notice */}
-        <View className="bg-blue-50 mx-4 mt-4 mb-6 rounded-xl p-4">
-          <Text className="text-[#0055aa] text-xs text-center leading-5">
+        <View className="bg-green-50 mx-4 mt-4 mb-6 rounded-xl p-4">
+          <Text className="text-[#028550] text-xs text-center leading-5">
             سيتم تحويل المبلغ إلى حسابك البنكي خلال 24 ساعة من وقت تأكيد العملية
           </Text>
         </View>
@@ -402,8 +402,8 @@ const BankTransferScreen = ({ navigation }) => {
               <View className="flex-row items-center">
                 <SvgIcons name="SARBlack" size={20} />
                 <Text className="text-gray-800 text-base font-bold ml-1">
-                  {businessWallet?.balance
-                    ? (businessWallet.balance - parseFloat(amount || 0)).toLocaleString(
+                  {personalWallet?.balance
+                    ? (personalWallet.balance - parseFloat(amount || 0)).toLocaleString(
                         "en-US",
                         {
                           minimumFractionDigits: 0,
@@ -422,7 +422,7 @@ const BankTransferScreen = ({ navigation }) => {
             <Button
               title="تأكيد التحويل"
               onPress={handleConfirmTransfer}
-              variant="business-primary"
+              variant="single-primary"
               className="w-full mb-3"
             />
 
@@ -449,4 +449,4 @@ const BankTransferScreen = ({ navigation }) => {
   );
 };
 
-export default BankTransferScreen;
+export default SingleBankTransferScreen;

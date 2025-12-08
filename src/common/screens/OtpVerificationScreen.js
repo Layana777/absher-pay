@@ -14,6 +14,7 @@
  *   amount: 500.00,
  *   userId: 'user123',
  *   walletId: 'wallet_personal_1234567890',
+ *   accountType: 'personal', // 'personal' for SARGreen, 'business' for SARBlue
  *   phoneNumber: '0501234567',
  *   paymentMethod: 'mada',
  *   paymentDetails: {
@@ -30,6 +31,7 @@
  * - walletId: String - Wallet ID to credit
  *
  * Optional Parameters:
+ * - accountType: String - Account type ('personal' or 'business') for SAR icon
  * - phoneNumber: String - Phone number for display
  * - paymentMethod: String - Payment method (mada, apple_pay, etc.)
  * - paymentDetails: Object - Additional payment information
@@ -70,13 +72,31 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     description = "أدخل رمز التحقق المرسل إلى رقم جوالك",
     userId,
     walletId,
+    accountType, // 'personal' or 'business'
     paymentMethod = "mada",
     paymentDetails = {},
   } = route.params || {};
 
-  // Determine SAR icon based on wallet type or primary color
-  const walletType = walletId?.includes('personal') ? 'personal' : 'business';
+  // Determine SAR icon based on account type
+  // Priority: accountType param > walletId check > default to business
+  let walletType = 'business';
+  if (accountType) {
+    walletType = accountType;
+  } else if (walletId?.includes('personal')) {
+    walletType = 'personal';
+  } else if (walletId?.includes('business')) {
+    walletType = 'business';
+  }
+
   const sarIconName = walletType === 'personal' ? 'SARGreen' : 'SARBlue';
+
+  // Debug: Log wallet info
+  console.log('=== SAR ICON DEBUG ===');
+  console.log('Wallet ID:', walletId);
+  console.log('Account Type Param:', accountType);
+  console.log('Wallet Type:', walletType);
+  console.log('SAR Icon Name:', sarIconName);
+  console.log('====================');
 
   const dispatch = useDispatch();
   const [otpValue, setOtpValue] = useState("");
