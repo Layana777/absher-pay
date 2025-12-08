@@ -18,6 +18,8 @@ import UpcomingPayDetailsScreen from "../screens/Dashboard/UpcomingPayDetailsScr
 import AddBankAccountScreen from "../screens/Dashboard/AddBankAccountScreen";
 import BankAccountSuccessScreen from "../screens/Dashboard/BankAccountSuccessScreen";
 import TransferSuccessScreen from "../screens/Dashboard/TransferSuccessScreen";
+import ScheduleSuccessScreen from "../screens/Dashboard/ScheduleSuccessScreen";
+import ScheduledBillsScreen from "../screens/Dashboard/ScheduledBillsScreen";
 import {
   BillPaymentOtpScreen,
   BillPaymentSuccessScreen,
@@ -182,6 +184,8 @@ const BusinessNavigator = () => {
 
       {/* Payment Details Screen */}
       <Stack.Screen name="UpcomingPayDetails" component={UpcomingPayDetailsScreen} />
+      <Stack.Screen name="ScheduleSuccess" component={ScheduleSuccessScreen} />
+      <Stack.Screen name="ScheduledBills" component={ScheduledBillsScreen} />
 
       {/* Bill Payment Flow Screens */}
       <Stack.Screen name="BillPaymentOtp" component={BillPaymentOtpScreen} />

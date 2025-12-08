@@ -26,6 +26,11 @@ export const DB_PATHS = {
   USER_BILLS: (userId) => `governmentBills/${userId}`,
   BILL: (userId, billId) => `governmentBills/${userId}/${billId}`,
 
+  // Scheduled Bills
+  SCHEDULED_BILLS: 'scheduledBills',
+  USER_SCHEDULED_BILLS: (userId) => `scheduledBills/${userId}`,
+  SCHEDULED_BILL: (userId, scheduledBillId) => `scheduledBills/${userId}/${scheduledBillId}`,
+
   // Bank Accounts
   BANK_ACCOUNTS: 'bankAccounts',
   USER_BANK_ACCOUNTS: (userId) => `bankAccounts/${userId}`,
