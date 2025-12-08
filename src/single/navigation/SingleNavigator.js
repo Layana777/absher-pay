@@ -4,6 +4,13 @@ import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
 import { SingleHomeScreen } from "../screens";
 import { OtpVerificationScreen } from "../../common/screens";
+import {
+  TopupAmountScreen,
+  TopupTransactionDetailsScreen,
+  TopupSuccessScreen,
+  CardSelectionScreen,
+  AddCardScreen,
+} from "../screens/wallet_topup";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -151,7 +158,12 @@ const SingleNavigator = () => {
       <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
       <Stack.Screen name="SingleHome" component={SingleHomeScreen} />
 
-      {/* Add more standalone screens here as needed */}
+      {/* Wallet Topup Flow Screens */}
+      <Stack.Screen name="CardSelection" component={CardSelectionScreen} />
+      <Stack.Screen name="AddCard" component={AddCardScreen} />
+      <Stack.Screen name="TopupAmount" component={TopupAmountScreen} />
+      <Stack.Screen name="TopupTransactionDetails" component={TopupTransactionDetailsScreen} />
+      <Stack.Screen name="TopupSuccess" component={TopupSuccessScreen} />
     </Stack.Navigator>
   );
 };
