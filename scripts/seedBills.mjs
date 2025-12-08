@@ -6,7 +6,7 @@
  * Usage:
  *   node scripts/seedBills.mjs --userId="YOUR_USER_ID" --walletId="YOUR_WALLET_ID"
  *   node scripts/seedBills.mjs --userId="abc123" --walletId="wallet_personal_1234567890" --count=10
- *   node scripts/seedBills.mjs --userId="abc123" --walletId="wallet_business_7001234567890" --serviceTypes="human_resources,commerce"
+ *   node scripts/seedBills.mjs --userId="abc123" --walletId="wallet_business_7001234567890" --serviceTypes="civil_affairs,commerce"
  *
  * Options:
  *   --userId          Firebase user ID (required)
@@ -15,8 +15,10 @@
  *   --statuses        Comma-separated statuses (default: unpaid,paid,overdue,upcoming)
  *   --serviceTypes    Comma-separated service types (default: all available for wallet type)
  *                     Personal: passports,traffic,civil_affairs
- *                     Business: human_resources,commerce,justice
+ *                     Business: civil_affairs,commerce
  */
+
+
 
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get } from "firebase/database";
@@ -108,9 +110,7 @@ const generateBillReferenceNumber = (serviceType) => {
     passports: "PASS",
     traffic: "TRAF",
     civil_affairs: "CIVIL",
-    human_resources: "IQAMA",
     commerce: "COM",
-    justice: "JUS",
   };
 
   const prefix = prefixes[serviceType] || "BILL";
@@ -125,28 +125,30 @@ const generateBillReferenceNumber = (serviceType) => {
 /**
  * Generate random bill
  */
-const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServiceType = null) => {
+const generateRandomBill = (
+  userId,
+  walletId,
+  isBusiness,
+  status,
+  specifiedServiceType = null
+) => {
   // Define available services based on wallet type
-  const personalServices = [
-    "passports",
-    "traffic",
-    "civil_affairs",
-  ];
-  const businessServices = [
-    "human_resources",
-    "commerce",
-    "justice",
-  ];
+  const personalServices = ["passports", "traffic", "civil_affairs"];
+  const businessServices = ["civil_affairs", "commerce"];
 
   const availableServices = isBusiness ? businessServices : personalServices;
 
   // Use specified service type if provided, otherwise pick random
-  const serviceType = specifiedServiceType ||
+  const serviceType =
+    specifiedServiceType ||
     availableServices[Math.floor(Math.random() * availableServices.length)];
 
   // Generate dates based on status
   const now = Date.now();
-  let issueDate, dueDate, paymentDate = null, paidWith = null;
+  let issueDate,
+    dueDate,
+    paymentDate = null,
+    paidWith = null;
 
   switch (status) {
     case "paid":
@@ -191,23 +193,12 @@ const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServi
       ministryName: { ar: "وزارة الداخلية", en: "Ministry of Interior" },
     },
     civil_affairs: {
-      ar: "تجديد بطاقة الهوية",
-      en: "Renew National ID",
+      ar: "تجديد بطاقة الهوية أو إقامة",
+      en: "Renew National ID or Iqama",
       amount: 100,
       category: "moi_civil_affairs",
       ministry: "MOI",
       ministryName: { ar: "وزارة الداخلية", en: "Ministry of Interior" },
-    },
-    human_resources: {
-      ar: "تجديد إقامة",
-      en: "Renew Iqama",
-      amount: 2000,
-      category: "mhrsd",
-      ministry: "MHRSD",
-      ministryName: {
-        ar: "وزارة الموارد البشرية",
-        en: "Ministry of Human Resources",
-      },
     },
     commerce: {
       ar: "تجديد السجل التجاري",
@@ -216,14 +207,6 @@ const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServi
       category: "moc",
       ministry: "MOC",
       ministryName: { ar: "وزارة التجارة", en: "Ministry of Commerce" },
-    },
-    justice: {
-      ar: "توثيق عقد",
-      en: "Contract Notarization",
-      amount: 50,
-      category: "moj",
-      ministry: "MOJ",
-      ministryName: { ar: "وزارة العدل", en: "Ministry of Justice" },
     },
   };
 
@@ -243,10 +226,8 @@ const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServi
     additionalInfo.violationDate = issueDate;
     additionalInfo.speed = "140 km/h";
     additionalInfo.speedLimit = "120 km/h";
-  } else if (serviceType === "civil_affairs") {
-    additionalInfo.nationalId = `${Math.floor(1000000000 + Math.random() * 9000000000)}`;
-    additionalInfo.expiryDate = dueDate;
-  } else if (serviceType === "human_resources") {
+  } else if (serviceType === "civil_affairs" && isBusiness) {
+    // For business civil_affairs (iqama services), generate employee data
     // Random between single employee and multiple employees
     const isMultipleEmployees = Math.random() > 0.5;
 
@@ -255,14 +236,36 @@ const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServi
       const employees = [];
 
       const sampleNames = [
-        "أحمد محمد", "محمد علي", "علي حسن", "حسن أحمد", "خالد محمود",
-        "محمود فيصل", "عبدالله سالم", "سالم ناصر", "ناصر عمر", "عمر طارق",
-        "طارق زياد", "زياد وليد", "وليد ماجد", "ماجد كريم"
+        "أحمد محمد",
+        "محمد علي",
+        "علي حسن",
+        "حسن أحمد",
+        "خالد محمود",
+        "محمود فيصل",
+        "عبدالله سالم",
+        "سالم ناصر",
+        "ناصر عمر",
+        "عمر طارق",
+        "طارق زياد",
+        "زياد وليد",
+        "وليد ماجد",
+        "ماجد كريم",
       ];
 
       const occupations = [
-        "محاسب", "مهندس", "سائق", "فني", "كهربائي", "نجار",
-        "سباك", "بناء", "حداد", "طباخ", "حارس", "عامل نظافة", "مساعد إداري"
+        "محاسب",
+        "مهندس",
+        "سائق",
+        "فني",
+        "كهربائي",
+        "نجار",
+        "سباك",
+        "بناء",
+        "حداد",
+        "طباخ",
+        "حارس",
+        "عامل نظافة",
+        "مساعد إداري",
       ];
 
       for (let i = 0; i < employeeCount; i++) {
@@ -270,7 +273,7 @@ const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServi
           name: sampleNames[i % sampleNames.length],
           iqamaNumber: `${Math.floor(2000000000 + Math.random() * 1000000000)}`,
           amount: 500,
-          occupation: occupations[i % occupations.length]
+          occupation: occupations[i % occupations.length],
         });
       }
 
@@ -278,23 +281,31 @@ const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServi
       additionalInfo.employees = employees;
     } else {
       additionalInfo.employeeName = "أحمد محمد";
-      additionalInfo.iqamaNumber = `${Math.floor(2000000000 + Math.random() * 1000000000)}`;
+      additionalInfo.iqamaNumber = `${Math.floor(
+        2000000000 + Math.random() * 1000000000
+      )}`;
       additionalInfo.nationality = "مصري";
       additionalInfo.occupation = "محاسب";
     }
+  } else if (serviceType === "civil_affairs") {
+    // For personal civil_affairs (national ID, etc.)
+    additionalInfo.nationalId = `${Math.floor(
+      1000000000 + Math.random() * 9000000000
+    )}`;
+    additionalInfo.expiryDate = dueDate;
   } else if (serviceType === "commerce") {
-    additionalInfo.registrationNumber = `${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+    additionalInfo.registrationNumber = `${Math.floor(
+      1000000000 + Math.random() * 9000000000
+    )}`;
     additionalInfo.companyName = "شركة النجاح التجارية";
-  } else if (serviceType === "justice") {
-    additionalInfo.contractType = "عقد عمل";
-    additionalInfo.parties = 2;
-    additionalInfo.documentNumber = `DOC-${new Date().getFullYear()}-${Math.floor(Math.random() * 100000)}`;
   }
 
   // Calculate penalty if overdue
   let penaltyInfo = null;
   if (status === "overdue") {
-    const daysOverdue = Math.abs(Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24)));
+    const daysOverdue = Math.abs(
+      Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24))
+    );
     const lateFee = service.amount * 0.1;
     penaltyInfo = {
       lateFee: parseFloat(lateFee.toFixed(2)),
@@ -303,7 +314,9 @@ const generateRandomBill = (userId, walletId, isBusiness, status, specifiedServi
     };
   }
 
-  const billId = `bill_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const billId = `bill_${Date.now()}_${Math.random()
+    .toString(36)
+    .substring(7)}`;
 
   return {
     id: billId,
@@ -349,9 +362,7 @@ const seedBills = async (userId, bills) => {
     for (const bill of bills) {
       try {
         const billRef = ref(database, `governmentBills/${userId}/${bill.id}`);
-        await import("firebase/database").then(({ set }) =>
-          set(billRef, bill)
-        );
+        await import("firebase/database").then(({ set }) => set(billRef, bill));
         success++;
         console.log(`   ✅ Bill ${bill.id} created (${bill.serviceName.en})`);
       } catch (error) {
@@ -394,10 +405,14 @@ async function main() {
     console.log("   --userId       Firebase user ID (required)");
     console.log("   --walletId     Wallet ID (required)");
     console.log("   --count        Number of bills to generate (default: 5)");
-    console.log("   --statuses     Comma-separated statuses (default: unpaid,paid,overdue,upcoming)");
-    console.log("   --serviceTypes Comma-separated service types (default: all for wallet type)");
+    console.log(
+      "   --statuses     Comma-separated statuses (default: unpaid,paid,overdue,upcoming)"
+    );
+    console.log(
+      "   --serviceTypes Comma-separated service types (default: all for wallet type)"
+    );
     console.log("                  Personal: passports,traffic,civil_affairs");
-    console.log("                  Business: human_resources,commerce,justice");
+    console.log("                  Business: civil_affairs,commerce");
     process.exit(1);
   }
 
@@ -410,7 +425,7 @@ async function main() {
 
   // Parse service types (will be validated after wallet type is known)
   const requestedServiceTypes = params.serviceTypes
-    ? params.serviceTypes.split(",").map(s => s.trim())
+    ? params.serviceTypes.split(",").map((s) => s.trim())
     : null;
 
   console.log("\n📊 CONFIGURATION");
@@ -436,7 +451,7 @@ async function main() {
 
   // Determine available service types based on wallet type
   const personalServices = ["passports", "traffic", "civil_affairs"];
-  const businessServices = ["human_resources", "commerce", "justice"];
+  const businessServices = ["civil_affairs", "commerce"];
   const availableServices = isBusiness ? businessServices : personalServices;
 
   // Validate and finalize service types
@@ -444,12 +459,20 @@ async function main() {
   if (requestedServiceTypes) {
     // Validate that all requested service types are available for this wallet type
     const invalidServices = requestedServiceTypes.filter(
-      st => !availableServices.includes(st)
+      (st) => !availableServices.includes(st)
     );
 
     if (invalidServices.length > 0) {
-      console.error(`\n❌ Invalid service types for ${wallet.type} wallet: ${invalidServices.join(", ")}`);
-      console.log(`   Available service types for ${wallet.type} wallet: ${availableServices.join(", ")}`);
+      console.error(
+        `\n❌ Invalid service types for ${
+          wallet.type
+        } wallet: ${invalidServices.join(", ")}`
+      );
+      console.log(
+        `   Available service types for ${
+          wallet.type
+        } wallet: ${availableServices.join(", ")}`
+      );
       process.exit(1);
     }
 
@@ -468,7 +491,13 @@ async function main() {
     const status = statuses[i % statuses.length];
     // Pick service type in round-robin fashion from available types
     const serviceType = serviceTypes[i % serviceTypes.length];
-    const bill = generateRandomBill(userId, walletId, isBusiness, status, serviceType);
+    const bill = generateRandomBill(
+      userId,
+      walletId,
+      isBusiness,
+      status,
+      serviceType
+    );
     bills.push(bill);
   }
 
@@ -486,7 +515,8 @@ async function main() {
 
   bills.forEach((bill) => {
     summary.byStatus[bill.status] = (summary.byStatus[bill.status] || 0) + 1;
-    summary.byServiceType[bill.serviceType] = (summary.byServiceType[bill.serviceType] || 0) + 1;
+    summary.byServiceType[bill.serviceType] =
+      (summary.byServiceType[bill.serviceType] || 0) + 1;
     summary.totalAmount += bill.penaltyInfo?.totalWithPenalty || bill.amount;
   });
 

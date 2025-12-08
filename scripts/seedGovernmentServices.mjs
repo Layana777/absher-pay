@@ -322,26 +322,7 @@ const GOVERNMENT_SERVICES_DATA = {
           ar: "توثيق عقد النكاح",
           en: "Marriage contract documentation"
         }
-      }
-    }
-  },
-
-  // ========== 4. وزارة الموارد البشرية والتنمية الاجتماعية (MHRSD) ==========
-  human_resources: {
-    nameAr: "الموارد البشرية والتنمية الاجتماعية",
-    nameEn: "Ministry of Human Resources and Social Development",
-    category: "mhrsd",
-    icon: "💼",
-    ministry: "MHRSD",
-    ministryName: {
-      ar: "وزارة الموارد البشرية والتنمية الاجتماعية",
-      en: "Ministry of Human Resources and Social Development"
-    },
-    description: {
-      ar: "خدمات الإقامات ورخص العمل للوافدين",
-      en: "Iqama and work permit services for expatriates"
-    },
-    subTypes: {
+      },
       issue_iqama: {
         nameAr: "إصدار إقامة",
         nameEn: "Issue Iqama",
@@ -377,40 +358,6 @@ const GOVERNMENT_SERVICES_DATA = {
           { ar: "جواز السفر ساري", en: "Valid passport" }
         ]
       },
-      issue_work_permit: {
-        nameAr: "إصدار رخصة عمل",
-        nameEn: "Issue Work Permit",
-        fee: 2000.00,
-        currency: "SAR",
-        availableFor: ["business"],
-        processingTime: "3-5 business days",
-        icon: "💼",
-        description: {
-          ar: "إصدار رخصة عمل جديدة للعامل الوافد",
-          en: "Issue new work permit for expatriate worker"
-        },
-        requiredDocuments: [
-          { ar: "طلب استقدام موافق عليه", en: "Approved recruitment request" },
-          { ar: "عقد العمل", en: "Work contract" }
-        ]
-      },
-      renew_work_permit: {
-        nameAr: "تجديد رخصة العمل",
-        nameEn: "Renew Work Permit",
-        fee: 2000.00,
-        currency: "SAR",
-        availableFor: ["business"],
-        processingTime: "1-3 business days",
-        icon: "🔄",
-        description: {
-          ar: "تجديد رخصة العمل المنتهية",
-          en: "Renew expired work permit"
-        },
-        requiredDocuments: [
-          { ar: "رخصة العمل القديمة", en: "Old work permit" },
-          { ar: "عقد العمل المحدث", en: "Updated work contract" }
-        ]
-      },
       exit_reentry_visa: {
         nameAr: "تأشيرة خروج وعودة",
         nameEn: "Exit Re-entry Visa",
@@ -437,24 +384,11 @@ const GOVERNMENT_SERVICES_DATA = {
             validity: "6 months"
           }
         }
-      },
-      transfer_sponsorship: {
-        nameAr: "نقل كفالة",
-        nameEn: "Transfer Sponsorship",
-        fee: 2000.00,
-        currency: "SAR",
-        availableFor: ["business"],
-        processingTime: "7-14 business days",
-        icon: "🔄",
-        description: {
-          ar: "نقل كفالة العامل من كفيل لآخر",
-          en: "Transfer worker sponsorship from one sponsor to another"
-        }
       }
     }
   },
 
-  // ========== 5. وزارة التجارة (MOC - Ministry of Commerce) ==========
+  // ========== 4. وزارة التجارة (MOC - Ministry of Commerce) ==========
   commerce: {
     nameAr: "وزارة التجارة",
     nameEn: "Ministry of Commerce",
@@ -511,68 +445,6 @@ const GOVERNMENT_SERVICES_DATA = {
         description: {
           ar: "إصدار رخصة تجارية جديدة",
           en: "Issue new business license"
-        }
-      }
-    }
-  },
-
-  // ========== 6. وزارة العدل (MOJ - Ministry of Justice) ==========
-  justice: {
-    nameAr: "وزارة العدل",
-    nameEn: "Ministry of Justice",
-    category: "moj",
-    icon: "⚖️",
-    ministry: "MOJ",
-    ministryName: {
-      ar: "وزارة العدل",
-      en: "Ministry of Justice"
-    },
-    description: {
-      ar: "خدمات التوثيق والعقود القانونية",
-      en: "Notarization and legal contract services"
-    },
-    subTypes: {
-      power_of_attorney: {
-        nameAr: "توكيل",
-        nameEn: "Power of Attorney",
-        fee: 50.00,
-        currency: "SAR",
-        availableFor: ["personal", "business"],
-        processingTime: "same day",
-        icon: "📝",
-        description: {
-          ar: "توثيق وكالة شرعية",
-          en: "Notarize power of attorney"
-        }
-      },
-      property_deed: {
-        nameAr: "صك ملكية",
-        nameEn: "Property Deed",
-        fee: 0,
-        currency: "SAR",
-        availableFor: ["personal", "business"],
-        processingTime: "3-7 business days",
-        icon: "🏠",
-        description: {
-          ar: "نقل ملكية عقار",
-          en: "Property ownership transfer"
-        },
-        note: {
-          ar: "الرسوم تعتمد على قيمة العقار",
-          en: "Fees based on property value"
-        }
-      },
-      contract_notarization: {
-        nameAr: "توثيق عقد",
-        nameEn: "Contract Notarization",
-        fee: 50.00,
-        currency: "SAR",
-        availableFor: ["personal", "business"],
-        processingTime: "same day",
-        icon: "📄",
-        description: {
-          ar: "توثيق العقود والاتفاقيات",
-          en: "Notarize contracts and agreements"
         }
       }
     }

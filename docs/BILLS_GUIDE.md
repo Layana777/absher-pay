@@ -105,7 +105,7 @@ Complete structure of a government bill:
   isBusiness: boolean,          // Wallet type flag
 
   // Service Classification
-  serviceType: string,          // passports, traffic, civil_affairs, human_resources, commerce, justice
+  serviceType: string,          // passports, traffic, civil_affairs, commerce
   serviceSubType: string,       // renew_passport, traffic_violations, renew_iqama, etc.
   serviceName: {
     ar: string,                 // Arabic service name
@@ -113,8 +113,8 @@ Complete structure of a government bill:
   },
 
   // Ministry Information
-  category: string,             // moi_passports, moi_traffic, mhrsd, moc, moj
-  ministry: string,             // MOI, MHRSD, MOC, MOJ
+  category: string,             // moi_passports, moi_traffic, moi_civil_affairs, moc
+  ministry: string,             // MOI, MOC
   ministryName: {
     ar: string,                 // وزارة الداخلية
     en: string                  // Ministry of Interior
@@ -486,7 +486,7 @@ Gets bills by ministry.
 
 **Parameters:**
 - `userId` (string) - User ID
-- `ministry` (string) - Ministry code (MOI, MHRSD, etc.)
+- `ministry` (string) - Ministry code (MOI, MOC)
 - `options` (Object) - Optional filters
 
 **Returns:** Promise<Array<Object>> - Filtered bills
@@ -494,7 +494,7 @@ Gets bills by ministry.
 **Example:**
 ```javascript
 const moiBills = await getBillsByMinistry(userId, 'MOI');
-const mhrsdBills = await getBillsByMinistry(userId, 'MHRSD', { status: 'unpaid' });
+const mocBills = await getBillsByMinistry(userId, 'MOC', { status: 'unpaid' });
 ```
 
 #### `getUpcomingBills(userId, days = 30)`
@@ -776,7 +776,7 @@ const unpaidBills = await autoGenerateBills(userId, walletId, false, {
 // Generate bills for specific services
 const specificBills = await autoGenerateBills(userId, walletId, true, {
   count: 3,
-  serviceTypes: ['human_resources', 'commerce']
+  serviceTypes: ['civil_affairs', 'commerce']
 });
 ```
 
@@ -1087,7 +1087,7 @@ const unpaidBills = await autoGenerateBills(userId, walletId, false, {
 // Generate specific service types
 const iqamaBills = await autoGenerateBills(userId, walletId, true, {
   count: 5,
-  serviceTypes: ['human_resources']
+  serviceTypes: ['civil_affairs']
 });
 ```
 

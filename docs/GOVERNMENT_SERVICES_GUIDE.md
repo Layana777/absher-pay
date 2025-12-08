@@ -21,7 +21,7 @@ The Government Services feature provides a centralized system for managing and p
 
 ### Key Features
 
-- **Comprehensive Coverage**: Includes services from multiple ministries (MOI, MHRSD, MOC, MOJ)
+- **Comprehensive Coverage**: Includes services from multiple ministries (MOI, MOC)
 - **Bilingual Support**: All services available in Arabic and English
 - **User Type Filtering**: Services filtered by user type (Personal/Business)
 - **Detailed Information**: Each service includes fees, processing time, and required documents
@@ -67,9 +67,7 @@ governmentServices/
 │           └── ...
 ├── traffic/
 ├── civil_affairs/
-├── human_resources/
-├── commerce/
-└── justice/
+└── commerce/
 ```
 
 ---
@@ -86,7 +84,7 @@ Each government service has the following structure:
   nameEn: string,              // English name
   category: string,            // Category identifier
   icon: string,                // Emoji or icon identifier
-  ministry: string,            // Ministry code (MOI, MHRSD, etc.)
+  ministry: string,            // Ministry code (MOI, MOC, etc.)
   ministryName: {
     ar: string,
     en: string
@@ -156,30 +154,16 @@ Each sub-type (specific service operation) has:
 - **Birth Certificate** - 50 SAR
 - **Family Book** - 100 SAR
 - **Marriage Certificate** - 50 SAR
-
-### 2. Ministry of Human Resources and Social Development (MHRSD)
-
-#### Human Resources Services (خدمات الموارد البشرية)
 - **Issue Iqama** - 2,000 SAR (Business only)
 - **Renew Iqama** - 2,000 SAR (Business only)
-- **Issue Work Permit** - 2,000 SAR (Business only)
-- **Renew Work Permit** - 2,000 SAR (Business only)
 - **Exit Re-entry Visa** - 200-500 SAR (Business only)
-- **Transfer Sponsorship** - 2,000 SAR (Business only)
 
-### 3. Ministry of Commerce (MOC)
+### 2. Ministry of Commerce (MOC)
 
 #### Commerce Services (خدمات التجارة)
 - **Commercial Registration** - 200 SAR (Business only)
 - **Renew Commercial Registration** - 200 SAR (Business only)
 - **Business License** - 300 SAR (Business only)
-
-### 4. Ministry of Justice (MOJ)
-
-#### Justice Services (خدمات العدل)
-- **Power of Attorney** - 50 SAR (Personal & Business)
-- **Property Deed** - Variable fees (Personal & Business)
-- **Contract Notarization** - 50 SAR (Personal & Business)
 
 ---
 
@@ -336,16 +320,14 @@ node scripts/seedGovernmentServices.mjs
 
 📊 DATA STATISTICS
 ======================================================================
-   Total Services: 6
-   Total Sub-types: 28
+   Total Services: 4
+   Total Sub-types: 20
    Services by Ministry:
       - MOI: 3
-      - MHRSD: 1
       - MOC: 1
-      - MOJ: 1
    Services by User Type:
-      - Personal: 18
-      - Business: 15
+      - Personal: 12
+      - Business: 13
 ======================================================================
 
 🌱 Seeding services to Firebase...
@@ -356,9 +338,9 @@ node scripts/seedGovernmentServices.mjs
 
 📈 SEEDING SUMMARY
 ======================================================================
-✅ Seeded: 6
+✅ Seeded: 4
 ❌ Failed: 0
-📊 Total: 6
+📊 Total: 4
 ======================================================================
 
 ✨ Government services successfully seeded to Firebase!
@@ -376,7 +358,7 @@ Returns an array of all service category keys.
 
 ```javascript
 const categories = getServiceCategories();
-// ['passports', 'traffic', 'civil_affairs', 'human_resources', 'commerce', 'justice']
+// ['passports', 'traffic', 'civil_affairs', 'commerce']
 ```
 
 #### `getServicesByMinistry(ministry: string)`
@@ -389,7 +371,7 @@ const moiServices = getServicesByMinistry('MOI');
 ```
 
 **Parameters:**
-- `ministry`: Ministry code ('MOI', 'MHRSD', 'MOC', 'MOJ')
+- `ministry`: Ministry code ('MOI', 'MOC')
 
 #### `getServicesForUserType(userType: string)`
 

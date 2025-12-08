@@ -246,16 +246,10 @@ This script populates Firebase Realtime Database with all Saudi Arabian governme
 ### Ministry of Interior (MOI)
 - **Passports** - Passport issuance and renewal, driving licenses
 - **Traffic Department** - Traffic violations, vehicle registration
-- **Civil Affairs** - National ID, birth certificates, family book
-
-### Ministry of Human Resources (MHRSD)
-- **HR Services** - Iqama issuance/renewal, work permits, exit re-entry visas
+- **Civil Affairs** - National ID, birth certificates, family book, Iqama services, exit re-entry visas
 
 ### Ministry of Commerce (MOC)
 - **Commerce Services** - Commercial registration, business licenses
-
-### Ministry of Justice (MOJ)
-- **Justice Services** - Power of attorney, property deeds, contract notarization
 
 ## Usage
 
@@ -277,16 +271,14 @@ node scripts/seedGovernmentServices.mjs
 
 📊 DATA STATISTICS
 ======================================================================
-   Total Services: 6
-   Total Sub-types: 28
+   Total Services: 4
+   Total Sub-types: 20
    Services by Ministry:
       - MOI: 3
-      - MHRSD: 1
       - MOC: 1
-      - MOJ: 1
    Services by User Type:
-      - Personal: 18
-      - Business: 15
+      - Personal: 12
+      - Business: 13
 ======================================================================
 
 🌱 Seeding services to Firebase...
@@ -326,9 +318,7 @@ governmentServices/
 │       └── renew_passport/
 ├── traffic/
 ├── civil_affairs/
-├── human_resources/
-├── commerce/
-└── justice/
+└── commerce/
 ```
 
 ## Verifying Seeded Data
@@ -339,7 +329,7 @@ governmentServices/
 2. Select your project
 3. Navigate to **Realtime Database**
 4. Expand the `governmentServices` node
-5. Verify all 6 services are present
+5. Verify all 4 services are present
 
 ### In the App
 

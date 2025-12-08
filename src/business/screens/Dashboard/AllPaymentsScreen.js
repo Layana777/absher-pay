@@ -94,9 +94,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       passports: "file-text",
       traffic: "truck",
       civil_affairs: "file",
-      human_resources: "users",
       commerce: "briefcase",
-      justice: "scale",
     };
     return iconMap[serviceType] || "file-text";
   };
@@ -107,9 +105,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       passports: { icon: "#8B5CF6", bg: "bg-purple-50" },
       traffic: { icon: "#EF4444", bg: "bg-red-50" },
       civil_affairs: { icon: "#3B82F6", bg: "bg-blue-50" },
-      human_resources: { icon: "#8B5CF6", bg: "bg-purple-50" },
       commerce: { icon: "#F97316", bg: "bg-orange-50" },
-      justice: { icon: "#10B981", bg: "bg-green-50" },
     };
     return colorMap[serviceType] || { icon: "#6B7280", bg: "bg-gray-50" };
   };
@@ -128,9 +124,8 @@ const AllPaymentsScreen = ({ navigation, route }) => {
   const transformBillToPayment = (bill) => {
     console.log("Transforming bill:", bill)
     const serviceSubTypeNameAr = getServiceNameAr(
-      bill.serviceName.ar,
+      bill.serviceType,
       bill.serviceSubType
-
     );
     const colors = getServiceColor(bill.serviceType);
     const arabicStatus = getArabicStatus(bill);
@@ -156,12 +151,12 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       dueDate: formatDate(bill.dueDate),
       status: arabicStatus,
       category: arabicStatus,
-      serviceType: serviceSubTypeNameAr,
+      serviceType: bill.serviceType,
       aiSuggestion: bill.penaltyInfo
         ? `متأخر ${bill.penaltyInfo.daysOverdue} يوم - غرامة ${bill.penaltyInfo.lateFee} ريال`
         : "لا يوجد",
       // Keep original bill data for payment processing
-      originalBill: bill,
+      billData: bill,
     };
   };
 
