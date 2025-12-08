@@ -28,6 +28,7 @@ import FinancialAnalysisScreen from "../screens/Dashboard/FinancialAnalysisScree
 import TransactionsListScreen from "../screens/Transactions/TransactionsListScreen";
 import TransactionDetailsScreen from "../screens/Transactions/TransactionDetailsScreen";
 import AllPaymentsScreen from "../screens/Dashboard/AllPaymentsScreen";
+import BulkPaymentReviewScreen from "../screens/Dashboard/BulkPaymentReviewScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -202,6 +203,9 @@ const BusinessNavigator = () => {
 
       {/* All Payments Screen */}
       <Stack.Screen name="AllPayments" component={AllPaymentsScreen} />
+
+      {/* Bulk Payment Review Screen */}
+      <Stack.Screen name="BulkPaymentReview" component={BulkPaymentReviewScreen} />
 
       {/* Standalone screens without tabs - Add your screens here */}
       {/* Example:

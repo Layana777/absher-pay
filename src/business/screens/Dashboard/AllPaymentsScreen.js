@@ -14,14 +14,12 @@ import SvgIcons from "../../../common/components/SvgIcons";
 import { useUser, useBusinessWallet } from "../../../store/hooks";
 import {
   getUserBills,
-  getBillsByStatus,
-  getBillsByServiceType,
-  processBulkBillPayment,
   calculateBulkTotal,
   isBillOverdue,
   getDaysUntilDue,
 } from "../../../common/services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../../../common/services/firebase/governmentServicesData";
+import { getMinistryIconName } from "../../../common/utils/ministryIconMapper";
 
 const AllPaymentsScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
@@ -38,14 +36,8 @@ const AllPaymentsScreen = ({ navigation, route }) => {
   const [activeServiceFilter, setActiveServiceFilter] = useState("الكل");
   const [totalDueAmount, setTotalDueAmount] = useState(0);
 
-  // Status filters mapping (Arabic to Firebase status)
+  // Status filters (Arabic)
   const statusFilters = ["الكل", "مستحق", "متوقع", "متأخر"];
-  const statusMapping = {
-    الكل: "all",
-    مستحق: "unpaid",
-    متوقع: "upcoming",
-    متأخر: "overdue",
-  };
 
   // Fixed service filters from GOVERNMENT_SERVICES_DATA (Arabic only)
   const serviceFilters = [
@@ -123,10 +115,14 @@ const AllPaymentsScreen = ({ navigation, route }) => {
   // Transform Firebase bill to UpcomingPaymentCard format
   const transformBillToPayment = (bill) => {
     console.log("Transforming bill:", bill)
+
+    // Get service name using the helper function
     const serviceSubTypeNameAr = getServiceNameAr(
+      bill.serviceType,
       bill.serviceType,
       bill.serviceSubType
     );
+
     const colors = getServiceColor(bill.serviceType);
     const arabicStatus = getArabicStatus(bill);
     const displayAmount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
@@ -141,7 +137,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
     return {
       id: bill.id,
-      title: serviceSubTypeNameAr,
+      title: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
       description: daysText,
       amount: displayAmount,
       icon: getServiceIcon(bill.serviceType),
@@ -151,10 +147,13 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       dueDate: formatDate(bill.dueDate),
       status: arabicStatus,
       category: arabicStatus,
-      serviceType: bill.serviceType,
+      serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
       aiSuggestion: bill.penaltyInfo
         ? `متأخر ${bill.penaltyInfo.daysOverdue} يوم - غرامة ${bill.penaltyInfo.lateFee} ريال`
         : "لا يوجد",
+      // Ministry icon configuration
+      ministryIconName: getMinistryIconName(bill.serviceType),
+      ministryIconSize: 50, // Size for detail screen header
       // Keep original bill data for payment processing
       billData: bill,
     };
@@ -237,8 +236,8 @@ const AllPaymentsScreen = ({ navigation, route }) => {
     });
   };
 
-  // Handle Pay All button
-  const handlePayAll = async () => {
+  // Handle Pay All button - Navigate to review screen
+  const handlePayAll = () => {
     if (!user?.uid || !businessWallet?.id) {
       Alert.alert("خطأ", "لا يوجد مستخدم أو محفظة نشطة");
       return;
@@ -256,58 +255,15 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
     const total = calculateBulkTotal(billsToPay);
 
-    Alert.alert(
-      "تأكيد الدفع",
-      `هل تريد دفع جميع الفواتير المستحقة؟\n\nعدد الفواتير: ${
-        billsToPay.length
-      }\nالمبلغ الإجمالي: ${total.toLocaleString()} ريال`,
-      [
-        {
-          text: "إلغاء",
-          style: "cancel",
-        },
-        {
-          text: "دفع",
-          onPress: async () => {
-            try {
-              setLoading(true);
-
-              const billIds = billsToPay.map((bill) => bill.id);
-              const result = await processBulkBillPayment(
-                user.uid,
-                billIds,
-                businessWallet.id,
-                { method: "wallet" }
-              );
-
-              Alert.alert(
-                "نجح الدفع",
-                `تم دفع ${
-                  result.billCount
-                } فاتورة بمبلغ ${result.totalAmount.toLocaleString()} ريال`,
-                [
-                  {
-                    text: "موافق",
-                    onPress: () => {
-                      // Refresh bills after payment
-                      fetchBills();
-                    },
-                  },
-                ]
-              );
-            } catch (err) {
-              console.error("Error processing payment:", err);
-              Alert.alert(
-                "خطأ",
-                "حدث خطأ أثناء معالجة الدفع. يرجى المحاولة مرة أخرى"
-              );
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
+    // Navigate to bulk payment review screen
+    navigation.navigate("BulkPaymentReview", {
+      billsToPay,
+      totalAmount: total,
+      userId: user.uid,
+      walletId: businessWallet.id,
+      primaryColor,
+      onPaymentComplete: fetchBills, // Pass refresh function
+    });
   };
 
   return (

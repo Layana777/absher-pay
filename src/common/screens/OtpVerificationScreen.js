@@ -49,7 +49,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
-import { updateBusinessWalletBalance } from "../../store/slices/walletSlice";
+import { updateBusinessWalletBalance, updatePersonalWalletBalance } from "../../store/slices/walletSlice";
 import { useResendTimer } from "../hooks/useResendTimer";
 import { formatAmount } from "../utils";
 import SvgIcons from "../components/SvgIcons";
@@ -73,6 +73,10 @@ const OtpVerificationScreen = ({ navigation, route }) => {
     paymentMethod = "mada",
     paymentDetails = {},
   } = route.params || {};
+
+  // Determine SAR icon based on wallet type or primary color
+  const walletType = walletId?.includes('personal') ? 'personal' : 'business';
+  const sarIconName = walletType === 'personal' ? 'SARGreen' : 'SARBlue';
 
   const dispatch = useDispatch();
   const [otpValue, setOtpValue] = useState("");
@@ -160,8 +164,16 @@ const OtpVerificationScreen = ({ navigation, route }) => {
       console.log("Wallet balance updated successfully");
 
       // Update Redux state to refresh UI on home screen
-      dispatch(updateBusinessWalletBalance(newBalance));
-      console.log("Redux wallet balance updated to:", newBalance);
+      // Determine wallet type from walletId or a passed parameter
+
+      const walletType = walletId?.includes('personal') ? 'personal' : 'business';
+      if (walletType === 'personal') {
+        dispatch(updatePersonalWalletBalance(newBalance));
+        console.log("Redux personal wallet balance updated to:", newBalance);
+      } else {
+        dispatch(updateBusinessWalletBalance(newBalance));
+        console.log("Redux business wallet balance updated to:", newBalance);
+      }
 
       // 5. Show success and navigate
       setIsProcessing(false);
@@ -320,7 +332,7 @@ const OtpVerificationScreen = ({ navigation, route }) => {
                   className="text-4xl font-bold mr-2"
                   style={{ color: primaryColor }}
                 >
-                  <SvgIcons name={"SARBlue"} size={25} />
+                  <SvgIcons name={sarIconName} size={25} />
                   {formatAmount(amount)}
                 </Text>
               </View>

@@ -355,13 +355,13 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
                   <View className="flex-row justify-between items-center mb-3">
                     <Text className="text-gray-600 text-sm">الخدمة</Text>
                     <Text className="text-gray-800 text-sm font-bold">
-                      {enrichedPayment.billData.serviceName.ar}
+                      {enrichedPayment.billData?.serviceName?.ar || enrichedPayment.title || "غير محدد"}
                     </Text>
                   </View>
                   <View className="flex-row justify-between items-center mb-3">
                     <Text className="text-gray-600 text-sm">الوزارة</Text>
                     <Text className="text-gray-800 text-sm font-medium">
-                      {enrichedPayment.billData.ministryName.ar}
+                      {enrichedPayment.billData?.ministryName?.ar || "غير محدد"}
                     </Text>
                   </View>
                   <View className="flex-row justify-between items-center mb-3">
