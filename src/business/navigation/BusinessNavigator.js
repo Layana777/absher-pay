@@ -115,7 +115,7 @@ const BusinessTabNavigator = () => {
         component={TransactionsListScreen}
         options={{
           headerShown: false,
-          tabBarLabel: "المدفوعات",
+          tabBarLabel: "العمليات",
           tabBarIcon: ({ color, size }) => (
             <Feather name="credit-card" size={size} color={color} />
           ),
@@ -132,7 +132,7 @@ const BusinessTabNavigator = () => {
           ),
         }}
       />
-
+      {/* 
       <Tab.Screen
         name="Reports"
         component={PlaceholderScreen}
@@ -143,7 +143,7 @@ const BusinessTabNavigator = () => {
             <Feather name="file-text" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
 
       <Tab.Screen
         name="Settings"
@@ -183,29 +183,47 @@ const BusinessNavigator = () => {
       <Stack.Screen name="BusinessHome" component={BusinessHomeScreen} />
       <Stack.Screen name="BankTransfer" component={BankTransferScreen} />
       <Stack.Screen name="AddBankAccount" component={AddBankAccountScreen} />
-      <Stack.Screen name="BankAccountSuccess" component={BankAccountSuccessScreen} />
+      <Stack.Screen
+        name="BankAccountSuccess"
+        component={BankAccountSuccessScreen}
+      />
       <Stack.Screen name="TransferSuccess" component={TransferSuccessScreen} />
 
       {/* Payment Details Screen */}
-      <Stack.Screen name="UpcomingPayDetails" component={UpcomingPayDetailsScreen} />
+      <Stack.Screen
+        name="UpcomingPayDetails"
+        component={UpcomingPayDetailsScreen}
+      />
       <Stack.Screen name="ScheduleSuccess" component={ScheduleSuccessScreen} />
       <Stack.Screen name="ScheduledBills" component={ScheduledBillsScreen} />
 
       {/* Bill Payment Flow Screens */}
       <Stack.Screen name="BillPaymentOtp" component={BillPaymentOtpScreen} />
-      <Stack.Screen name="BillPaymentSuccess" component={BillPaymentSuccessScreen} />
+      <Stack.Screen
+        name="BillPaymentSuccess"
+        component={BillPaymentSuccessScreen}
+      />
 
       {/* Financial Analysis Screen */}
-      <Stack.Screen name="FinancialAnalysis" component={FinancialAnalysisScreen} />
+      <Stack.Screen
+        name="FinancialAnalysis"
+        component={FinancialAnalysisScreen}
+      />
 
       {/* Transaction Details Screen */}
-      <Stack.Screen name="TransactionDetails" component={TransactionDetailsScreen} />
+      <Stack.Screen
+        name="TransactionDetails"
+        component={TransactionDetailsScreen}
+      />
 
       {/* All Payments Screen */}
       <Stack.Screen name="AllPayments" component={AllPaymentsScreen} />
 
       {/* Bulk Payment Review Screen */}
-      <Stack.Screen name="BulkPaymentReview" component={BulkPaymentReviewScreen} />
+      <Stack.Screen
+        name="BulkPaymentReview"
+        component={BulkPaymentReviewScreen}
+      />
 
       {/* Standalone screens without tabs - Add your screens here */}
       {/* Example:

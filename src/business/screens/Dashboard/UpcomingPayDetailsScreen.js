@@ -22,7 +22,10 @@ import {
 } from "../../components/Dashboard";
 import Button from "../../../common/components/ui/Button";
 import { getWalletById } from "../../../common/services/walletService";
-import { createScheduledBill, getDateOnlyTimestamp } from "../../../common/services/scheduledBillsService";
+import {
+  createScheduledBill,
+  getDateOnlyTimestamp,
+} from "../../../common/services/scheduledBillsService";
 
 /**
  * Upcoming Payment Details Screen
@@ -127,14 +130,22 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
   const handleSchedulePayment = async (paymentDate) => {
     console.log("📅 Schedule Payment pressed for date:", paymentDate);
     console.log("📅 Payment date type:", typeof paymentDate);
-    console.log("📅 Payment date ISO:", paymentDate instanceof Date ? paymentDate.toISOString() : "Not a Date object");
+    console.log(
+      "📅 Payment date ISO:",
+      paymentDate instanceof Date
+        ? paymentDate.toISOString()
+        : "Not a Date object"
+    );
 
     try {
       // Prepare scheduled bill data
       // Convert date to midnight timestamp (date only, no time)
       const scheduledDateTimestamp = getDateOnlyTimestamp(paymentDate);
       console.log("📅 Converted to timestamp:", scheduledDateTimestamp);
-      console.log("📅 Timestamp as date:", new Date(scheduledDateTimestamp).toISOString());
+      console.log(
+        "📅 Timestamp as date:",
+        new Date(scheduledDateTimestamp).toISOString()
+      );
 
       const scheduledBillData = {
         walletId: enrichedPayment.billData.walletId,
@@ -150,8 +161,8 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
           vatAmount,
           serviceFee,
           serviceType: enrichedPayment.billData.serviceType,
-          category: enrichedPayment.billData.category
-        }
+          category: enrichedPayment.billData.category,
+        },
       };
 
       // Save scheduled bill to database
@@ -163,8 +174,8 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
       console.log("✅ Scheduled bill saved:", scheduledBill.id);
 
       // Format date for display in success screen
-      const day = String(paymentDate.getDate()).padStart(2, '0');
-      const month = String(paymentDate.getMonth() + 1).padStart(2, '0');
+      const day = String(paymentDate.getDate()).padStart(2, "0");
+      const month = String(paymentDate.getMonth() + 1).padStart(2, "0");
       const year = paymentDate.getFullYear();
       const formattedDateForDisplay = `${day}-${month}-${year}`;
 
@@ -178,11 +189,9 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
       });
     } catch (error) {
       console.error("❌ Error scheduling payment:", error);
-      Alert.alert(
-        "خطأ",
-        "حدث خطأ أثناء جدولة الدفع. يرجى المحاولة مرة أخرى.",
-        [{ text: "حسناً" }]
-      );
+      Alert.alert("خطأ", "حدث خطأ أثناء جدولة الدفع. يرجى المحاولة مرة أخرى.", [
+        { text: "حسناً" },
+      ]);
     }
   };
 
@@ -227,7 +236,11 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
 
   return (
     <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}
+      >
         {/* Sticky Navigation Header */}
         <UpcomingPayNavBar
           primaryColor={primaryColor}
@@ -242,12 +255,12 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         />
 
         {/* Warning Alert for urgent payments */}
-        {enrichedPayment.isUrgent && (
+        {/* {enrichedPayment.isUrgent && (
           <PaymentWarningAlert
             message="قد تحتاج حساباً أعمال أو تأخير سداد لحراك الوزارات"
             type="warning"
           />
-        )}
+        )} */}
 
         {/* Overdue penalty alert */}
         {enrichedPayment.penaltyInfo && (
@@ -355,7 +368,9 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
                   <View className="flex-row justify-between items-center mb-3">
                     <Text className="text-gray-600 text-sm">الخدمة</Text>
                     <Text className="text-gray-800 text-sm font-bold">
-                      {enrichedPayment.billData?.serviceName?.ar || enrichedPayment.title || "غير محدد"}
+                      {enrichedPayment.billData?.serviceName?.ar ||
+                        enrichedPayment.title ||
+                        "غير محدد"}
                     </Text>
                   </View>
                   <View className="flex-row justify-between items-center mb-3">

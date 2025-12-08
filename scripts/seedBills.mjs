@@ -18,8 +18,6 @@
  *                     Business: civil_affairs,commerce
  */
 
-
-
 import { initializeApp } from "firebase/app";
 import { getDatabase, ref, get } from "firebase/database";
 
@@ -134,7 +132,7 @@ const generateRandomBill = (
 ) => {
   // Define available services based on wallet type
   const personalServices = ["passports", "traffic", "civil_affairs"];
-  const businessServices = ["civil_affairs", "commerce"];
+  const businessServices = ["civil_affairs", "commerce", "traffic"];
 
   const availableServices = isBusiness ? businessServices : personalServices;
 
@@ -451,7 +449,7 @@ async function main() {
 
   // Determine available service types based on wallet type
   const personalServices = ["passports", "traffic", "civil_affairs"];
-  const businessServices = ["civil_affairs", "commerce"];
+  const businessServices = ["civil_affairs", "commerce", "traffic"];
   const availableServices = isBusiness ? businessServices : personalServices;
 
   // Validate and finalize service types
