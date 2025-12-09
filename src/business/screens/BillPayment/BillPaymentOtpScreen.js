@@ -18,7 +18,7 @@ import SvgIcons from "../../../common/components/SvgIcons";
 import {
   getWalletById,
   updateWalletBalance,
-  createPaymentTransaction,
+  createPaymentTransactionEnhanced,
   markBillAsPaid,
 } from "../../../common/services";
 import { updateBusinessWalletBalance } from "../../../store/slices/walletSlice";
@@ -130,8 +130,8 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
         return;
       }
 
-      // 4. Create payment transaction
-      console.log("Creating payment transaction...");
+      // 4. Create payment transaction with enhanced metadata
+      console.log("Creating enhanced payment transaction...");
 
       // Determine transaction description
       const descriptionAr = isBulkPayment
@@ -144,16 +144,27 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
         ? "bulk_payment"
         : bill?.serviceType || "government_service";
 
-      const transactionResult = await createPaymentTransaction(
+      // Build enhanced payment metadata for AI insights
+      const paymentMetadata = {
+        serviceSubType: isBulkPayment ? null : bill?.serviceSubType,
+        serviceName: isBulkPayment ? null : bill?.serviceName,
+        ministry: isBulkPayment ? null : bill?.ministry,
+        ministryName: isBulkPayment ? null : bill?.ministryName,
+        linkedBillIds: bills.map(b => b?.id).filter(Boolean),
+        penaltyInfo: isBulkPayment ? null : bill?.penaltyInfo,
+      };
+
+      const transactionResult = await createPaymentTransactionEnhanced(
         walletId,
         userId,
         totalAmount,
         balanceBefore,
         serviceType,
         descriptionAr,
-        descriptionEn
+        descriptionEn,
+        paymentMetadata
       );
-    
+
 
       if (!transactionResult.success) {
         throw new Error(transactionResult.error || "فشل إنشاء المعاملة");

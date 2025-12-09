@@ -15,21 +15,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { hideTabBar, showTabBar } from "../../../store/slices";
 import { CustomHeader } from "../../../common/components";
 import { COLORS } from "../../../common/constants/colors";
-
-const MESSAGES = [
-  { id: "1", sender: "user", text: "كم صرفت هذا الشهر؟" },
-  {
-    id: "2",
-    sender: "ai",
-    text: "إجمالي مصاريفك حتى اليوم هو 28,450 ريال سعودي. هذا يشمل المدفوعات للموظفين، الفواتير، ومشتريات المخزون.",
-  },
-  { id: "3", sender: "user", text: "هل عندي فواتير قريب استحقاقها؟" },
-  {
-    id: "4",
-    sender: "ai",
-    text: "نعم، لديك 3 فواتير تستحق الدفع خلال الأيام العشرة القادمة:\n\n• فاتورة كهرباء: 2,500 ريال (خلال 3 أيام)\n• إيجار المحل: 15,000 ريال (خلال 7 أيام)\n• اشتراك الإنترنت: 499 ريال (خلال 10 أيام)",
-  },
-];
+import { useUser, useBusinessWallet } from "../../../store/hooks";
+import { generateFinancialInsight } from "../../../common/services/aiService";
+import {
+  getWalletTransactions,
+  getTransactionStats,
+} from "../../../common/services/transactionService";
+import { getWalletBills } from "../../../common/services/billsService";
 
 const QUICK_SUGGESTIONS = [
   "كم صرفت هذا الربع؟",
@@ -37,11 +29,55 @@ const QUICK_SUGGESTIONS = [
   "ما أعلى فئة صرفت عليها؟",
 ];
 
+// Animated typing indicator component
+const AnimatedTypingIndicator = () => {
+  const [dots, setDots] = useState('');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots(prev => {
+        if (prev === '...') return '';
+        return prev + '.';
+      });
+    }, 500); // Change dots every 500ms
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <View className="mb-3 items-start">
+      <View className="flex-row items-center mb-1">
+        <View
+          className="w-6 h-6 rounded-full items-center justify-center"
+          style={{ backgroundColor: COLORS.businessPrimaryLight }}
+        >
+          <Feather name="cpu" size={12} color="white" />
+        </View>
+        <Text
+          className="text-xs font-semibold mx-1"
+          style={{ color: COLORS.businessPrimary }}
+        >
+          AI Assistant
+        </Text>
+      </View>
+      <View
+        className="rounded-2xl px-4 py-3 flex-row items-center"
+        style={{ backgroundColor: COLORS.businessPrimaryLight }}
+      >
+        <Text className="text-white text-sm">جاري الكتابة{dots}</Text>
+      </View>
+    </View>
+  );
+};
+
 const AiBusinessChatScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+  const user = useUser();
+  const businessWallet = useBusinessWallet();
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState(MESSAGES);
-const scrollViewRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
+  const scrollViewRef = useRef(null);
 
   // Hide tab bar when screen is focused and show it when unfocused
   useFocusEffect(
@@ -54,19 +90,92 @@ const scrollViewRef = useRef(null);
     }, [dispatch])
   );
 
-  // useEffect(() => {
-  //   scrollViewRef.current?.scrollToEnd({ animated: true });
-  // }, [messages]);
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
 
-  const handleSend = () => {
-    if (message.trim()) {
-      const newMessage = {
-        id: Date.now().toString(),
-        sender: "user",
-        text: message,
+  // Fetch financial data from Firebase
+  const fetchFinancialData = async () => {
+    try {
+      if (!user?.uid || !businessWallet?.id) {
+        throw new Error("User or wallet not found");
+      }
+
+      // Get last 30 days timestamp
+      const startDate = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+      // Parallel fetch for better performance
+      const [transactionsResult, billsResult, statsResult] = await Promise.all([
+        getWalletTransactions(businessWallet.id, { limit: 100 }),
+        getWalletBills(user.uid, businessWallet.id, {}),
+        getTransactionStats(businessWallet.id, {
+          startDate,
+          endDate: Date.now(),
+        }),
+      ]);
+
+      return {
+        transactions: transactionsResult.data || [],
+        bills: billsResult || [],
+        stats: statsResult.data || {},
+        wallet: businessWallet,
       };
-      setMessages([...messages, newMessage]);
-      setMessage("");
+    } catch (error) {
+      console.error("Error fetching financial data:", error);
+      throw error;
+    }
+  };
+
+  const handleSend = async () => {
+    if (!message.trim()) return;
+
+    // Add user message immediately
+    const newUserMessage = {
+      id: Date.now().toString(),
+      sender: "user",
+      text: message.trim(),
+    };
+    setMessages((prev) => [...prev, newUserMessage]);
+    const userQuery = message.trim();
+    setMessage("");
+    setIsLoadingAI(true);
+
+    try {
+      // Fetch financial data
+      const financialData = await fetchFinancialData();
+
+      // Call AI service
+      const result = await generateFinancialInsight(userQuery, financialData);
+
+      if (result.success) {
+        // Add AI response
+        const aiMessage = {
+          id: (Date.now() + 1).toString(),
+          sender: "ai",
+          text: result.response,
+        };
+        setMessages((prev) => [...prev, aiMessage]);
+      } else {
+        // Error as AI message
+        const errorMessage = {
+          id: (Date.now() + 1).toString(),
+          sender: "ai",
+          text: result.error.userMessage,
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error("Error in handleSend:", error);
+      const errorMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: "ai",
+        text: "عذراً، حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+        isError: true,
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoadingAI(false);
     }
   };
 
@@ -241,6 +350,8 @@ const scrollViewRef = useRef(null);
                   )}
                 </View>
               ))}
+
+              {isLoadingAI && <AnimatedTypingIndicator />}
             </View>
           </ScrollView>
 
@@ -276,12 +387,13 @@ const scrollViewRef = useRef(null);
             <View className="flex-row items-center">
               <TouchableOpacity
                 onPress={handleSend}
-                disabled={!message.trim()}
+                disabled={!message.trim() || isLoadingAI}
                 className="w-11 h-11 rounded-full items-center justify-center mx-2"
                 style={{
-                  backgroundColor: message.trim()
-                    ? COLORS.businessPrimary
-                    : COLORS.border,
+                  backgroundColor:
+                    message.trim() && !isLoadingAI
+                      ? COLORS.businessPrimary
+                      : COLORS.border,
                 }}
               >
                 <Feather name="send" size={18} color="white" />

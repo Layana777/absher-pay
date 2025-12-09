@@ -36,18 +36,17 @@ const BusinessHomeScreen = ({ navigation }) => {
 
   const onRefresh = useCallback(async () => {
     if (!user?.uid) return;
-    
+
     setRefreshing(true);
     try {
       // 1. Fetch fresh wallet data
       const wallets = await getWalletsByUserId(user.uid);
-      
+
       // 2. Update Redux store
       dispatch(setWallets(wallets));
-      
+
       // 3. Force re-fetch of upcoming payments
-      setRefreshKey(prev => prev + 1);
-      
+      setRefreshKey((prev) => prev + 1);
     } catch (error) {
       console.error("Error refreshing data:", error);
       Alert.alert("خطأ", "فشل تحديث البيانات");
@@ -58,44 +57,40 @@ const BusinessHomeScreen = ({ navigation }) => {
 
   // Handle logout
   const handleLogout = () => {
-    Alert.alert(
-      "تسجيل الخروج",
-      "هل أنت متأكد من تسجيل الخروج؟",
-      [
-        {
-          text: "إلغاء",
-          style: "cancel",
-        },
-        {
-          text: "تسجيل الخروج",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              // Clear Redux state
-              dispatch(clearUser());
-              dispatch(clearWallets());
+    Alert.alert("تسجيل الخروج", "هل أنت متأكد من تسجيل الخروج؟", [
+      {
+        text: "إلغاء",
+        style: "cancel",
+      },
+      {
+        text: "تسجيل الخروج",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            // Clear Redux state
+            dispatch(clearUser());
+            dispatch(clearWallets());
 
-              // Clear AsyncStorage
-              await AsyncStorage.removeItem("authToken");
-              await AsyncStorage.removeItem("userType");
+            // Clear AsyncStorage
+            await AsyncStorage.removeItem("authToken");
+            await AsyncStorage.removeItem("userType");
 
-              console.log("User logged out successfully");
-              // RootNavigator will automatically switch to AuthNavigator
-            } catch (error) {
-              console.error("Logout error:", error);
-              Alert.alert("خطأ", "حدث خطأ أثناء تسجيل الخروج");
-            }
-          },
+            console.log("User logged out successfully");
+            // RootNavigator will automatically switch to AuthNavigator
+          } catch (error) {
+            console.error("Logout error:", error);
+            Alert.alert("خطأ", "حدث خطأ أثناء تسجيل الخروج");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // Handle view all payments
   const handleViewAllPayments = () => {
     console.log("View all payments pressed");
     navigation.navigate("AllPayments", {
-      primaryColor: "#0055aa"
+      primaryColor: "#0055aa",
     });
   };
 
@@ -104,7 +99,7 @@ const BusinessHomeScreen = ({ navigation }) => {
     console.log("Payment pressed:", payment);
     navigation.navigate("UpcomingPayDetails", {
       payment,
-      primaryColor: "#0055aa"
+      primaryColor: "#0055aa",
     });
   };
 
@@ -124,14 +119,19 @@ const BusinessHomeScreen = ({ navigation }) => {
         <SvgIcons name={"AbsherWhite"} size={45} />
       </View>
 
-      <ScrollView 
+      <ScrollView
         className="flex-1 bg-gray-50"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#0055aa"]} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#0055aa"]}
+          />
         }
       >
         {/* Wallet Card Component */}
-        <WalletCard navigation={navigation}
+        <WalletCard
+          navigation={navigation}
           onTransferPress={() => navigation.navigate("BankTransfer")}
         />
 
@@ -146,14 +146,13 @@ const BusinessHomeScreen = ({ navigation }) => {
             showViewAll={true}
           />
         */}
-        
+
         <UpcomingPaymentsSection
           key={refreshKey}
           userId={user?.uid}
           onViewAll={handleViewAllPayments}
           onPaymentPress={handlePaymentPress}
         />
-     
       </ScrollView>
     </View>
   );

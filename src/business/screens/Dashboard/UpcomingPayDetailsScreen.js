@@ -27,6 +27,8 @@ import {
   getDateOnlyTimestamp,
 } from "../../../common/services/scheduledBillsService";
 import { generateBillPDF } from "../../../common/services/PDFService";
+import { formatAmount } from "../../../common/utils";
+import SvgIcons from "../../../common/components/SvgIcons";
 
 /**
  * Upcoming Payment Details Screen
@@ -392,7 +394,7 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
                         رصيد المحفظة
                       </Text>
                       <Text className="text-gray-800 text-sm font-medium">
-                        {walletData.balance.toFixed(2)} ريال
+                        {formatAmount(walletData.balance.toFixed(2))} ريال
                       </Text>
                     </View>
                   )}
@@ -401,12 +403,16 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
                     <Text className="text-gray-900 text-base font-bold">
                       المبلغ الإجمالي
                     </Text>
-                    <Text
-                      className="text-xl font-bold"
-                      style={{ color: primaryColor }}
-                    >
-                      {totalAmount.toFixed(2)} ريال
-                    </Text>
+
+                    <View className="flex-row items-center">
+                      <Text
+                        className="text-xl font-bold"
+                        style={{ color: primaryColor }}
+                      >
+                        {totalAmount.toFixed(2)}
+                      </Text>
+                      <SvgIcons name={"SARBlue"} size={20} />
+                    </View>
                   </View>
                   {enrichedPayment.penaltyInfo && (
                     <Text className="text-xs text-gray-500 mt-2 text-right">

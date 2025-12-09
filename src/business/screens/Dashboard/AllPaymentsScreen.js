@@ -385,7 +385,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
                             activeStatusFilter === filter
                               ? primaryColor
                               : "white",
-                          marginLeft: index < statusFilters.length - 1 ? 8 : 0,
+                          marginRight: index < statusFilters.length - 1 ? 8 : 0,
                         }}
                       >
                         <Text

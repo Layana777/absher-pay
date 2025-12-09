@@ -232,6 +232,58 @@ export const createPaymentTransaction = async (
 };
 
 /**
+ * Creates an enhanced payment transaction for government services with full metadata
+ * This version includes service details, ministry information, and penalty tracking
+ * @param {string} walletId - Wallet ID
+ * @param {string} userId - User ID
+ * @param {number} amount - Amount to pay (will be negative)
+ * @param {number} balanceBefore - Balance before transaction
+ * @param {string} serviceType - Service type (passports, traffic, civil_affairs, commerce)
+ * @param {string} descriptionAr - Arabic description
+ * @param {string} descriptionEn - English description
+ * @param {object} paymentMetadata - Additional payment metadata
+ * @param {string} paymentMetadata.serviceSubType - Specific service subtype (renew_passport, etc.)
+ * @param {object} paymentMetadata.serviceName - Service name {ar, en}
+ * @param {string} paymentMetadata.ministry - Ministry code (MOI, MOC)
+ * @param {object} paymentMetadata.ministryName - Ministry name {ar, en}
+ * @param {array} paymentMetadata.linkedBillIds - Array of bill IDs paid
+ * @param {object} paymentMetadata.penaltyInfo - Penalty details {lateFee, daysOverdue, totalWithPenalty}
+ * @returns {Promise<object>} Transaction result
+ */
+export const createPaymentTransactionEnhanced = async (
+  walletId,
+  userId,
+  amount,
+  balanceBefore,
+  serviceType,
+  descriptionAr,
+  descriptionEn,
+  paymentMetadata = {}
+) => {
+  const transactionData = {
+    userId,
+    type: "payment",
+    category: "government_service",
+    serviceType,
+    amount: -Math.abs(parseFloat(amount.toFixed(2))),
+    balanceBefore: parseFloat(balanceBefore.toFixed(2)),
+    balanceAfter: parseFloat((balanceBefore - Math.abs(amount)).toFixed(2)),
+    descriptionAr,
+    descriptionEn,
+
+    // Enhanced fields for better AI insights
+    serviceSubType: paymentMetadata.serviceSubType || null,
+    serviceName: paymentMetadata.serviceName || null,
+    ministry: paymentMetadata.ministry || null,
+    ministryName: paymentMetadata.ministryName || null,
+    linkedBillIds: paymentMetadata.linkedBillIds || [],
+    penaltyInfo: paymentMetadata.penaltyInfo || null,
+  };
+
+  return await createTransaction(walletId, transactionData);
+};
+
+/**
  * Creates a refund transaction
  * @param {string} walletId - Wallet ID
  * @param {string} userId - User ID
