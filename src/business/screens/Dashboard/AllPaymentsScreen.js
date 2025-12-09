@@ -114,7 +114,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
   // Transform Firebase bill to UpcomingPaymentCard format
   const transformBillToPayment = (bill) => {
-    console.log("Transforming bill:", bill)
+    console.log("Transforming bill:", bill);
 
     // Get service name using the helper function
     const serviceSubTypeNameAr = getServiceNameAr(
@@ -129,11 +129,12 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
     // Calculate days remaining
     const daysRemaining = getDaysUntilDue(bill);
-    const daysText = daysRemaining > 0
-      ? `${daysRemaining} يوم متبقي`
-      : daysRemaining === 0
-      ? 'اليوم آخر موعد'
-      : `متأخر ${Math.abs(daysRemaining)} يوم`;
+    const daysText =
+      daysRemaining > 0
+        ? `${daysRemaining} يوم متبقي`
+        : daysRemaining === 0
+        ? "اليوم آخر موعد"
+        : `متأخر ${Math.abs(daysRemaining)} يوم`;
 
     return {
       id: bill.id,
@@ -245,7 +246,8 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
     // Get all unpaid and overdue bills
     const billsToPay = (allBills || []).filter(
-      (bill) => bill != null && (bill.status === "unpaid" || isBillOverdue(bill))
+      (bill) =>
+        bill != null && (bill.status === "unpaid" || isBillOverdue(bill))
     );
 
     if (billsToPay.length === 0) {
