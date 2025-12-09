@@ -76,7 +76,6 @@ const AddCardScreen = ({ navigation, route }) => {
     );
   };
 
-
   const handleSaveCard = async () => {
     if (!validateForm()) {
       return;
@@ -113,60 +112,56 @@ const AddCardScreen = ({ navigation, route }) => {
         isDefault: false, // يمكن للمستخدم تعيينها كافتراضية لاحقاً
       };
 
-      console.log('💾 حفظ البطاقة في Firebase:', cardData);
+      console.log("💾 حفظ البطاقة في Firebase:", cardData);
 
       // حفظ البطاقة في Firebase
       const result = await saveCard(user.uid, cardData);
 
       if (result.success) {
-        Alert.alert(
-          "تم بنجاح",
-          "تم حفظ البطاقة بنجاح",
-          [
-            {
-              text: "متابعة للدفع",
-              onPress: () => {
-                // استدعاء callback إذا كان موجود
-                if (onCardAdded) {
-                  onCardAdded();
-                }
+        Alert.alert("تم بنجاح", "تم حفظ البطاقة بنجاح", [
+          {
+            text: "متابعة للدفع",
+            onPress: () => {
+              // استدعاء callback إذا كان موجود
+              if (onCardAdded) {
+                onCardAdded();
+              }
 
-                // الانتقال لشاشة المبلغ
-                navigation.navigate("TopupAmount", {
-                  paymentMethod: "CARD",
-                  primaryColor: primaryColor,
-                  cardData: {
-                    cardNumber: lastFourDigits,
-                    lastFourDigits: lastFourDigits,
-                    cardType: cardType,
-                    bankName: bankName,
-                    type: arabicCardType,
-                    cardId: result.cardId,
-                    holderName: cardHolder,
-                    expiryDate: expiryDate,
-                    cvv: cvv, // CVV لا يُحفظ في Firebase - فقط للاستخدام الفوري
-                  },
-                });
-              }
+              // الانتقال لشاشة المبلغ
+              navigation.navigate("TopupAmount", {
+                paymentMethod: "CARD",
+                primaryColor: primaryColor,
+                cardData: {
+                  cardNumber: lastFourDigits,
+                  lastFourDigits: lastFourDigits,
+                  cardType: cardType,
+                  bankName: bankName,
+                  type: arabicCardType,
+                  cardId: result.cardId,
+                  holderName: cardHolder,
+                  expiryDate: expiryDate,
+                  cvv: cvv, // CVV لا يُحفظ في Firebase - فقط للاستخدام الفوري
+                },
+              });
             },
-            {
-              text: "العودة للبطاقات",
-              style: "cancel",
-              onPress: () => {
-                // استدعاء callback إذا كان موجود
-                if (onCardAdded) {
-                  onCardAdded();
-                }
-                navigation.goBack();
+          },
+          {
+            text: "العودة للبطاقات",
+            style: "cancel",
+            onPress: () => {
+              // استدعاء callback إذا كان موجود
+              if (onCardAdded) {
+                onCardAdded();
               }
-            }
-          ]
-        );
+              navigation.goBack();
+            },
+          },
+        ]);
       } else {
         Alert.alert("خطأ", result.message || "حدث خطأ في حفظ البطاقة");
       }
     } catch (error) {
-      console.error('❌ خطأ في حفظ البطاقة:', error);
+      console.error("❌ خطأ في حفظ البطاقة:", error);
       Alert.alert("خطأ", "حدث خطأ غير متوقع في حفظ البطاقة");
     } finally {
       setSaving(false);
@@ -174,176 +169,180 @@ const AddCardScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
-      {/* Header */}
+    <>
       <CustomHeader
         title="إضافة بطاقة جديدة"
         onBack={() => navigation.goBack()}
       />
+      <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
+        {/* Header */}
 
-      <KeyboardAvoidingView
-        className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
-      >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View className="flex-1">
-            {/* Form */}
-            <ScrollView
-              className="flex-1"
-              showsVerticalScrollIndicator={false}
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={{ flexGrow: 1 }}
-            >
-              <View className="px-4 pt-6 pb-4">
-                {/* Card Preview */}
-                <View
-                  className="rounded-2xl p-6 mb-6"
-                  style={{ backgroundColor: primaryColor }}
-                >
-                  <View className="flex-row justify-between items-start mb-8">
-                    <Feather name="credit-card" size={32} color="white" />
-                    <Text className="text-white text-xs">VISA/MADA</Text>
-                  </View>
-
-                  <Text className="text-white text-lg mb-6 tracking-wider">
-                    {cardNumber || "•••• •••• •••• ••••"}
-                  </Text>
-
-                  <View className="flex-row justify-between items-end">
-                    <View>
-                      <Text className="text-white text-xs opacity-70 mb-1">
-                        حامل البطاقة
-                      </Text>
-                      <Text className="text-white font-semibold">
-                        {cardHolder || "الاسم الكامل"}
-                      </Text>
-                    </View>
-                    <View>
-                      <Text className="text-white text-xs opacity-70 mb-1">
-                        تاريخ الانتهاء
-                      </Text>
-                      <Text className="text-white font-semibold">
-                        {expiryDate || "MM/YY"}
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-
-                {/* Card Number */}
-                <TextInput
-                  label="رقم البطاقة"
-                  placeholder="1234 5678 9012 3456"
-                  value={cardNumber}
-                  onChangeText={(text) => setCardNumber(formatCardNumber(text))}
-                  keyboardType="numeric"
-                  maxLength={19}
-                  error={errors.cardNumber}
-                  editable={!saving}
-                />
-
-                {/* Card Holder */}
-                <TextInput
-                  label="اسم حامل البطاقة"
-                  placeholder="محمد أحمد"
-                  value={cardHolder}
-                  onChangeText={(text) => {
-                    if (text.length <= 16) {
-                      setCardHolder(text);
-                    }
-                  }}
-                  maxLength={16}
-                  error={errors.cardHolder}
-                  editable={!saving}
-                />
-
-                {/* Expiry and CVV */}
-                <View className="flex-row" style={{ gap: 12 }}>
-                  <View className="flex-1">
-                    <TextInput
-                      label="CVV"
-                      placeholder="123"
-                      value={cvv}
-                      onChangeText={(text) => setCvv(text.slice(0, 3))}
-                      keyboardType="numeric"
-                      maxLength={3}
-                      secureTextEntry
-                      error={errors.cvv}
-                      editable={!saving}
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <TextInput
-                      label="تاريخ الانتهاء"
-                      placeholder="MM/YY"
-                      value={expiryDate}
-                      onChangeText={(text) =>
-                        setExpiryDate(formatExpiryDate(text))
-                      }
-                      keyboardType="numeric"
-                      maxLength={5}
-                      error={errors.expiryDate}
-                      editable={!saving}
-                    />
-                  </View>
-                </View>
-
-                {/* Security Info */}
-                <View
-                  className="rounded-xl p-4 mt-6"
-                  style={{ backgroundColor: `${primaryColor}08` }}
-                >
-                  <View className="flex-row items-start">
-                    <Feather
-                      name="lock"
-                      size={18}
-                      color={primaryColor}
-                      style={{ marginLeft: 8, marginTop: 2 }}
-                    />
-                    <View className="flex-1">
-                      <Text className="text-xs text-gray-600 text-right font-semibold mb-1">
-                        أمان البيانات
-                      </Text>
-                      <Text className="text-xs text-gray-500 text-right">
-                        • نحفظ فقط آخر 4 أرقام من البطاقة{"\n"}
-                        • CVV لا يُحفظ أبداً (للاستخدام الفوري فقط){"\n"}
-                        • جميع البيانات مشفرة في Firebase
-                      </Text>
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Save Button */}
-            <View className="px-4 pb-6 pt-4 bg-white border-t border-gray-200">
-              <TouchableOpacity
-                onPress={handleSaveCard}
-                disabled={!isFormComplete() || saving}
-                className="rounded-xl py-4"
-                style={{
-                  backgroundColor:
-                    isFormComplete() && !saving ? primaryColor : "#d1d5db",
-                }}
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View className="flex-1">
+              {/* Form */}
+              <ScrollView
+                className="flex-1"
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                contentContainerStyle={{ flexGrow: 1 }}
               >
-                {saving ? (
-                  <View className="flex-row items-center justify-center">
-                    <ActivityIndicator size="small" color="white" />
-                    <Text className="text-white text-center text-base font-semibold mr-2">
-                      جاري الحفظ...
+                <View className="px-4 pt-6 pb-4">
+                  {/* Card Preview */}
+                  <View
+                    className="rounded-2xl p-6 mb-6"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    <View className="flex-row justify-between items-start mb-8">
+                      <Feather name="credit-card" size={32} color="white" />
+                      <Text className="text-white text-xs">VISA/MADA</Text>
+                    </View>
+
+                    <Text className="text-white text-lg mb-6 tracking-wider">
+                      {cardNumber || "•••• •••• •••• ••••"}
                     </Text>
+
+                    <View className="flex-row justify-between items-end">
+                      <View>
+                        <Text className="text-white text-xs opacity-70 mb-1">
+                          حامل البطاقة
+                        </Text>
+                        <Text className="text-white font-semibold">
+                          {cardHolder || "الاسم الكامل"}
+                        </Text>
+                      </View>
+                      <View>
+                        <Text className="text-white text-xs opacity-70 mb-1">
+                          تاريخ الانتهاء
+                        </Text>
+                        <Text className="text-white font-semibold">
+                          {expiryDate || "MM/YY"}
+                        </Text>
+                      </View>
+                    </View>
                   </View>
-                ) : (
-                  <Text className="text-white text-center text-base font-semibold">
-                    حفظ البطاقة والمتابعة
-                  </Text>
-                )}
-              </TouchableOpacity>
+
+                  {/* Card Number */}
+                  <TextInput
+                    label="رقم البطاقة"
+                    placeholder="1234 5678 9012 3456"
+                    value={cardNumber}
+                    onChangeText={(text) =>
+                      setCardNumber(formatCardNumber(text))
+                    }
+                    keyboardType="numeric"
+                    maxLength={19}
+                    error={errors.cardNumber}
+                    editable={!saving}
+                  />
+
+                  {/* Card Holder */}
+                  <TextInput
+                    label="اسم حامل البطاقة"
+                    placeholder="محمد أحمد"
+                    value={cardHolder}
+                    onChangeText={(text) => {
+                      if (text.length <= 16) {
+                        setCardHolder(text);
+                      }
+                    }}
+                    maxLength={16}
+                    error={errors.cardHolder}
+                    editable={!saving}
+                  />
+
+                  {/* Expiry and CVV */}
+                  <View className="flex-row" style={{ gap: 12 }}>
+                    <View className="flex-1">
+                      <TextInput
+                        label="CVV"
+                        placeholder="123"
+                        value={cvv}
+                        onChangeText={(text) => setCvv(text.slice(0, 3))}
+                        keyboardType="numeric"
+                        maxLength={3}
+                        secureTextEntry
+                        error={errors.cvv}
+                        editable={!saving}
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <TextInput
+                        label="تاريخ الانتهاء"
+                        placeholder="MM/YY"
+                        value={expiryDate}
+                        onChangeText={(text) =>
+                          setExpiryDate(formatExpiryDate(text))
+                        }
+                        keyboardType="numeric"
+                        maxLength={5}
+                        error={errors.expiryDate}
+                        editable={!saving}
+                      />
+                    </View>
+                  </View>
+
+                  {/* Security Info */}
+                  <View
+                    className="rounded-xl p-4 mt-6"
+                    style={{ backgroundColor: `${primaryColor}08` }}
+                  >
+                    <View className="flex-row items-start">
+                      <Feather
+                        name="lock"
+                        size={18}
+                        color={primaryColor}
+                        style={{ marginLeft: 8, marginTop: 2 }}
+                      />
+                      <View className="flex-1">
+                        <Text className="text-xs text-gray-600 text-right font-semibold mb-1">
+                          أمان البيانات
+                        </Text>
+                        <Text className="text-xs text-gray-500 text-right">
+                          • نحفظ فقط آخر 4 أرقام من البطاقة{"\n"}• CVV لا يُحفظ
+                          أبداً (للاستخدام الفوري فقط){"\n"}• جميع البيانات
+                          مشفرة في Firebase
+                        </Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+              </ScrollView>
+
+              {/* Save Button */}
+              <View className="px-4 pb-6 pt-4 bg-white border-t border-gray-200">
+                <TouchableOpacity
+                  onPress={handleSaveCard}
+                  disabled={!isFormComplete() || saving}
+                  className="rounded-xl py-4"
+                  style={{
+                    backgroundColor:
+                      isFormComplete() && !saving ? primaryColor : "#d1d5db",
+                  }}
+                >
+                  {saving ? (
+                    <View className="flex-row items-center justify-center">
+                      <ActivityIndicator size="small" color="white" />
+                      <Text className="text-white text-center text-base font-semibold mr-2">
+                        جاري الحفظ...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text className="text-white text-center text-base font-semibold">
+                      حفظ البطاقة والمتابعة
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
             </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-    </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </View>
+    </>
   );
 };
 
