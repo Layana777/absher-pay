@@ -85,9 +85,7 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
     >
       <View className="flex-row items-center justify-between mb-2 pm-8">
         <View className="flex-row items-center flex-1">
-          <View
-            className={`w-12 h-12 ${iconBgColor} rounded-xl items-center justify-center`}
-          >
+          <View className={`w-12 h-12 rounded-xl items-center justify-center`}>
             <SvgIcons name={ministryIconName} size={40} />
           </View>
           <View className="flex-1 mr-3" style={{ direction: "ltr" }}>
