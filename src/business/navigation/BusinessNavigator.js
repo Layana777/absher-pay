@@ -2,7 +2,9 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Text } from "react-native";
+import { useSelector } from "react-redux";
 import { BusinessHomeScreen, SettingsScreen } from "../screens";
 import {
   CardSelectionScreen,
@@ -29,6 +31,7 @@ import TransactionsListScreen from "../screens/Transactions/TransactionsListScre
 import TransactionDetailsScreen from "../screens/Transactions/TransactionDetailsScreen";
 import AllPaymentsScreen from "../screens/Dashboard/AllPaymentsScreen";
 import BulkPaymentReviewScreen from "../screens/Dashboard/BulkPaymentReviewScreen";
+import BillGeneratorScreen from "../screens/Settings/BillGeneratorScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -79,6 +82,8 @@ const PlaceholderScreen = ({ route }) => {
 
 // Bottom Tab Navigator - Main screens with tabs
 const BusinessTabNavigator = () => {
+  const isTabBarVisible = useSelector((state) => state.tabBar.isVisible);
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -96,6 +101,7 @@ const BusinessTabNavigator = () => {
           paddingBottom: 8,
           paddingTop: 10,
           height: 90,
+          display: isTabBarVisible ? "flex" : "none",
         },
       }}
     >
@@ -224,6 +230,9 @@ const BusinessNavigator = () => {
         name="BulkPaymentReview"
         component={BulkPaymentReviewScreen}
       />
+
+      {/* Bill Generator Screen */}
+      <Stack.Screen name="BillGenerator" component={BillGeneratorScreen} />
 
       {/* Standalone screens without tabs - Add your screens here */}
       {/* Example:
