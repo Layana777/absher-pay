@@ -824,7 +824,7 @@ const TransactionsListScreen = ({ navigation }) => {
         <View className="flex-row items-center bg-gray-50 rounded-xl px-4 py-3">
           <Feather name="search" size={20} color="#9ca3af" />
           <TextInput
-            className="flex-1 mr-2 text-gray-900 text-right"
+            className="flex-1 mx-2 text-gray-900 text-right"
             placeholder="البحث في المعاملات"
             placeholderTextColor="#9ca3af"
             value={searchQuery}

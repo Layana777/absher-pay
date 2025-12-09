@@ -369,7 +369,6 @@ const TransactionDetailsScreen = ({ navigation, route }) => {
               ) : (
                 <SvgIcons name={"SARTred"} size={35} />
               )}
-              :
               <Text
                 className={`text-4xl font-bold mx-1 ${
                   isPositive ? "text-green-500" : "text-red-500"
