@@ -28,8 +28,6 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
     userId,
     walletId,
     primaryColor = "#0055aa",
-    iconBgColor = "bg-blue-50",
-    ministryIconName = "MOI",
   } = route.params || {};
 
   // Debug: Log bills data
@@ -40,13 +38,8 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
 
   const [loading, setLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  // Track selected bills (initially all bills are selected)
-  const [selectedBillIds, setSelectedBillIds] = useState(
-    (billsToPay || [])
-      .filter((bill) => bill != null)
-      .map((bill) => bill?.id)
-      .filter((id) => id != null)
-  );
+  // Track selected bills (initially no bills are selected)
+  const [selectedBillIds, setSelectedBillIds] = useState([]);
 
   // Helper function to get service name in Arabic
   const getServiceNameAr = (serviceType, serviceSubType) => {
@@ -95,10 +88,10 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
   // Helper function to format date
   const formatDate = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toLocaleDateString("ar-SA", {
+    return date.toLocaleDateString("en-GB", {
       year: "numeric",
-      month: "long",
-      day: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   };
 
@@ -250,7 +243,18 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
 
   return (
     <>
-      <CustomHeader title="مراجعة الدفع" onBack={() => navigation.goBack()} />
+      <CustomHeader
+        title="مراجعة الدفع"
+        onBack={() => navigation.goBack()}
+        rightComponent={
+          <TouchableOpacity
+            onPress={() => navigation.navigate("PaidBills", { primaryColor })}
+            className="p-2"
+          >
+            <Feather name="file-text" size={24} color="#000000" />
+          </TouchableOpacity>
+        }
+      />
       <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
         {/* Summary Card at Top */}
         {/* <View className="bg-white p-4 mb-4 shadow-sm">
@@ -378,9 +382,9 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
                     {/* Service Name with Ministry Icon */}
                     <View className="flex-row items-center mb-2 pt-3 border-t border-gray-100">
                       <View
-                        className={`w-12 h-12 ${iconBgColor} rounded-xl items-center justify-center`}
+                        className={`w-12 h-12 ${getServiceColor(bill?.serviceType).bg} rounded-xl items-center justify-center`}
                       >
-                        <SvgIcons name={ministryIconName} size={40} />
+                        <SvgIcons name={getMinistryIconName(bill?.serviceType)} size={40} />
                       </View>
                       <View className="flex-row items-center flex-1">
                         <Text className="text-gray-800 font-semibold text-sm text-left flex-1 p-3">
