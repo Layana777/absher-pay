@@ -185,38 +185,30 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
       // 8. Show success and navigate
       setIsProcessing(false);
 
-      Alert.alert(
-        "تمت العملية بنجاح",
-        `تم دفع الفاتورة بنجاح\n\nالخدمة: ${bill.serviceName.ar}\nالمبلغ: ${formatAmount(totalAmount)} ريال\n\nرقم المرجع: ${transaction.referenceNumber}`,
-        [
-          {
-            text: "حسناً",
-            onPress: () => {
-              navigation.dispatch(
-                CommonActions.reset({
-                  index: 0,
-                  routes: [
-                    {
-                      name: "BusinessTabs",
-                      state: { routes: [{ name: "Home" }], index: 0 },
-                    },
-                    {
-                      name: "BillPaymentSuccess",
-                      params: {
-                        bill,
-                        totalAmount,
-                        transactionId: transaction.id,
-                        referenceNumber: transaction.referenceNumber,
-                        newBalance,
-                        primaryColor,
-                      },
-                    },
-                  ],
-                })
-              );
+      // 8. Show success and navigate
+      setIsProcessing(false);
+
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [
+            {
+              name: "BusinessTabs",
+              state: { routes: [{ name: "Home" }], index: 0 },
             },
-          },
-        ]
+            {
+              name: "BillPaymentSuccess",
+              params: {
+                bill,
+                totalAmount,
+                transactionId: transaction.id,
+                referenceNumber: transaction.referenceNumber,
+                newBalance,
+                primaryColor,
+              },
+            },
+          ],
+        })
       );
     } catch (error) {
       console.error("Bill payment error:", error);

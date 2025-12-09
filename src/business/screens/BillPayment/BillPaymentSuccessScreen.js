@@ -1,9 +1,21 @@
 import React, { useEffect, useRef } from "react";
-import { View, Text, TouchableOpacity, Animated, Share } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Animated,
+  Share,
+  StatusBar,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CommonActions } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
-import { formatAmount, formatDateLong, formatTime } from "../../../common/utils";
+import {
+  formatAmount,
+  formatDateLong,
+  formatTime,
+} from "../../../common/utils";
+import { generateTransactionPDF } from "../../../common/services/PDFService";
 
 /**
  * Bill Payment Success Screen
@@ -63,12 +75,24 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
 
   const handleShare = async () => {
     try {
-      await Share.share({
-        message: `إيصال دفع فاتورة\n\nالخدمة: ${bill.serviceName.ar}\nالمبلغ: ${totalAmount.toFixed(
-          2
-        )} ريال\nرقم المرجع: ${bill.referenceNumber}\nرقم العملية: ${transactionId}`,
-        title: "إيصال الدفع",
-      });
+      // Construct transaction object for PDF
+      const transaction = {
+        id: transactionId,
+        type: "payment",
+        amount: -totalAmount, // Negative for payment
+        timestamp: new Date().toISOString(),
+        status: "completed",
+        referenceNumber: referenceNumber,
+        descriptionAr: `سداد فاتورة - ${bill.serviceName.ar}`,
+        descriptionEn: `Bill Payment - ${
+          bill.serviceName.en || bill.serviceName.ar
+        }`,
+        balanceAfter: newBalance,
+        // Add bill specific details if needed in description or separate fields
+        // The PDF template handles basic transaction fields
+      };
+
+      await generateTransactionPDF(transaction);
     } catch (error) {
       console.error("Share error:", error);
     }
@@ -79,6 +103,7 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
+      <StatusBar barStyle="dark-content" backgroundColor={primaryColor} />
       <View className="flex-1 justify-center items-center px-6">
         {/* Animated Success Icon */}
         <Animated.View
@@ -97,7 +122,10 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
         </Animated.View>
 
         {/* Success Message */}
-        <Animated.View style={{ opacity: fadeAnim }} className="items-center mb-8">
+        <Animated.View
+          style={{ opacity: fadeAnim }}
+          className="items-center mb-8"
+        >
           <Text className="text-2xl font-bold text-gray-900 mb-2">
             تم الدفع بنجاح
           </Text>
@@ -154,7 +182,10 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
         </Animated.View>
 
         {/* Action Buttons */}
-        <Animated.View style={{ opacity: fadeAnim }} className="w-full space-y-3">
+        <Animated.View
+          style={{ opacity: fadeAnim }}
+          className="w-full space-y-3"
+        >
           {/* Done Button */}
           <TouchableOpacity
             onPress={handleDone}
@@ -172,12 +203,15 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
             className="rounded-2xl py-4 border-2"
             style={{ borderColor: primaryColor }}
           >
-            <Text
-              className="text-center text-base font-bold"
-              style={{ color: primaryColor }}
-            >
-              مشاركة الإيصال
-            </Text>
+            <View className="flex-row items-center justify-center">
+              <Feather name="file-text" size={20} color={primaryColor} />
+              <Text
+                className="text-center text-base font-bold ml-2"
+                style={{ color: primaryColor }}
+              >
+                تحميل الإيصال PDF
+              </Text>
+            </View>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -186,7 +220,12 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
 };
 
 // Helper component for info rows
-const InfoRow = ({ label, value, highlight = false, primaryColor = "#0055aa" }) => (
+const InfoRow = ({
+  label,
+  value,
+  highlight = false,
+  primaryColor = "#0055aa",
+}) => (
   <View className="flex-row justify-between items-center py-2">
     <Text
       className={`font-medium ${highlight ? "text-lg" : "text-sm"}`}

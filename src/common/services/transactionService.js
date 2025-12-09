@@ -908,3 +908,45 @@ export const searchTransactions = async (walletId, searchTerm, limit = 50) => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Gets total payments for the current month
+ * @param {string} walletId - Wallet ID
+ * @returns {Promise<object>} Total payments amount
+ */
+export const getMonthlyTotalPayments = async (walletId) => {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+
+    const result = await getTransactionsByDateRange(walletId, startOfMonth, endOfMonth);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const transactions = result.data;
+    let totalPayments = 0;
+
+    // Transaction types that are considered payments (money out)
+    const paymentTypes = [
+      "payment",
+      "transfer_out",
+      "withdrawal",
+      "fee",
+      "penalty"
+    ];
+
+    transactions.forEach((txn) => {
+      if (paymentTypes.includes(txn.type) && txn.amount < 0) {
+        totalPayments += Math.abs(txn.amount);
+      }
+    });
+
+    return { success: true, data: parseFloat(totalPayments.toFixed(2)) };
+  } catch (error) {
+    console.error("Error getting monthly total payments:", error);
+    return { success: false, error: error.message };
+  }
+};

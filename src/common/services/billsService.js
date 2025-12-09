@@ -42,9 +42,7 @@ export const generateBillReferenceNumber = (serviceType) => {
     passports: 'PASS',
     traffic: 'TRAF',
     civil_affairs: 'CIVIL',
-    human_resources: 'IQAMA',
-    commerce: 'COM',
-    justice: 'JUS'
+    commerce: 'COM'
   };
 
   const prefix = prefixes[serviceType] || 'BILL';
@@ -762,14 +760,20 @@ export const generateRandomBill = (userId, walletId, isBusiness, serviceType, st
       additionalInfo.speed = '140 km/h';
       additionalInfo.speedLimit = '120 km/h';
     }
-  } else if (serviceType === 'civil_affairs') {
-    additionalInfo.nationalId = `${Math.floor(Math.random() * 10000000000)}`;
-    additionalInfo.expiryDate = dueDate;
-  } else if (serviceType === 'human_resources') {
+  } else if (serviceType === 'civil_affairs' &&
+             (subTypeKey === 'issue_iqama' || subTypeKey === 'renew_iqama')) {
     additionalInfo.employeeName = 'أحمد محمد';
     additionalInfo.iqamaNumber = `${Math.floor(Math.random() * 10000000000)}`;
     additionalInfo.nationality = 'مصري';
     additionalInfo.occupation = 'محاسب';
+  } else if (serviceType === 'civil_affairs' && subTypeKey === 'exit_reentry_visa') {
+    additionalInfo.employeeName = 'أحمد محمد';
+    additionalInfo.iqamaNumber = `${Math.floor(Math.random() * 10000000000)}`;
+    additionalInfo.visaType = Math.random() > 0.5 ? 'single' : 'multiple';
+    additionalInfo.validUntil = dueDate;
+  } else if (serviceType === 'civil_affairs') {
+    additionalInfo.nationalId = `${Math.floor(Math.random() * 10000000000)}`;
+    additionalInfo.expiryDate = dueDate;
   }
 
   // Calculate penalty if overdue

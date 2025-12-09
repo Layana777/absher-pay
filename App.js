@@ -23,7 +23,12 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Provider store={store}>
-        <NavigationContainer>
+        <NavigationContainer
+          onStateChange={(state) => {
+            const currentRouteName = state?.routes[state.index]?.name;
+            console.log("📱 Navigated to:", currentRouteName);
+          }}
+        >
           <View className="flex-1 bg-background">
             <RootNavigator />
             <StatusBar style="auto" />

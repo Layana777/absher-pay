@@ -248,31 +248,12 @@ const PaymentAdditionalInfoSection = ({
           </>
         )}
 
-        {/* CIVIL AFFAIRS */}
-        {serviceType === "civil_affairs" && (
-          <>
-            {additionalInfo.nationalId && (
-              <InfoCard
-                icon="credit-card"
-                label="رقم الهوية الوطنية"
-                value={additionalInfo.nationalId}
-              />
-            )}
-            {additionalInfo.expiryDate && (
-              <InfoCard
-                icon="calendar"
-                label="تاريخ انتهاء الصلاحية"
-                value={formatDate(additionalInfo.expiryDate)}
-              />
-            )}
-          </>
-        )}
-
-        {/* HUMAN RESOURCES */}
-        {serviceType === "human_resources" && (
+        {/* BUSINESS CIVIL AFFAIRS - Employee/Iqama Services */}
+        {serviceType === "civil_affairs" &&
+         (additionalInfo.employeeName || additionalInfo.employeeCount) && (
           <>
             {/* Single Employee */}
-            {additionalInfo.employeeName && (
+            {additionalInfo.employeeName && !additionalInfo.employeeCount && (
               <>
                 <InfoCard
                   icon="user"
@@ -338,6 +319,28 @@ const PaymentAdditionalInfoSection = ({
           </>
         )}
 
+        {/* PERSONAL CIVIL AFFAIRS - National ID, Birth Certificates, etc. */}
+        {serviceType === "civil_affairs" &&
+         !additionalInfo.employeeName &&
+         !additionalInfo.employeeCount && (
+          <>
+            {additionalInfo.nationalId && (
+              <InfoCard
+                icon="credit-card"
+                label="رقم الهوية الوطنية"
+                value={additionalInfo.nationalId}
+              />
+            )}
+            {additionalInfo.expiryDate && (
+              <InfoCard
+                icon="calendar"
+                label="تاريخ انتهاء الصلاحية"
+                value={formatDate(additionalInfo.expiryDate)}
+              />
+            )}
+          </>
+        )}
+
         {/* COMMERCE */}
         {serviceType === "commerce" && (
           <>
@@ -353,33 +356,6 @@ const PaymentAdditionalInfoSection = ({
                 icon="briefcase"
                 label="اسم الشركة"
                 value={additionalInfo.companyName}
-              />
-            )}
-          </>
-        )}
-
-        {/* JUSTICE */}
-        {serviceType === "justice" && (
-          <>
-            {additionalInfo.contractType && (
-              <InfoCard
-                icon="file-text"
-                label="نوع العقد"
-                value={additionalInfo.contractType}
-              />
-            )}
-            {additionalInfo.parties && (
-              <InfoCard
-                icon="users"
-                label="عدد الأطراف"
-                value={`${additionalInfo.parties} طرف`}
-              />
-            )}
-            {additionalInfo.documentNumber && (
-              <InfoCard
-                icon="hash"
-                label="رقم الوثيقة"
-                value={additionalInfo.documentNumber}
               />
             )}
           </>

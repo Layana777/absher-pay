@@ -90,9 +90,7 @@ const TopupTransactionDetailsScreen = ({ navigation, route }) => {
                 المبلغ المراد إضافته
               </Text>
               <View className="flex-row items-center">
-                <Text className="text-white text-xl">
-                  <SvgIcons name={"SAR"} size={44} />
-                </Text>
+                <SvgIcons name={"SAR"} size={44} />
                 <Text className="text-white text-4xl font-bold mr-2">
                   {formatAmount(amount)}
                 </Text>
@@ -204,32 +202,38 @@ const TopupTransactionDetailsScreen = ({ navigation, route }) => {
 
               {/* Amount */}
               <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-gray-900 text-base">
-                  <SvgIcons name={"SARBlack"} size={14} />{" "}
-                  {formatAmount(amount)}
-                </Text>
+                <View className="flex-row items-center">
+                  <SvgIcons name={"SARBlack"} size={14} />
+                  <Text className="text-gray-900 text-base ml-1">
+                    {formatAmount(amount)}
+                  </Text>
+                </View>
 
                 <Text className="text-gray-600 text-base">المبلغ</Text>
               </View>
 
               {/* Transaction Fee */}
               <View className="flex-row justify-between items-center mb-4 pb-4 border-b border-gray-200">
-                <Text className="text-green-600 text-base">
-                  <SvgIcons name={"SARGreen"} size={14} />{" "}
-                  {formatAmount(transactionFee)}
-                </Text>
+                <View className="flex-row items-center">
+                  <SvgIcons name={"SARGreen"} size={14} />
+                  <Text className="text-green-600 text-base ml-1">
+                    {formatAmount(transactionFee)}
+                  </Text>
+                </View>
                 <Text className="text-gray-600 text-base">رسوم العملية</Text>
               </View>
 
               {/* Total */}
               <View className="flex-row justify-between items-center">
-                <Text
-                  className="text-xl font-bold"
-                  style={{ color: primaryColor }}
-                >
-                  <SvgIcons name={"SARGreen"} size={18} />{" "}
-                  {formatAmount(totalAmount)}
-                </Text>
+                <View className="flex-row items-center">
+                  <SvgIcons name={"SARGreen"} size={18} />
+                  <Text
+                    className="text-xl font-bold ml-1"
+                    style={{ color: primaryColor }}
+                  >
+                    {formatAmount(totalAmount)}
+                  </Text>
+                </View>
                 <Text className="text-gray-900 font-semibold text-base">
                   الإجمالي
                 </Text>

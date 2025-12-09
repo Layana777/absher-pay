@@ -53,9 +53,9 @@ const UpcomingPayHeaderDetails = ({
       <View className="items-center mb-6 mt-4">
         <View
           className="w-20 h-20 rounded-2xl items-center justify-center mb-3"
-          style={{ backgroundColor: "rgba(255, 255, 255, 0.25)" }}
+          style={{ backgroundColor: "rgba(255, 255, 255)" }}
         >
-          <SvgIcons name={ministryIconName} size={40} />
+          <SvgIcons name={ministryIconName} size={60} />
         </View>
       </View>
       <View className="absolute top-[39%] right-[-18%] w-40 h-40 rounded-full opacity-10 bg-white" />

@@ -24,7 +24,7 @@ export const SAMPLE_UNPAID_BUSINESS_BILL = {
   isBusiness: true,
 
   // Service classification (hierarchical)
-  serviceType: "human_resources",           // Main category
+  serviceType: "civil_affairs",           // Main category
   serviceSubType: "renew_iqama",           // Specific service
   serviceName: {
     ar: "تجديد إقامة",
@@ -32,11 +32,11 @@ export const SAMPLE_UNPAID_BUSINESS_BILL = {
   },
 
   // Ministry information
-  category: "mhrsd",                        // Category code
-  ministry: "MHRSD",                        // Ministry code
+  category: "moi_civil_affairs",                        // Category code
+  ministry: "MOI",                        // Ministry code
   ministryName: {
-    ar: "وزارة الموارد البشرية",
-    en: "Ministry of Human Resources"
+    ar: "وزارة الداخلية",
+    en: "Ministry of Interior"
   },
 
   // Financial information
@@ -53,7 +53,7 @@ export const SAMPLE_UNPAID_BUSINESS_BILL = {
   paidWith: null,                           // Transaction ID if paid
 
   // Reference and description
-  referenceNumber: "IQAMA-2024-7856",       // Format: PREFIX-YEAR-RANDOM
+  referenceNumber: "CIVIL-2024-7856",       // Format: PREFIX-YEAR-RANDOM
   description: {
     ar: "فاتورة تجديد إقامة",
     en: "Iqama renewal bill"
@@ -203,18 +203,18 @@ export const SAMPLE_UPCOMING_MULTI_EMPLOYEE_BILL = {
 
   isBusiness: true,
 
-  serviceType: "human_resources",
+  serviceType: "civil_affairs",
   serviceSubType: "renew_iqama",
   serviceName: {
     ar: "تجديد إقامة العمالة",
     en: "Renew Workers Iqama"
   },
 
-  category: "mhrsd",
-  ministry: "MHRSD",
+  category: "moi_civil_affairs",
+  ministry: "MOI",
   ministryName: {
-    ar: "وزارة الموارد البشرية",
-    en: "Ministry of Human Resources"
+    ar: "وزارة الداخلية",
+    en: "Ministry of Interior"
   },
 
   amount: 6500,                             // Total for multiple employees
@@ -227,7 +227,7 @@ export const SAMPLE_UPCOMING_MULTI_EMPLOYEE_BILL = {
   paymentDate: null,
   paidWith: null,
 
-  referenceNumber: "IQAMA-2024-9012",
+  referenceNumber: "CIVIL-2024-9012",
   description: {
     ar: "فاتورة تجديد إقامة العمالة",
     en: "Workers iqama renewal bill"
@@ -426,59 +426,6 @@ export const SAMPLE_NATIONAL_ID_BILL = {
 };
 
 // ============================================================================
-// SAMPLE 7: Justice - Contract Notarization
-// ============================================================================
-
-export const SAMPLE_JUSTICE_BILL = {
-  id: "bill_1705100000000_pqr159",
-  userId: "user_firebase_uid_12345",
-  walletId: "wallet_business_7001234567890",
-
-  isBusiness: true,
-
-  serviceType: "justice",
-  serviceSubType: "contract_notarization",
-  serviceName: {
-    ar: "توثيق عقد",
-    en: "Contract Notarization"
-  },
-
-  category: "moj",
-  ministry: "MOJ",
-  ministryName: {
-    ar: "وزارة العدل",
-    en: "Ministry of Justice"
-  },
-
-  amount: 50,
-  currency: "SAR",
-
-  status: "unpaid",
-
-  issueDate: 1705000000000,
-  dueDate: 1707592000000,
-  paymentDate: null,
-  paidWith: null,
-
-  referenceNumber: "JUS-2024-4567",
-  description: {
-    ar: "فاتورة توثيق عقد",
-    en: "Contract notarization bill"
-  },
-
-  additionalInfo: {
-    contractType: "عقد عمل",
-    parties: 2,
-    documentNumber: "DOC-2024-12345"
-  },
-
-  penaltyInfo: null,
-
-  createdAt: 1705000000000,
-  updatedAt: 1705000000000
-};
-
-// ============================================================================
 // FIELD VALUE REFERENCE GUIDE
 // ============================================================================
 
@@ -514,7 +461,7 @@ export const FIELD_REFERENCE = {
   // Service Classification
   serviceType: {
     type: "string",
-    values: ["passports", "traffic", "civil_affairs", "human_resources", "commerce", "justice"],
+    values: ["passports", "traffic", "civil_affairs", "commerce"],
     description: "Main service category"
   },
 
@@ -526,13 +473,13 @@ export const FIELD_REFERENCE = {
 
   category: {
     type: "string",
-    values: ["moi_passports", "moi_traffic", "moi_civil_affairs", "mhrsd", "moc", "moj"],
+    values: ["moi_passports", "moi_traffic", "moi_civil_affairs", "moc"],
     description: "Category code for filtering and grouping"
   },
 
   ministry: {
     type: "string",
-    values: ["MOI", "MHRSD", "MOC", "MOJ"],
+    values: ["MOI", "MOC"],
     description: "Ministry abbreviation code"
   },
 
@@ -626,10 +573,8 @@ export const FIELD_REFERENCE = {
     byServiceType: {
       passports: ["passportNumber", "expiryDate", "holderName"],
       traffic: ["plateNumber", "violationType", "location", "speed", "speedLimit"],
-      civil_affairs: ["nationalId", "expiryDate"],
-      human_resources: ["employeeName", "iqamaNumber", "nationality", "occupation", "employeeCount", "employees"],
-      commerce: ["registrationNumber", "companyName"],
-      justice: ["contractType", "parties", "documentNumber"]
+      civil_affairs: ["nationalId", "expiryDate", "employeeName", "iqamaNumber", "nationality", "occupation", "employeeCount", "employees", "visaType", "validUntil"],
+      commerce: ["registrationNumber", "companyName"]
     }
   },
 
@@ -659,8 +604,7 @@ export const ALL_SAMPLES = [
   SAMPLE_PAID_PASSPORT_BILL,
   SAMPLE_UPCOMING_MULTI_EMPLOYEE_BILL,
   SAMPLE_COMMERCE_REGISTRATION_BILL,
-  SAMPLE_NATIONAL_ID_BILL,
-  SAMPLE_JUSTICE_BILL
+  SAMPLE_NATIONAL_ID_BILL
 ];
 
 // ============================================================================
@@ -694,7 +638,6 @@ export default {
   SAMPLE_UPCOMING_MULTI_EMPLOYEE_BILL,
   SAMPLE_COMMERCE_REGISTRATION_BILL,
   SAMPLE_NATIONAL_ID_BILL,
-  SAMPLE_JUSTICE_BILL,
   FIELD_REFERENCE,
   ALL_SAMPLES,
   getSampleByStatus,
