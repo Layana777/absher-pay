@@ -486,9 +486,17 @@ async function main() {
   const bills = [];
 
   for (let i = 0; i < count; i++) {
-    const status = statuses[i % statuses.length];
+    let status = statuses[i % statuses.length];
     // Pick service type in round-robin fashion from available types
     const serviceType = serviceTypes[i % serviceTypes.length];
+
+    // Traffic violations cannot be "upcoming" - they're created after incidents
+    // Only allow: unpaid, overdue, paid
+    if (serviceType === "traffic" && status === "upcoming") {
+      // Replace upcoming with unpaid for traffic bills
+      status = "unpaid";
+    }
+
     const bill = generateRandomBill(
       userId,
       walletId,

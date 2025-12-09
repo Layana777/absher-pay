@@ -81,6 +81,21 @@ const getIconConfig = (type) => {
   return configs[type] || configs.default;
 };
 
+/**
+ * Format time for display (e.g., "3:00 PM")
+ */
+const formatTime = (timestamp) => {
+  if (!timestamp) return "";
+
+  const date = new Date(timestamp);
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const ampm = hours >= 12 ? "PM" : "AM";
+  const displayHours = (hours % 12 || 12).toString().padStart(2, "0");
+
+  return `${displayHours}:${minutes} ${ampm}`;
+};
+
 // ==================== TRANSACTION CARD COMPONENT ====================
 
 const TransactionCard = ({ transaction, onPress, isLast }) => {
@@ -116,6 +131,9 @@ const TransactionCard = ({ transaction, onPress, isLast }) => {
             </Text>
             <Text className="text-gray-500 text-sm text-left mt-1">
               {transaction.descriptionEn || ""}
+            </Text>
+            <Text className="text-gray-400 text-xs text-left mt-1">
+              {formatTime(transaction.timestamp)}
             </Text>
           </View>
         </View>

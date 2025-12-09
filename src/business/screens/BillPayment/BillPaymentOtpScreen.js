@@ -130,48 +130,65 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
         return;
       }
 
-      // 4. Create payment transaction with enhanced metadata
-      console.log("Creating enhanced payment transaction...");
+      // 4. Create individual payment transactions for each bill
+      console.log("Creating individual transactions for each bill...");
 
-      // Determine transaction description
-      const descriptionAr = isBulkPayment
-        ? `دفع ${bills.length} فاتورة حكومية`
-        : bill?.serviceName?.ar || "دفع فاتورة";
-      const descriptionEn = isBulkPayment
-        ? `Payment for ${bills.length} government bills`
-        : bill?.serviceName?.en || bill?.serviceName?.ar || "Bill payment";
-      const serviceType = isBulkPayment
-        ? "bulk_payment"
-        : bill?.serviceType || "government_service";
+      const createdTransactions = [];
+      let currentBalance = balanceBefore;
 
-      // Build enhanced payment metadata for AI insights
-      const paymentMetadata = {
-        serviceSubType: isBulkPayment ? null : bill?.serviceSubType,
-        serviceName: isBulkPayment ? null : bill?.serviceName,
-        ministry: isBulkPayment ? null : bill?.ministry,
-        ministryName: isBulkPayment ? null : bill?.ministryName,
-        linkedBillIds: bills.map(b => b?.id).filter(Boolean),
-        penaltyInfo: isBulkPayment ? null : bill?.penaltyInfo,
-      };
+      for (const currentBill of bills) {
+        if (!currentBill?.id) {
+          console.warn("Skipping bill with no ID:", currentBill);
+          continue;
+        }
 
-      const transactionResult = await createPaymentTransactionEnhanced(
-        walletId,
-        userId,
-        totalAmount,
-        balanceBefore,
-        serviceType,
-        descriptionAr,
-        descriptionEn,
-        paymentMetadata
-      );
+        // Calculate amount for this specific bill
+        const billAmount = currentBill.penaltyInfo?.totalWithPenalty || currentBill.amount || 0;
 
+        // Build transaction description for this specific bill
+        const descriptionAr = currentBill?.serviceName?.ar || "دفع فاتورة";
+        const descriptionEn = currentBill?.serviceName?.en || currentBill?.serviceName?.ar || "Bill payment";
+        const serviceType = currentBill?.serviceType || "government_service";
 
-      if (!transactionResult.success) {
-        throw new Error(transactionResult.error || "فشل إنشاء المعاملة");
+        // Build enhanced payment metadata for AI insights
+        const paymentMetadata = {
+          serviceSubType: currentBill?.serviceSubType,
+          serviceName: currentBill?.serviceName,
+          ministry: currentBill?.ministry,
+          ministryName: currentBill?.ministryName,
+          linkedBillIds: [currentBill.id],
+          penaltyInfo: currentBill?.penaltyInfo,
+        };
+
+        const transactionResult = await createPaymentTransactionEnhanced(
+          walletId,
+          userId,
+          billAmount,
+          currentBalance,
+          serviceType,
+          descriptionAr,
+          descriptionEn,
+          paymentMetadata
+        );
+
+        if (!transactionResult.success) {
+          throw new Error(transactionResult.error || `فشل إنشاء المعاملة للفاتورة ${currentBill.id}`);
+        }
+
+        const transaction = transactionResult.data;
+        console.log(`Transaction created for bill ${currentBill.id}:`, transaction.id);
+
+        createdTransactions.push({
+          transactionId: transaction.id,
+          billId: currentBill.id,
+          amount: billAmount
+        });
+
+        // Update balance for next transaction
+        currentBalance -= billAmount;
       }
 
-      const transaction = transactionResult.data;
-      console.log("Transaction created:", transaction.id);
+      console.log(`Created ${createdTransactions.length} individual transactions`);
 
       // 5. Update wallet balance (deduct amount)
       const newBalance = balanceBefore - totalAmount;
@@ -195,24 +212,22 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
 
       console.log("Wallet balance updated successfully");
 
-      // 6. Mark bills as paid
-      console.log("Marking bills as paid...");
+      // 6. Mark bills as paid with their respective transaction IDs
+      console.log("Marking bills as paid with individual transactions...");
       let failedBills = 0;
 
-      for (const currentBill of bills) {
-        if (currentBill?.id) {
-          const billUpdateSuccess = await markBillAsPaid(
-            userId,
-            currentBill.id,
-            transaction.id
-          );
+      for (const transactionInfo of createdTransactions) {
+        const billUpdateSuccess = await markBillAsPaid(
+          userId,
+          transactionInfo.billId,
+          transactionInfo.transactionId
+        );
 
-          if (!billUpdateSuccess) {
-            console.warn(`Failed to mark bill ${currentBill.id} as paid`);
-            failedBills++;
-          } else {
-            console.log(`Bill ${currentBill.id} marked as paid successfully`);
-          }
+        if (!billUpdateSuccess) {
+          console.warn(`Failed to mark bill ${transactionInfo.billId} as paid`);
+          failedBills++;
+        } else {
+          console.log(`Bill ${transactionInfo.billId} marked as paid with transaction ${transactionInfo.transactionId}`);
         }
       }
 
@@ -245,8 +260,9 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
                 isBulkPayment,
                 billsCount: bills.length,
                 totalAmount,
-                transactionId: transaction.id,
-                referenceNumber: transaction.referenceNumber,
+                transactionId: isBulkPayment ? createdTransactions[0]?.transactionId : createdTransactions[0]?.transactionId, // First transaction ID for display
+                transactionIds: createdTransactions.map(t => t.transactionId), // All transaction IDs
+                referenceNumber: createdTransactions[0]?.transactionId || "N/A", // Use first transaction ID as reference
                 newBalance,
                 primaryColor,
               },

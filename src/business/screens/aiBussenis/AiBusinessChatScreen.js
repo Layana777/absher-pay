@@ -26,6 +26,7 @@ import {
   getDaysUntilDue,
 } from "../../../common/services/billsService";
 import moment from "moment";
+import SvgIcons from "../../../common/components/SvgIcons";
 
 const QUICK_SUGGESTIONS = [
   "كم صرفت هذا الربع؟",
@@ -154,19 +155,19 @@ const AIMessageWithBillLinks = ({
               >
                 {/* Top row: Service name and amount */}
                 <View className="flex-row items-start justify-between mb-2">
-                  <View className="flex-1">
-                    <Text className="text-gray-900 font-bold text-base text-right">
+                  <View className="flex-row items-center">
+                    <SvgIcons name={"SARBlack"} size={14} />
+                    <Text className="text-gray-900 font-bold text-x1 mx-1">
+                      {bill.amount?.toFixed(2) || "0.00"}
+                    </Text>
+                  </View>
+                  <View className="">
+                    <Text className="text-gray-900 font-bold text-x1 text-right">
                       {bill.serviceName?.ar || "فاتورة"}
                     </Text>
                     <Text className="text-gray-500 text-xs text-right mt-1">
                       {bill.ministryName?.ar || "غير محدد"}
                     </Text>
-                  </View>
-                  <View className="flex-row items-center">
-                    <Text className="text-gray-900 font-bold text-lg mr-1">
-                      {bill.amount?.toFixed(2) || "0.00"}
-                    </Text>
-                    <Text className="text-gray-600 text-xs">ريال</Text>
                   </View>
                 </View>
 
@@ -177,7 +178,7 @@ const AIMessageWithBillLinks = ({
                 <View className="flex-row items-center justify-between">
                   <View className="flex-row items-center">
                     <Feather name="calendar" size={14} color="#6B7280" />
-                    <Text className="text-gray-600 text-xs mr-2">
+                    <Text className="text-gray-600 text-xs mx-1">
                       {dueDate}
                     </Text>
                   </View>
@@ -196,7 +197,7 @@ const AIMessageWithBillLinks = ({
 
                 {/* Navigate icon */}
                 <View
-                  className="absolute left-3 top-1/2"
+                  className="absolute left-3 top-1/2 my-1"
                   style={{ transform: [{ translateY: -10 }] }}
                 >
                   <Feather name="chevron-left" size={20} color={primaryColor} />

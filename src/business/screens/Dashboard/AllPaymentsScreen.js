@@ -148,6 +148,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       ministryIconSize: 50, // Size for detail screen header
       // Keep original bill data for payment processing
       billData: bill,
+
     };
   };
 
