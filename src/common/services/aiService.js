@@ -13,38 +13,35 @@
  * - PII exclusion for security
  */
 
-import axios from 'axios';
-import moment from 'moment';
-import 'moment/locale/ar'; // Import Arabic locale for moment
-import { formatAmount, formatDate } from '../utils/formatting';
-import { getDaysUntilDue } from './billsService';
+import axios from "axios";
+import moment from "moment";
+import { formatAmount, formatDate } from "../utils/formatting";
+import { getDaysUntilDue } from "./billsService";
 
 // TODO: Move to environment variables for production
-const OPENAI_API_KEY = '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';
+const OPENAI_API_KEY =
+  "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";
 
 // OpenAI API Configuration
 const OPENAI_CONFIG = {
-  baseURL: 'https://api.openai.com/v1',
-  model: 'gpt-3.5-turbo',
-  temperature: 0.3,  // Low temperature for factual, consistent answers
-  max_tokens: 500,   // Reasonable limit for Arabic responses
-  timeout: 30000,    // 30 second timeout
+  baseURL: "https://api.openai.com/v1",
+  model: "gpt-3.5-turbo",
+  temperature: 0.3, // Low temperature for factual, consistent answers
+  max_tokens: 500, // Reasonable limit for Arabic responses
+  timeout: 30000, // 30 second timeout
 };
 
 /**
- * Format date in Gregorian calendar with Arabic month names
+ * Format date in Gregorian calendar with English month names
  * Uses moment.js to ensure Gregorian calendar is used (not Hijri)
  * @param {number|Date} timestamp - The timestamp or Date object to format
- * @returns {string} Formatted date string (e.g., "15 يناير 2024")
+ * @returns {string} Formatted date string (e.g., "15 January 2024")
  */
 const formatDateGregorian = (timestamp) => {
-  if (!timestamp) return 'غير محدد';
+  if (!timestamp) return "غير محدد";
 
-  // Set moment to use Arabic locale with Gregorian calendar
-  moment.locale('ar');
-
-  // Format: "DD MMMM YYYY" (e.g., "15 يناير 2024")
-  return moment(timestamp).format('DD MMMM YYYY');
+  // Format: "DD MMMM YYYY" (e.g., "15 January 2024")
+  return moment(timestamp).format("DD MMMM YYYY");
 };
 
 /**
@@ -56,71 +53,95 @@ const formatDateGregorian = (timestamp) => {
  * @param {Object} wallet - Wallet information
  * @returns {Object} Formatted data structure for AI
  */
-export const formatFinancialDataForAI = (transactions, bills, stats, wallet) => {
+export const formatFinancialDataForAI = (
+  transactions,
+  bills,
+  stats,
+  wallet
+) => {
   try {
     // Format recent transactions (top 10) with enhanced service details
-    const recentTransactions = transactions.slice(0, 10).map(txn => ({
-      المبلغ: formatAmount(txn.amount) + ' ريال',
+    const recentTransactions = transactions.slice(0, 10).map((txn) => ({
+      المبلغ: formatAmount(txn.amount) + " ريال",
       النوع: txn.descriptionAr || txn.type,
-      التصنيف: txn.category || 'غير محدد',
+      التصنيف: txn.category || "غير محدد",
       التاريخ: formatDateGregorian(txn.timestamp),
-      الحالة: txn.status === 'completed' ? 'مكتملة' : txn.status,
+      الحالة: txn.status === "completed" ? "مكتملة" : txn.status,
 
       // Enhanced service type details
-      نوع_الخدمة: txn.serviceType || 'غير محدد',
+      نوع_الخدمة: txn.serviceType || "غير محدد",
       الخدمة_التفصيلية: txn.serviceSubType || null,
       اسم_الخدمة: txn.serviceName?.ar || txn.descriptionAr,
-      الوزارة: txn.ministryName?.ar || 'غير محدد',
+      الوزارة: txn.ministryName?.ar || "غير محدد",
       رمز_الوزارة: txn.ministry || null,
-      معلومات_الغرامة: txn.penaltyInfo ? {
-        غرامة: formatAmount(txn.penaltyInfo.lateFee) + ' ريال',
-        أيام_التأخير: txn.penaltyInfo.daysOverdue + ' يوم',
-        المبلغ_الإجمالي: formatAmount(txn.penaltyInfo.totalWithPenalty) + ' ريال'
-      } : null
+      معلومات_الغرامة: txn.penaltyInfo
+        ? {
+            غرامة: formatAmount(txn.penaltyInfo.lateFee) + " ريال",
+            أيام_التأخير: txn.penaltyInfo.daysOverdue + " يوم",
+            المبلغ_الإجمالي:
+              formatAmount(txn.penaltyInfo.totalWithPenalty) + " ريال",
+          }
+        : null,
     }));
 
     // Format upcoming bills (top 10)
     const upcomingBills = bills
-      .filter(bill => bill.status === 'unpaid' || bill.status === 'upcoming')
+      .filter((bill) => bill.status === "unpaid" || bill.status === "upcoming")
       .slice(0, 10)
-      .map(bill => ({
-        الخدمة: bill.serviceName?.ar || 'خدمة حكومية',
-        المبلغ: formatAmount(bill.amount) + ' ريال',
+      .map((bill) => ({
+        رقم_الفاتورة: bill.id, // Bill ID for reference and navigation
+        الخدمة: bill.serviceName?.ar || "خدمة حكومية",
+        المبلغ: formatAmount(bill.amount) + " ريال",
         تاريخ_الاستحقاق: formatDateGregorian(bill.dueDate),
-        الأيام_المتبقية: getDaysUntilDue(bill) + ' يوم',
-        الحالة: bill.status
+        الأيام_المتبقية: getDaysUntilDue(bill) + " يوم",
+        الحالة: bill.status,
+        الوزارة: bill.ministryName?.ar || "غير محدد",
       }));
 
     // Format overdue bills
     const overdueBills = bills
-      .filter(bill => bill.status === 'overdue')
-      .map(bill => ({
-        الخدمة: bill.serviceName?.ar || 'خدمة حكومية',
-        المبلغ: formatAmount(bill.penaltyInfo?.totalWithPenalty || bill.amount) + ' ريال',
+      .filter((bill) => bill.status === "overdue")
+      .map((bill) => ({
+        رقم_الفاتورة: bill.id, // Bill ID for reference and navigation
+        الخدمة: bill.serviceName?.ar || "خدمة حكومية",
+        المبلغ:
+          formatAmount(bill.penaltyInfo?.totalWithPenalty || bill.amount) +
+          " ريال",
         تاريخ_الاستحقاق: formatDateGregorian(bill.dueDate),
-        الأيام_المتأخرة: Math.abs(getDaysUntilDue(bill)) + ' يوم',
-        غرامة_التأخير: bill.penaltyInfo ? formatAmount(bill.penaltyInfo.lateFee) + ' ريال' : 'لا يوجد'
+        الأيام_المتأخرة: Math.abs(getDaysUntilDue(bill)) + " يوم",
+        غرامة_التأخير: bill.penaltyInfo
+          ? formatAmount(bill.penaltyInfo.lateFee) + " ريال"
+          : "لا يوجد",
+        الوزارة: bill.ministryName?.ar || "غير محدد",
       }));
 
     // Calculate bill summaries
     const totalUnpaidAmount = bills
-      .filter(bill => bill.status !== 'paid')
-      .reduce((sum, bill) => sum + (bill.penaltyInfo?.totalWithPenalty || bill.amount), 0);
+      .filter((bill) => bill.status !== "paid")
+      .reduce(
+        (sum, bill) =>
+          sum + (bill.penaltyInfo?.totalWithPenalty || bill.amount),
+        0
+      );
 
     const totalOverdueAmount = bills
-      .filter(bill => bill.status === 'overdue')
-      .reduce((sum, bill) => sum + (bill.penaltyInfo?.totalWithPenalty || bill.amount), 0);
+      .filter((bill) => bill.status === "overdue")
+      .reduce(
+        (sum, bill) =>
+          sum + (bill.penaltyInfo?.totalWithPenalty || bill.amount),
+        0
+      );
 
     // Calculate spending by ministry for detailed breakdown
     const spendingByMinistry = {};
-    transactions.forEach(txn => {
-      if (txn.type === 'payment' && txn.ministry) {
+    transactions.forEach((txn) => {
+      if (txn.type === "payment" && txn.ministry) {
         const ministryKey = txn.ministryName?.ar || txn.ministry;
         if (!spendingByMinistry[ministryKey]) {
           spendingByMinistry[ministryKey] = {
             total: 0,
             count: 0,
-            services: {}
+            services: {},
           };
         }
         spendingByMinistry[ministryKey].total += Math.abs(txn.amount);
@@ -132,36 +153,41 @@ export const formatFinancialDataForAI = (transactions, bills, stats, wallet) => 
           if (!spendingByMinistry[ministryKey].services[serviceName]) {
             spendingByMinistry[ministryKey].services[serviceName] = {
               total: 0,
-              count: 0
+              count: 0,
             };
           }
-          spendingByMinistry[ministryKey].services[serviceName].total += Math.abs(txn.amount);
+          spendingByMinistry[ministryKey].services[serviceName].total +=
+            Math.abs(txn.amount);
           spendingByMinistry[ministryKey].services[serviceName].count += 1;
         }
       }
     });
 
     // Format ministry breakdown for AI
-    const ministryBreakdown = Object.entries(spendingByMinistry).map(([ministry, data]) => ({
-      الوزارة: ministry,
-      المبلغ_الإجمالي: formatAmount(data.total) + ' ريال',
-      عدد_المعاملات: data.count,
-      الخدمات: Object.entries(data.services).map(([service, serviceData]) => ({
-        الخدمة: service,
-        المبلغ: formatAmount(serviceData.total) + ' ريال',
-        العدد: serviceData.count
-      }))
-    }));
+    const ministryBreakdown = Object.entries(spendingByMinistry).map(
+      ([ministry, data]) => ({
+        الوزارة: ministry,
+        المبلغ_الإجمالي: formatAmount(data.total) + " ريال",
+        عدد_المعاملات: data.count,
+        الخدمات: Object.entries(data.services).map(
+          ([service, serviceData]) => ({
+            الخدمة: service,
+            المبلغ: formatAmount(serviceData.total) + " ريال",
+            العدد: serviceData.count,
+          })
+        ),
+      })
+    );
 
     return {
-      الرصيد_الحالي: formatAmount(wallet.balance) + ' ريال سعودي',
+      الرصيد_الحالي: formatAmount(wallet.balance) + " ريال سعودي",
 
       ملخص_المعاملات: {
-        إجمالي_الإيرادات: formatAmount(stats.totalIncome) + ' ريال',
-        إجمالي_المصروفات: formatAmount(stats.totalExpense) + ' ريال',
-        صافي_المبلغ: formatAmount(stats.netAmount) + ' ريال',
-        الفترة: 'آخر 30 يوماً',
-        عدد_المعاملات: stats.totalTransactions
+        إجمالي_الإيرادات: formatAmount(stats.totalIncome) + " ريال",
+        إجمالي_المصروفات: formatAmount(stats.totalExpense) + " ريال",
+        صافي_المبلغ: formatAmount(stats.netAmount) + " ريال",
+        الفترة: "آخر 30 يوماً",
+        عدد_المعاملات: stats.totalTransactions,
       },
 
       المعاملات_الأخيرة: recentTransactions,
@@ -170,21 +196,21 @@ export const formatFinancialDataForAI = (transactions, bills, stats, wallet) => 
       التفصيل_حسب_الوزارة: ministryBreakdown,
 
       ملخص_الفواتير: {
-        إجمالي_الفواتير_غير_المدفوعة: formatAmount(totalUnpaidAmount) + ' ريال',
-        إجمالي_الفواتير_المتأخرة: formatAmount(totalOverdueAmount) + ' ريال',
+        إجمالي_الفواتير_غير_المدفوعة: formatAmount(totalUnpaidAmount) + " ريال",
+        إجمالي_الفواتير_المتأخرة: formatAmount(totalOverdueAmount) + " ريال",
         عدد_الفواتير_القادمة: upcomingBills.length,
-        عدد_الفواتير_المتأخرة: overdueBills.length
+        عدد_الفواتير_المتأخرة: overdueBills.length,
       },
 
       الفواتير_القادمة: upcomingBills,
-      الفواتير_المتأخرة: overdueBills
+      الفواتير_المتأخرة: overdueBills,
     };
   } catch (error) {
-    console.error('Error formatting financial data for AI:', error);
+    console.error("Error formatting financial data for AI:", error);
     return {
-      الرصيد_الحالي: formatAmount(wallet.balance) + ' ريال سعودي',
+      الرصيد_الحالي: formatAmount(wallet.balance) + " ريال سعودي",
       ملخص_المعاملات: { إجمالي_المعاملات: 0 },
-      ملخص_الفواتير: { عدد_الفواتير: 0 }
+      ملخص_الفواتير: { عدد_الفواتير: 0 },
     };
   }
 };
@@ -218,6 +244,8 @@ export const buildSystemPrompt = (financialData) => {
 11. الوزارات المتاحة: وزارة الداخلية (جوازات، مرور، أحوال مدنية) ووزارة التجارة (سجل تجاري، رخص)
 12. عند عدم توفر معلومات تفصيلية عن الخدمة، اذكر ما هو متاح فقط دون اختراع
 13. جميع التواريخ المقدمة لك بالتقويم الميلادي (الغريغوري) وليس الهجري - استخدمها كما هي
+14. عند ذكر فاتورة محددة من الفواتير القادمة أو المتأخرة، أضف رقم الفاتورة في نهاية الجملة بصيغة [BILL:رقم_الفاتورة] لتمكين المستخدم من الانتقال إليها مباشرة
+    - مثال: "لديك فاتورة تجديد جواز سفر بمبلغ 300 ريال تستحق خلال 5 أيام [BILL:abc123]"
 
 البيانات المالية المتاحة:
 ${dataString}
@@ -233,18 +261,19 @@ ${dataString}
  * @returns {Object} Structured error response
  */
 export const handleAPIError = (error) => {
-  console.error('OpenAI API Error:', error);
+  console.error("OpenAI API Error:", error);
 
   // Network errors
-  if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+  if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
     return {
       success: false,
       error: {
-        code: 'TIMEOUT',
-        messageAr: 'انتهت مهلة الاتصال',
-        messageEn: 'Request timeout',
-        userMessage: 'عذراً، استغرق الطلب وقتاً طويلاً. يرجى المحاولة مرة أخرى.'
-      }
+        code: "TIMEOUT",
+        messageAr: "انتهت مهلة الاتصال",
+        messageEn: "Request timeout",
+        userMessage:
+          "عذراً، استغرق الطلب وقتاً طويلاً. يرجى المحاولة مرة أخرى.",
+      },
     };
   }
 
@@ -252,11 +281,12 @@ export const handleAPIError = (error) => {
     return {
       success: false,
       error: {
-        code: 'NETWORK_ERROR',
-        messageAr: 'خطأ في الشبكة',
-        messageEn: 'Network error',
-        userMessage: 'عذراً، يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك والمحاولة مرة أخرى.'
-      }
+        code: "NETWORK_ERROR",
+        messageAr: "خطأ في الشبكة",
+        messageEn: "Network error",
+        userMessage:
+          "عذراً، يبدو أن هناك مشكلة في الاتصال بالإنترنت. يرجى التحقق من اتصالك والمحاولة مرة أخرى.",
+      },
     };
   }
 
@@ -267,11 +297,12 @@ export const handleAPIError = (error) => {
     return {
       success: false,
       error: {
-        code: 'AUTH_ERROR',
-        messageAr: 'خطأ في المصادقة',
-        messageEn: 'Authentication error',
-        userMessage: 'عذراً، حدث خطأ في التحقق من الهوية. يرجى المحاولة لاحقاً.'
-      }
+        code: "AUTH_ERROR",
+        messageAr: "خطأ في المصادقة",
+        messageEn: "Authentication error",
+        userMessage:
+          "عذراً، حدث خطأ في التحقق من الهوية. يرجى المحاولة لاحقاً.",
+      },
     };
   }
 
@@ -279,11 +310,12 @@ export const handleAPIError = (error) => {
     return {
       success: false,
       error: {
-        code: 'RATE_LIMIT',
-        messageAr: 'تجاوز الحد المسموح',
-        messageEn: 'Rate limit exceeded',
-        userMessage: 'عذراً، لقد تجاوزت الحد المسموح من الأسئلة. يرجى الانتظار دقيقة والمحاولة مرة أخرى.'
-      }
+        code: "RATE_LIMIT",
+        messageAr: "تجاوز الحد المسموح",
+        messageEn: "Rate limit exceeded",
+        userMessage:
+          "عذراً، لقد تجاوزت الحد المسموح من الأسئلة. يرجى الانتظار دقيقة والمحاولة مرة أخرى.",
+      },
     };
   }
 
@@ -291,11 +323,11 @@ export const handleAPIError = (error) => {
     return {
       success: false,
       error: {
-        code: 'SERVER_ERROR',
-        messageAr: 'خطأ في الخادم',
-        messageEn: 'Server error',
-        userMessage: 'عذراً، حدث خطأ مؤقت في الخادم. يرجى المحاولة بعد قليل.'
-      }
+        code: "SERVER_ERROR",
+        messageAr: "خطأ في الخادم",
+        messageEn: "Server error",
+        userMessage: "عذراً، حدث خطأ مؤقت في الخادم. يرجى المحاولة بعد قليل.",
+      },
     };
   }
 
@@ -303,11 +335,11 @@ export const handleAPIError = (error) => {
   return {
     success: false,
     error: {
-      code: 'UNKNOWN_ERROR',
-      messageAr: 'خطأ غير معروف',
-      messageEn: 'Unknown error',
-      userMessage: 'عذراً، حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.'
-    }
+      code: "UNKNOWN_ERROR",
+      messageAr: "خطأ غير معروف",
+      messageEn: "Unknown error",
+      userMessage: "عذراً، حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.",
+    },
   };
 };
 
@@ -318,7 +350,7 @@ export const handleAPIError = (error) => {
  * @returns {boolean} True if valid
  */
 export const validateAIResponse = (response) => {
-  if (!response || typeof response !== 'string') {
+  if (!response || typeof response !== "string") {
     return false;
   }
 
@@ -332,7 +364,7 @@ export const validateAIResponse = (response) => {
   // Check if contains Arabic characters (basic validation)
   const arabicRegex = /[\u0600-\u06FF]/;
   if (!arabicRegex.test(trimmed)) {
-    console.warn('AI response does not contain Arabic characters');
+    console.warn("AI response does not contain Arabic characters");
     return false;
   }
 
@@ -354,11 +386,11 @@ export const generateFinancialInsight = async (userQuery, financialData) => {
       return {
         success: false,
         error: {
-          code: 'INVALID_INPUT',
-          messageAr: 'سؤال فارغ',
-          messageEn: 'Empty query',
-          userMessage: 'يرجى كتابة سؤال.'
-        }
+          code: "INVALID_INPUT",
+          messageAr: "سؤال فارغ",
+          messageEn: "Empty query",
+          userMessage: "يرجى كتابة سؤال.",
+        },
       };
     }
 
@@ -373,7 +405,7 @@ export const generateFinancialInsight = async (userQuery, financialData) => {
     // Build system prompt with context
     const systemPrompt = buildSystemPrompt(formattedData);
 
-    console.log('Calling OpenAI API for query:', userQuery);
+    console.log("Calling OpenAI API for query:", userQuery);
 
     // Call OpenAI API
     const response = await axios.post(
@@ -383,16 +415,16 @@ export const generateFinancialInsight = async (userQuery, financialData) => {
         temperature: OPENAI_CONFIG.temperature,
         max_tokens: OPENAI_CONFIG.max_tokens,
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userQuery }
-        ]
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userQuery },
+        ],
       },
       {
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+          "Content-Type": "application/json",
         },
-        timeout: OPENAI_CONFIG.timeout
+        timeout: OPENAI_CONFIG.timeout,
       }
     );
 
@@ -401,25 +433,32 @@ export const generateFinancialInsight = async (userQuery, financialData) => {
 
     // Validate response
     if (!validateAIResponse(aiResponse)) {
-      console.error('Invalid AI response:', aiResponse);
+      console.error("Invalid AI response:", aiResponse);
       return {
         success: false,
         error: {
-          code: 'INVALID_RESPONSE',
-          messageAr: 'استجابة غير صالحة',
-          messageEn: 'Invalid response',
-          userMessage: 'عذراً، لم أتمكن من معالجة السؤال. يرجى المحاولة مرة أخرى بصياغة مختلفة.'
-        }
+          code: "INVALID_RESPONSE",
+          messageAr: "استجابة غير صالحة",
+          messageEn: "Invalid response",
+          userMessage:
+            "عذراً، لم أتمكن من معالجة السؤال. يرجى المحاولة مرة أخرى بصياغة مختلفة.",
+        },
       };
     }
 
-    console.log('AI response received successfully');
+    console.log("AI response received successfully");
 
     return {
       success: true,
-      response: aiResponse.trim()
+      response: aiResponse.trim(),
+      // Include bill data for navigation purposes
+      billsData: {
+        upcoming: financialData.bills || [],
+        overdue:
+          financialData.bills?.filter((bill) => bill.status === "overdue") ||
+          [],
+      },
     };
-
   } catch (error) {
     // Handle errors with user-friendly messages
     return handleAPIError(error);
@@ -434,13 +473,28 @@ export const generateFinancialInsight = async (userQuery, financialData) => {
  */
 export const isFinancialQuery = (query) => {
   const financialKeywords = [
-    'رصيد', 'صرف', 'دفع', 'فاتورة', 'معاملة', 'تحويل',
-    'سحب', 'إيداع', 'مصاريف', 'إيرادات', 'ريال', 'مبلغ',
-    'استحقاق', 'متأخر', 'قادم', 'شهر', 'ربع', 'سنة'
+    "رصيد",
+    "صرف",
+    "دفع",
+    "فاتورة",
+    "معاملة",
+    "تحويل",
+    "سحب",
+    "إيداع",
+    "مصاريف",
+    "إيرادات",
+    "ريال",
+    "مبلغ",
+    "استحقاق",
+    "متأخر",
+    "قادم",
+    "شهر",
+    "ربع",
+    "سنة",
   ];
 
   const lowerQuery = query.toLowerCase();
-  return financialKeywords.some(keyword => lowerQuery.includes(keyword));
+  return financialKeywords.some((keyword) => lowerQuery.includes(keyword));
 };
 
 export default {
@@ -449,5 +503,5 @@ export default {
   buildSystemPrompt,
   handleAPIError,
   validateAIResponse,
-  isFinancialQuery
+  isFinancialQuery,
 };

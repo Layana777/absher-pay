@@ -21,23 +21,27 @@ import {
   getWalletTransactions,
   getTransactionStats,
 } from "../../../common/services/transactionService";
-import { getWalletBills } from "../../../common/services/billsService";
+import {
+  getWalletBills,
+  getDaysUntilDue,
+} from "../../../common/services/billsService";
+import moment from "moment";
 
 const QUICK_SUGGESTIONS = [
   "كم صرفت هذا الربع؟",
-  "هل لديّ مصاريف قادمة؟",
+  "اعرض لي فواتيري القادمة",
   "ما أعلى فئة صرفت عليها؟",
 ];
 
 // Animated typing indicator component
 const AnimatedTypingIndicator = () => {
-  const [dots, setDots] = useState('');
+  const [dots, setDots] = useState("");
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDots(prev => {
-        if (prev === '...') return '';
-        return prev + '.';
+      setDots((prev) => {
+        if (prev === "...") return "";
+        return prev + ".";
       });
     }, 500); // Change dots every 500ms
 
@@ -66,6 +70,142 @@ const AnimatedTypingIndicator = () => {
       >
         <Text className="text-white text-sm">جاري الكتابة{dots}</Text>
       </View>
+    </View>
+  );
+};
+
+// Component to render AI message with clickable bill references
+const AIMessageWithBillLinks = ({
+  text,
+  billsData,
+  onBillPress,
+  primaryColor,
+}) => {
+  // Remove [BILL:id] tags from text for clean display
+  const cleanText = text.replace(/\[BILL:[^\]]+\]/g, "").trim();
+
+  // Parse text to find [BILL:id] references to extract mentioned bill IDs
+  const billRefPattern = /\[BILL:([^\]]+)\]/g;
+  const mentionedBillIds = [];
+  let match;
+
+  while ((match = billRefPattern.exec(text)) !== null) {
+    mentionedBillIds.push(match[1]);
+  }
+
+  // Get all bills (upcoming + overdue)
+  const allBills = [
+    ...(billsData?.upcoming || []),
+    ...(billsData?.overdue || []),
+  ];
+
+  // Only show bills if AI explicitly mentioned them with [BILL:id] tags
+  const billsToShow =
+    mentionedBillIds.length > 0
+      ? allBills.filter((bill) => mentionedBillIds.includes(bill.id))
+      : []; // Don't show any bills if no [BILL:id] tags found
+
+  // Format date in Gregorian calendar with English month names
+  const formatDateGregorian = (timestamp) => {
+    if (!timestamp) return "غير محدد";
+    return moment(timestamp).format("DD MMMM YYYY");
+  };
+
+  // Get remaining days text
+  const getRemainingDaysText = (bill) => {
+    const daysRemaining = getDaysUntilDue(bill);
+    if (daysRemaining > 0) {
+      return `${daysRemaining} يوم متبقي`;
+    } else if (daysRemaining === 0) {
+      return "اليوم آخر موعد";
+    } else {
+      return `متأخر ${Math.abs(daysRemaining)} يوم`;
+    }
+  };
+
+  // Get status color
+  const getStatusColor = (bill) => {
+    const daysRemaining = getDaysUntilDue(bill);
+    if (daysRemaining < 0) return "#EF4444"; // Red for overdue
+    if (daysRemaining <= 3) return "#F59E0B"; // Orange for urgent
+    return "#10B981"; // Green for normal
+  };
+
+  return (
+    <View>
+      <Text className="text-sm text-right leading-6 text-white">
+        {cleanText}
+      </Text>
+
+      {/* Render bill cards at the bottom */}
+      {billsToShow.length > 0 && (
+        <View className="mt-3 gap-2">
+          {billsToShow.map((bill, index) => {
+            const daysText = getRemainingDaysText(bill);
+            const statusColor = getStatusColor(bill);
+            const dueDate = formatDateGregorian(bill.dueDate);
+
+            return (
+              <TouchableOpacity
+                key={bill.id || index}
+                onPress={() => onBillPress(bill)}
+                className="bg-white rounded-xl p-4 shadow-sm"
+                style={{ borderWidth: 1, borderColor: "#E5E7EB" }}
+              >
+                {/* Top row: Service name and amount */}
+                <View className="flex-row items-start justify-between mb-2">
+                  <View className="flex-1">
+                    <Text className="text-gray-900 font-bold text-base text-right">
+                      {bill.serviceName?.ar || "فاتورة"}
+                    </Text>
+                    <Text className="text-gray-500 text-xs text-right mt-1">
+                      {bill.ministryName?.ar || "غير محدد"}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center">
+                    <Text className="text-gray-900 font-bold text-lg mr-1">
+                      {bill.amount?.toFixed(2) || "0.00"}
+                    </Text>
+                    <Text className="text-gray-600 text-xs">ريال</Text>
+                  </View>
+                </View>
+
+                {/* Divider */}
+                <View className="h-px bg-gray-200 my-2" />
+
+                {/* Bottom row: Date and status */}
+                <View className="flex-row items-center justify-between">
+                  <View className="flex-row items-center">
+                    <Feather name="calendar" size={14} color="#6B7280" />
+                    <Text className="text-gray-600 text-xs mr-2">
+                      {dueDate}
+                    </Text>
+                  </View>
+                  <View
+                    className="px-3 py-1 rounded-full"
+                    style={{ backgroundColor: `${statusColor}15` }}
+                  >
+                    <Text
+                      className="text-xs font-semibold"
+                      style={{ color: statusColor }}
+                    >
+                      {daysText}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Navigate icon */}
+                <View
+                  className="absolute left-3 top-1/2"
+                  style={{ transform: [{ translateY: -10 }] }}
+                >
+                  <Feather name="chevron-left" size={20} color={primaryColor} />
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
     </View>
   );
 };
@@ -148,11 +288,12 @@ const AiBusinessChatScreen = ({ navigation }) => {
       const result = await generateFinancialInsight(userQuery, financialData);
 
       if (result.success) {
-        // Add AI response
+        // Add AI response with bill data for navigation
         const aiMessage = {
           id: (Date.now() + 1).toString(),
           sender: "ai",
           text: result.response,
+          billsData: result.billsData || null, // Store bill data for clickable references
         };
         setMessages((prev) => [...prev, aiMessage]);
       } else {
@@ -181,6 +322,28 @@ const AiBusinessChatScreen = ({ navigation }) => {
 
   const handleSuggestionPress = (suggestion) => {
     setMessage(suggestion);
+  };
+
+  // Handle bill press - Navigate to UpcomingPayDetailsScreen
+  const handleBillPress = (bill) => {
+    console.log("Bill pressed from AI chat:", bill);
+
+    // Transform bill to payment format (similar to AllPaymentsScreen)
+    const payment = {
+      id: bill.id,
+      title: bill.serviceName?.ar || "فاتورة",
+      amount: bill.amount,
+      dueDate: bill.dueDate,
+      status: bill.status,
+      referenceNumber: bill.referenceNumber || "N/A",
+      isUrgent: bill.status === "overdue",
+      billData: bill, // Pass full bill data
+    };
+
+    navigation.navigate("UpcomingPayDetails", {
+      payment,
+      primaryColor: COLORS.businessPrimary,
+    });
   };
 
   return (
@@ -231,7 +394,7 @@ const AiBusinessChatScreen = ({ navigation }) => {
                       className="text-xs font-bold"
                       style={{ color: COLORS.businessPrimary }}
                     >
-                      AI Assistant
+                      المساعد الذكي للأعمال{" "}
                     </Text>
                   </View>
                 </View>
@@ -312,7 +475,7 @@ const AiBusinessChatScreen = ({ navigation }) => {
                         className="text-xs font-semibold mx-1"
                         style={{ color: COLORS.businessPrimary }}
                       >
-                        AI Assistant
+                        المساعد الذكي للأعمال
                       </Text>
                     </View>
                   )}
@@ -331,13 +494,22 @@ const AiBusinessChatScreen = ({ navigation }) => {
                       maxWidth: "85%",
                     }}
                   >
-                    <Text
-                      className={`text-sm text-right leading-6 ${
-                        msg.sender === "user" ? "text-gray-800" : "text-white"
-                      }`}
-                    >
-                      {msg.text}
-                    </Text>
+                    {msg.sender === "ai" && msg.billsData ? (
+                      <AIMessageWithBillLinks
+                        text={msg.text}
+                        billsData={msg.billsData}
+                        onBillPress={handleBillPress}
+                        primaryColor={COLORS.businessPrimary}
+                      />
+                    ) : (
+                      <Text
+                        className={`text-sm text-right leading-6 ${
+                          msg.sender === "user" ? "text-gray-800" : "text-white"
+                        }`}
+                      >
+                        {msg.text}
+                      </Text>
+                    )}
                   </View>
 
                   {msg.sender === "user" && (
