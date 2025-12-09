@@ -66,18 +66,6 @@ const getArabicStatus = (bill) => {
 };
 
 /**
- * Helper function to format date
- */
-const formatDate = (timestamp) => {
-  const date = new Date(timestamp);
-  return date.toLocaleDateString("ar-SA", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
-/**
  * Transform Firebase bill to payment card format
  */
 const transformBillToPayment = (bill) => {
@@ -109,7 +97,7 @@ const transformBillToPayment = (bill) => {
     iconColor: colors.icon,
     iconBgColor: colors.bg,
     isUrgent: isBillOverdue(bill),
-    dueDate: formatDate(bill.dueDate),
+    dueDate: bill.dueDate,
     status: arabicStatus,
     category: arabicStatus,
     serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",

@@ -102,19 +102,9 @@ const AllPaymentsScreen = ({ navigation, route }) => {
     return colorMap[serviceType] || { icon: "#6B7280", bg: "bg-gray-50" };
   };
 
-  // Helper function to format date
-  const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString("ar-SA", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
   // Transform Firebase bill to UpcomingPaymentCard format
   const transformBillToPayment = (bill) => {
-    console.log("Transforming bill:", bill)
+    console.log("Transforming bill:", bill);
 
     // Get service name using the helper function
     const serviceSubTypeNameAr = getServiceNameAr(
@@ -129,11 +119,12 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
     // Calculate days remaining
     const daysRemaining = getDaysUntilDue(bill);
-    const daysText = daysRemaining > 0
-      ? `${daysRemaining} يوم متبقي`
-      : daysRemaining === 0
-      ? 'اليوم آخر موعد'
-      : `متأخر ${Math.abs(daysRemaining)} يوم`;
+    const daysText =
+      daysRemaining > 0
+        ? `${daysRemaining} يوم متبقي`
+        : daysRemaining === 0
+        ? "اليوم آخر موعد"
+        : `متأخر ${Math.abs(daysRemaining)} يوم`;
 
     return {
       id: bill.id,
@@ -144,7 +135,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       iconColor: colors.icon,
       iconBgColor: colors.bg,
       isUrgent: isBillOverdue(bill),
-      dueDate: formatDate(bill.dueDate),
+      dueDate: bill.dueDate,
       status: arabicStatus,
       category: arabicStatus,
       serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",

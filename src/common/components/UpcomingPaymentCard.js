@@ -1,7 +1,44 @@
 import React from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import moment from "moment";
 import SvgIcons from "../../common/components/SvgIcons";
+
+/**
+ * Format date to Gregorian format with Arabic month names
+ * @param {string|Date} date - Date string or Date object
+ * @returns {string} Formatted date in Gregorian (e.g., "25 ديسمبر 2024")
+ */
+const formatGregorianDate = (date) => {
+  if (!date) return "";
+
+  const arabicMonths = {
+    "01": "يناير",
+    "02": "فبراير",
+    "03": "مارس",
+    "04": "أبريل",
+    "05": "مايو",
+    "06": "يونيو",
+    "07": "يوليو",
+    "08": "أغسطس",
+    "09": "سبتمبر",
+    10: "أكتوبر",
+    11: "نوفمبر",
+    12: "ديسمبر",
+  };
+
+  const momentDate = moment(date);
+
+  if (!momentDate.isValid()) {
+    return date; // Return original if invalid
+  }
+
+  const day = momentDate.format("D");
+  const month = arabicMonths[momentDate.format("MM")];
+  const year = momentDate.format("YYYY");
+
+  return `${day} ${month} ${year}`;
+};
 
 /**
  * Reusable Payment Card Component
@@ -15,6 +52,10 @@ import SvgIcons from "../../common/components/SvgIcons";
  * @param {string} payment.iconBgColor - Icon background color
  * @param {string} payment.ministryIconName - Ministry icon name for SvgIcons
  * @param {boolean} payment.isUrgent - Whether payment is urgent
+ * @param {string} payment.status - Payment status (e.g., "مدفوع", "قيد الانتظار", "متأخر")
+ * @param {string} payment.statusColor - Status badge color (e.g., "bg-green-500", "bg-yellow-500")
+ * @param {string} payment.dueDate - Due date or payment date in Gregorian format (e.g., "25 ديسمبر 2024")
+ * @param {string} payment.referenceNumber - Optional reference or transaction number
  * @param {Function} onPress - Callback when card is pressed
  */
 const UpcomingPaymentCard = ({ payment, onPress }) => {
@@ -27,6 +68,10 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
     iconBgColor = "bg-blue-50",
     ministryIconName = "MOI",
     isUrgent = false,
+    status,
+    statusColor = "bg-blue-500",
+    dueDate,
+    referenceNumber,
   } = payment;
 
   return (
@@ -60,14 +105,43 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
         </View>
       </View>
 
-      <View style={{ direction: "ltr" }}>
-        {isUrgent && (
-          <View className="bg-red-500  py-1 rounded-lg w-12  items-center justify-center ">
-            <Text className="text-white text-xs font-bold items-left">
-              عاجل
-            </Text>
-          </View>
-        )}
+      <View
+        className="flex-row items-center justify-between"
+        style={{ direction: "ltr" }}
+      >
+        {/* Left side: Status badges */}
+        <View className="flex-row items-center gap-2">
+          {isUrgent && (
+            <View className="bg-red-500 px-3 py-1 rounded-lg items-center justify-center">
+              <Text className="text-white text-xs font-bold">عاجل</Text>
+            </View>
+          )}
+          {status && (
+            <View
+              className={`${statusColor} px-3 py-1 rounded-lg items-center justify-center`}
+            >
+              <Text className="text-white text-xs font-bold">{status}</Text>
+            </View>
+          )}
+        </View>
+
+        {/* Right side: Date and Reference info */}
+        <View className="items-end">
+          {dueDate && (
+            <View className="flex-row items-center gap-1 mx-1">
+              <Text className="text-gray-600 text-xs ">
+                {formatGregorianDate(dueDate)}
+              </Text>
+              <Feather name="calendar" size={12} color="#6b7280" />
+            </View>
+          )}
+          {referenceNumber && (
+            <View className="flex-row items-center gap-1 mt-1">
+              <Text className="text-gray-500 text-xs">{referenceNumber}</Text>
+              <Feather name="hash" size={12} color="#9ca3af" />
+            </View>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );

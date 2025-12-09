@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./slices/userSlice";
 import walletReducer from "./slices/walletSlice";
 import bankAccountsReducer from "./slices/bankAccountsSlice";
+import tabBarReducer from "./slices/tabBarSlice";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     wallet: walletReducer,
     bankAccounts: bankAccountsReducer,
+    tabBar: tabBarReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

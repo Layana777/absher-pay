@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,9 @@ import {
   StatusBar,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import { useDispatch } from "react-redux";
+import { useFocusEffect } from "@react-navigation/native";
+import { hideTabBar, showTabBar } from "../../../store/slices";
 import { CustomHeader } from "../../../common/components";
 import { COLORS } from "../../../common/constants/colors";
 
@@ -35,9 +38,21 @@ const QUICK_SUGGESTIONS = [
 ];
 
 const AiBusinessChatScreen = ({ navigation }) => {
+  const dispatch = useDispatch();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(MESSAGES);
-  const scrollViewRef = useRef(null);
+const scrollViewRef = useRef(null);
+
+  // Hide tab bar when screen is focused and show it when unfocused
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(hideTabBar());
+
+      return () => {
+        dispatch(showTabBar());
+      };
+    }, [dispatch])
+  );
 
   // useEffect(() => {
   //   scrollViewRef.current?.scrollToEnd({ animated: true });
