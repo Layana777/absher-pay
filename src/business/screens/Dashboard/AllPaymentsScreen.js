@@ -56,6 +56,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
   // Helper function to map Firebase status to Arabic
   const getArabicStatus = (bill) => {
+    if (bill.status === "paid") return "مدفوع";
     if (isBillOverdue(bill)) return "متأخر";
     if (bill.status === "upcoming") return "متوقع";
     if (bill.status === "unpaid") return "مستحق";
@@ -165,19 +166,18 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       // Fetch all bills for the user
       const bills = await getUserBills(user.uid, {});
 
-      // Filter to only business wallet bills
+      // Filter to only business wallet bills (including paid bills for transaction history)
       const businessBills = bills.filter(
         (bill) =>
           bill.walletId === businessWallet.id &&
-          bill.isBusiness === true &&
-          bill.status !== "paid" // Exclude paid bills
+          bill.isBusiness === true
       );
 
       setAllBills(businessBills);
 
-      // Calculate total due amount (unpaid + overdue)
+      // Calculate total due amount (unpaid + overdue, excluding paid)
       const dueBills = businessBills.filter(
-        (bill) => bill.status === "unpaid" || isBillOverdue(bill)
+        (bill) => bill.status !== "paid" && (bill.status === "unpaid" || isBillOverdue(bill))
       );
       const total = calculateBulkTotal(dueBills);
       setTotalDueAmount(total);
@@ -234,10 +234,10 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       return;
     }
 
-    // Get all unpaid and overdue bills
+    // Get all unpaid and overdue bills (excluding paid)
     const billsToPay = (allBills || []).filter(
       (bill) =>
-        bill != null && (bill.status === "unpaid" || isBillOverdue(bill))
+        bill != null && bill.status !== "paid" && (bill.status === "unpaid" || isBillOverdue(bill))
     );
 
     if (billsToPay.length === 0) {
@@ -260,7 +260,18 @@ const AllPaymentsScreen = ({ navigation, route }) => {
 
   return (
     <>
-      <CustomHeader title="مركز المدفوعات" onBack={() => navigation.goBack()} />
+      <CustomHeader
+        title="مركز المدفوعات"
+        onBack={() => navigation.goBack()}
+        rightComponent={
+          <TouchableOpacity
+            onPress={() => navigation.navigate("PaidBills", { primaryColor })}
+            className="p-2"
+          >
+            <Feather name="file-text" size={24} color="#000000" />
+          </TouchableOpacity>
+        }
+      />
       <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
         {/* Loading State */}
         {loading && (

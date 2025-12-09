@@ -31,6 +31,7 @@ import TransactionsListScreen from "../screens/Transactions/TransactionsListScre
 import TransactionDetailsScreen from "../screens/Transactions/TransactionDetailsScreen";
 import AllPaymentsScreen from "../screens/Dashboard/AllPaymentsScreen";
 import BulkPaymentReviewScreen from "../screens/Dashboard/BulkPaymentReviewScreen";
+import PaidBillsScreen from "../screens/Dashboard/PaidBillsScreen";
 import BillGeneratorScreen from "../screens/Settings/BillGeneratorScreen";
 
 const Tab = createBottomTabNavigator();
@@ -230,6 +231,9 @@ const BusinessNavigator = () => {
         name="BulkPaymentReview"
         component={BulkPaymentReviewScreen}
       />
+
+      {/* Paid Bills Screen */}
+      <Stack.Screen name="PaidBills" component={PaidBillsScreen} />
 
       {/* Bill Generator Screen */}
       <Stack.Screen name="BillGenerator" component={BillGeneratorScreen} />

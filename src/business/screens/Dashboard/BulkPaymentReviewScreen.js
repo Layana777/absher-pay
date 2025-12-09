@@ -243,7 +243,18 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
 
   return (
     <>
-      <CustomHeader title="مراجعة الدفع" onBack={() => navigation.goBack()} />
+      <CustomHeader
+        title="مراجعة الدفع"
+        onBack={() => navigation.goBack()}
+        rightComponent={
+          <TouchableOpacity
+            onPress={() => navigation.navigate("PaidBills", { primaryColor })}
+            className="p-2"
+          >
+            <Feather name="file-text" size={24} color="#000000" />
+          </TouchableOpacity>
+        }
+      />
       <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
         {/* Summary Card at Top */}
         {/* <View className="bg-white p-4 mb-4 shadow-sm">
