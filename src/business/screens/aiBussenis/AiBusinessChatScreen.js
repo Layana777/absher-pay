@@ -262,7 +262,7 @@ const AiBusinessChatScreen = ({ navigation }) => {
               <TouchableOpacity
                 onPress={handleSend}
                 disabled={!message.trim()}
-                className="w-11 h-11 rounded-full items-center justify-center ml-2"
+                className="w-11 h-11 rounded-full items-center justify-center mx-2"
                 style={{
                   backgroundColor: message.trim()
                     ? COLORS.businessPrimary

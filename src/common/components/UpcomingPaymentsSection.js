@@ -1,37 +1,125 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, ActivityIndicator } from "react-native";
 import UpcomingPaymentCard from "./UpcomingPaymentCard";
-import { getUserBills, getDaysUntilDue } from "../services/billsService";
+import {
+  getUserBills,
+  getDaysUntilDue,
+  isBillOverdue,
+} from "../services/billsService";
+import GOVERNMENT_SERVICES_DATA from "../services/firebase/governmentServicesData";
+import { getMinistryIconName } from "../utils/ministryIconMapper";
 
 /**
- * Map bill data to payment card format
+ * Helper function to get service name in Arabic
  */
-const mapBillToPayment = (bill) => {
-  const daysUntilDue = getDaysUntilDue(bill);
-  const isUrgent = daysUntilDue <= 7 && daysUntilDue >= 0;
+const getServiceNameAr = (serviceType, serviceSubType) => {
+  const service = GOVERNMENT_SERVICES_DATA[serviceType];
 
-  // Format description based on days until due
-  let description = "";
-  if (daysUntilDue < 0) {
-    description = `متأخر ${Math.abs(daysUntilDue)} يوم`;
-  } else if (daysUntilDue === 0) {
-    description = "مستحق اليوم";
-  } else if (daysUntilDue <= 7) {
-    description = `${daysUntilDue} أيام متبقية`;
-  } else {
-    description = `${daysUntilDue} يوم`;
+  // If subType exists, return its Arabic name
+  if (service?.subTypes?.[serviceSubType]?.nameAr) {
+    return service.subTypes[serviceSubType].nameAr;
   }
+
+  // If no subType, return main service Arabic name
+  if (service?.nameAr) {
+    return service.nameAr;
+  }
+
+  // Absolute fallback (should rarely happen)
+  return serviceType;
+};
+
+/**
+ * Helper function to get icon for service
+ */
+const getServiceIcon = (serviceType) => {
+  const iconMap = {
+    passports: "file-text",
+    traffic: "truck",
+    civil_affairs: "file",
+    commerce: "briefcase",
+  };
+  return iconMap[serviceType] || "file-text";
+};
+
+/**
+ * Helper function to get color for service
+ */
+const getServiceColor = (serviceType) => {
+  const colorMap = {
+    passports: { icon: "#8B5CF6", bg: "bg-purple-50" },
+    traffic: { icon: "#EF4444", bg: "bg-red-50" },
+    civil_affairs: { icon: "#3B82F6", bg: "bg-blue-50" },
+    commerce: { icon: "#F97316", bg: "bg-orange-50" },
+  };
+  return colorMap[serviceType] || { icon: "#6B7280", bg: "bg-gray-50" };
+};
+
+/**
+ * Helper function to map Firebase status to Arabic
+ */
+const getArabicStatus = (bill) => {
+  if (isBillOverdue(bill)) return "متأخر";
+  if (bill.status === "upcoming") return "متوقع";
+  if (bill.status === "unpaid") return "مستحق";
+  return "الكل";
+};
+
+/**
+ * Helper function to format date
+ */
+const formatDate = (timestamp) => {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString("ar-SA", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
+/**
+ * Transform Firebase bill to payment card format
+ */
+const transformBillToPayment = (bill) => {
+  // Get service name using the helper function
+  const serviceSubTypeNameAr = getServiceNameAr(
+    bill.serviceType,
+    bill.serviceSubType
+  );
+
+  const colors = getServiceColor(bill.serviceType);
+  const arabicStatus = getArabicStatus(bill);
+  const displayAmount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
+
+  // Calculate days remaining
+  const daysRemaining = getDaysUntilDue(bill);
+  const daysText =
+    daysRemaining > 0
+      ? `${daysRemaining} يوم متبقي`
+      : daysRemaining === 0
+      ? "اليوم آخر موعد"
+      : `متأخر ${Math.abs(daysRemaining)} يوم`;
 
   return {
     id: bill.id,
-    title: bill.serviceName.ar,
-    description,
-    amount: bill.penaltyInfo?.totalWithPenalty || bill.amount,
-    icon: bill.category || "file-text",
-    iconColor: isUrgent ? "#dc2626" : "#0055aa",
-    iconBgColor: isUrgent ? "bg-red-50" : "bg-blue-50",
-    isUrgent,
-    // Store original bill data for details screen
+    title: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
+    description: daysText,
+    amount: displayAmount,
+    icon: getServiceIcon(bill.serviceType),
+    iconColor: colors.icon,
+    iconBgColor: colors.bg,
+    isUrgent: isBillOverdue(bill),
+    dueDate: formatDate(bill.dueDate),
+    status: arabicStatus,
+    category: arabicStatus,
+    serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
+    aiSuggestion: bill.penaltyInfo
+      ? `متأخر ${bill.penaltyInfo.daysOverdue} يوم - غرامة ${bill.penaltyInfo.lateFee} ريال`
+      : "لا يوجد",
+    // Ministry icon configuration
+    ministryIconName: getMinistryIconName(bill.serviceType),
+    ministryIconSize: 50, // Size for detail screen header
+    // Keep original bill data for payment processing
     billData: bill,
   };
 };
@@ -75,7 +163,7 @@ const UpcomingPaymentsSection = ({
         )
         .sort((a, b) => a.dueDate - b.dueDate)
         .slice(0, 3)
-        .map(mapBillToPayment);
+        .map(transformBillToPayment);
 
       setBills(upcomingBills);
     } catch (error) {

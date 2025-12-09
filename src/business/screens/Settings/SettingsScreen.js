@@ -13,7 +13,7 @@ import { selectUser, clearUser } from "../../../store/slices/userSlice";
 import CustomHeader from "../../../common/components/CustomHeader";
 import BiometricService from "../../../common/services/BiometricService";
 
-const SettingsScreen = () => {
+const SettingsScreen = ({ navigation }) => {
   const dispatch = useAppDispatch();
   const user = useAppSelector(selectUser);
 
@@ -267,6 +267,11 @@ const SettingsScreen = () => {
             icon="file-text"
             title="إدارة الفواتير والحدود"
             onPress={() => {}}
+          />
+          <MenuItem
+            icon="plus-circle"
+            title="مولد الفواتير التجريبية"
+            onPress={() => navigation.navigate("BillGenerator")}
             isLast
           />
         </View>
