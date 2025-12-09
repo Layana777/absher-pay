@@ -244,8 +244,8 @@ const AllPaymentsScreen = ({ navigation, route }) => {
     }
 
     // Get all unpaid and overdue bills
-    const billsToPay = allBills.filter(
-      (bill) => bill.status === "unpaid" || isBillOverdue(bill)
+    const billsToPay = (allBills || []).filter(
+      (bill) => bill != null && (bill.status === "unpaid" || isBillOverdue(bill))
     );
 
     if (billsToPay.length === 0) {

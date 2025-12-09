@@ -17,6 +17,7 @@ import {
   processBulkBillPayment,
   isBillOverdue,
   getDaysUntilDue,
+  calculateBulkTotal,
 } from "../../../common/services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../../../common/services/firebase/governmentServicesData";
 import { getMinistryIconName } from "../../../common/utils/ministryIconMapper";
@@ -29,14 +30,22 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
     primaryColor = "#0055aa",
     iconBgColor = "bg-blue-50",
     ministryIconName = "MOI",
-    onPaymentComplete,
   } = route.params || {};
+
+  // Debug: Log bills data
+  console.log("=== BULK PAYMENT REVIEW DEBUG ===");
+  console.log("Bills to pay:", billsToPay);
+  console.log("Bills count:", billsToPay?.length);
+  console.log("===================================");
 
   const [loading, setLoading] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   // Track selected bills (initially all bills are selected)
   const [selectedBillIds, setSelectedBillIds] = useState(
-    billsToPay.map((bill) => bill.id)
+    (billsToPay || [])
+      .filter((bill) => bill != null)
+      .map((bill) => bill?.id)
+      .filter((id) => id != null)
   );
 
   // Helper function to get service name in Arabic
@@ -116,7 +125,12 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
 
   // Select all bills
   const selectAllBills = () => {
-    setSelectedBillIds(billsToPay.map((bill) => bill.id));
+    setSelectedBillIds(
+      (billsToPay || [])
+        .filter((bill) => bill != null)
+        .map((bill) => bill?.id)
+        .filter((id) => id != null)
+    );
   };
 
   // Deselect all bills
@@ -125,27 +139,31 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
   };
 
   // Get selected bills
-  const selectedBills = billsToPay.filter((bill) =>
-    selectedBillIds.includes(bill.id)
+  const selectedBills = (billsToPay || []).filter(
+    (bill) => bill != null && selectedBillIds.includes(bill?.id)
   );
 
   // Calculate total for selected bills
   const selectedTotalAmount = selectedBills.reduce((total, bill) => {
-    const amount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
+    const amount = bill?.penaltyInfo?.totalWithPenalty || bill?.amount || 0;
     return total + amount;
   }, 0);
 
   // Transform Firebase bill to UpcomingPaymentCard format
   const transformBillToPayment = (bill) => {
+    if (!bill) return null;
+
     // Get service name using the helper function
     const serviceSubTypeNameAr = getServiceNameAr(
-      bill.serviceType,
-      bill.serviceSubType
+      bill?.serviceType,
+      bill?.serviceSubType
     );
+    console.log("this :", bill);
 
-    const colors = getServiceColor(bill.serviceType);
+    const colors = getServiceColor(bill?.serviceType);
     const arabicStatus = getArabicStatus(bill);
-    const displayAmount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
+    const displayAmount =
+      bill?.penaltyInfo?.totalWithPenalty || bill?.amount || 0;
 
     // Calculate days remaining
     const daysRemaining = getDaysUntilDue(bill);
@@ -157,23 +175,23 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
         : `متأخر ${Math.abs(daysRemaining)} يوم`;
 
     return {
-      id: bill.id,
-      title: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
+      id: bill?.id,
+      title: bill?.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
       description: daysText,
       amount: displayAmount,
-      icon: getServiceIcon(bill.serviceType),
+      icon: getServiceIcon(bill?.serviceType),
       iconColor: colors.icon,
       iconBgColor: colors.bg,
       isUrgent: isBillOverdue(bill),
-      dueDate: formatDate(bill.dueDate),
+      dueDate: bill?.dueDate ? formatDate(bill.dueDate) : "غير محدد",
       status: arabicStatus,
       category: arabicStatus,
-      serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
-      aiSuggestion: bill.penaltyInfo
-        ? `متأخر ${bill.penaltyInfo.daysOverdue} يوم - غرامة ${bill.penaltyInfo.lateFee} ريال`
+      serviceType: bill?.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
+      aiSuggestion: bill?.penaltyInfo
+        ? `متأخر ${bill?.penaltyInfo?.daysOverdue} يوم - غرامة ${bill?.penaltyInfo?.lateFee} ريال`
         : "لا يوجد",
       // Ministry icon configuration
-      ministryIconName: getMinistryIconName(bill.serviceType),
+      ministryIconName: getMinistryIconName(bill?.serviceType),
       ministryIconSize: 50,
       // Keep original bill data for payment processing
       originalBill: bill,
@@ -185,7 +203,7 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
     setShowConfirmModal(true);
   };
 
-  // Confirm and navigate to OTP screen
+  // Confirm payment - navigate to OTP screen
   const handleConfirmPayment = () => {
     setShowConfirmModal(false);
 
@@ -199,17 +217,36 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
       return;
     }
 
-    // Navigate to OTP screen for bulk payment
+    // Calculate total using the bulk total function
+    const totalAmount = calculateBulkTotal(selectedBills);
+
+    console.log("=== NAVIGATING TO OTP SCREEN ===");
+    console.log("Selected Bills Count:", selectedBills.length);
+    console.log("Total Amount:", totalAmount);
+    console.log("==================================");
+
+    // Navigate to BillPaymentOtpScreen
     navigation.navigate("BillPaymentOtp", {
-      billsToPay: selectedBills, // Pass only selected bills
-      totalAmount: selectedTotalAmount,
+      billsToPay: selectedBills,
+      totalAmount: totalAmount,
       walletId,
       userId,
       primaryColor,
-      isBulkPayment: true, // Flag to indicate bulk payment
-      onPaymentComplete, // Pass refresh function
+      isBulkPayment: true,
     });
   };
+
+  // Handle empty or invalid bills
+  if (!billsToPay || billsToPay.length === 0) {
+    return (
+      <>
+        <CustomHeader title="مراجعة الدفع" onBack={() => navigation.goBack()} />
+        <View className="flex-1 bg-gray-50 items-center justify-center">
+          <Text className="text-gray-500 text-lg">لا توجد فواتير للعرض</Text>
+        </View>
+      </>
+    );
+  }
 
   return (
     <>
@@ -265,10 +302,12 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
             style={{ direction: "rtl" }}
           >
             <Text className="text-gray-700 font-bold text-lg">
-              الفواتير المستحقة ({selectedBills.length}/{billsToPay.length})
+              الفواتير المستحقة ({selectedBills.length}/
+              {(billsToPay || []).length})
             </Text>
             <View className="flex-row gap-2">
-              {selectedBills.length === billsToPay.length ? (
+              {selectedBills.length === (billsToPay || []).length &&
+              (billsToPay || []).length > 0 ? (
                 <TouchableOpacity
                   onPress={deselectAllBills}
                   className="px-3 py-1 rounded-lg"
@@ -298,113 +337,117 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          {billsToPay.map((bill) => {
-            const payment = transformBillToPayment(bill);
-            const serviceName =
-              bill.serviceName?.ar ||
-              getServiceNameAr(bill.serviceType, bill.serviceSubType) ||
-              "غير محدد";
-            const arabicStatus = getArabicStatus(bill);
-            const displayAmount =
-              bill.penaltyInfo?.totalWithPenalty || bill.amount;
+          {billsToPay
+            .filter((bill) => bill != null)
+            .map((bill) => {
+              const payment = transformBillToPayment(bill);
+              const serviceName =
+                bill?.serviceName?.ar ||
+                getServiceNameAr(bill?.serviceType, bill?.serviceSubType) ||
+                "غير محدد";
+              const arabicStatus = getArabicStatus(bill);
+              const displayAmount =
+                bill?.penaltyInfo?.totalWithPenalty || bill?.amount || 0;
 
-            // Status badge colors
-            const statusColor =
-              arabicStatus === "متأخر"
-                ? "#EF4444"
-                : arabicStatus === "مستحق"
-                ? "#F59E0B"
-                : "#6B7280";
+              // Status badge colors
+              const statusColor =
+                arabicStatus === "متأخر"
+                  ? "#EF4444"
+                  : arabicStatus === "مستحق"
+                  ? "#F59E0B"
+                  : "#6B7280";
 
-            const isSelected = selectedBillIds.includes(bill.id);
+              const isSelected = selectedBillIds.includes(bill?.id);
 
-            return (
-              <TouchableOpacity
-                key={payment.id}
-                className="mb-3"
-                onPress={() => toggleBillSelection(bill.id)}
-                activeOpacity={0.7}
-              >
-                {/* Additional Details Below Card */}
-                <View
-                  className="bg-white rounded-xl px-4 pb-6 shadow-lg mt-1"
-                  style={{
-                    direction: "rtl",
-                    borderWidth: 2,
-                    borderColor: isSelected ? primaryColor : "transparent",
-                  }}
+              return (
+                <TouchableOpacity
+                  key={payment.id}
+                  className="mb-3"
+                  onPress={() => toggleBillSelection(bill.id)}
+                  activeOpacity={0.7}
                 >
-                  {/* Service Name with Ministry Icon */}
-                  <View className="flex-row items-center mb-2 pt-3 border-t border-gray-100">
-                    <View
-                      className={`w-12 h-12 ${iconBgColor} rounded-xl items-center justify-center`}
-                    >
-                      <SvgIcons name={ministryIconName} size={40} />
-                    </View>
-                    <View className="flex-row items-center flex-1">
-                      <Text className="text-gray-800 font-semibold text-sm text-left flex-1 p-3">
-                        {serviceName}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Status Badge */}
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-600 text-sm ml-2">الحالة:</Text>
-                    <View
-                      className="px-3 py-1 rounded-full"
-                      style={{ backgroundColor: `${statusColor}15` }}
-                    >
-                      <Text
-                        className="text-xs font-semibold"
-                        style={{ color: statusColor }}
-                      >
-                        {arabicStatus}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Due Date */}
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-gray-600 text-sm ml-2">
-                      تاريخ الاستحقاق:
-                    </Text>
-                    <Text className="text-gray-800 text-sm">
-                      {formatDate(bill.dueDate)}
-                    </Text>
-                  </View>
-
-                  {/* Amount with Penalty Info */}
-                  <View className="flex-row items-center justify-between pt-2 border-t border-gray-100">
-                    <Text className="text-gray-600 text-sm">
-                      المبلغ الإجمالي:
-                    </Text>
-                    <View>
+                  {/* Additional Details Below Card */}
+                  <View
+                    className="bg-white rounded-xl px-4 pb-6 shadow-lg mt-1"
+                    style={{
+                      direction: "rtl",
+                      borderWidth: 2,
+                      borderColor: isSelected ? primaryColor : "transparent",
+                    }}
+                  >
+                    {/* Service Name with Ministry Icon */}
+                    <View className="flex-row items-center mb-2 pt-3 border-t border-gray-100">
                       <View
-                        style={{
-                          flexDirection: "row",
-                          alignItems: "center",
-                          direction: "ltr",
-                        }}
+                        className={`w-12 h-12 ${iconBgColor} rounded-xl items-center justify-center`}
                       >
-                        <Text className="text-gray-600 text-sm">
-                          <SvgIcons name="SARBlack" size={15} />
-                        </Text>
-                        <Text className="text-gray-800 font-bold text-base ml-1">
-                          {displayAmount.toLocaleString()}
+                        <SvgIcons name={ministryIconName} size={40} />
+                      </View>
+                      <View className="flex-row items-center flex-1">
+                        <Text className="text-gray-800 font-semibold text-sm text-left flex-1 p-3">
+                          {serviceName}
                         </Text>
                       </View>
-                      {bill.penaltyInfo && (
-                        <Text className="text-red-600 text-xs text-left mt-1">
-                          يشمل غرامة {bill.penaltyInfo.lateFee} ريال
+                    </View>
+
+                    {/* Status Badge */}
+                    <View className="flex-row items-center mb-2">
+                      <Text className="text-gray-600 text-sm ml-2">
+                        الحالة:
+                      </Text>
+                      <View
+                        className="px-3 py-1 rounded-full"
+                        style={{ backgroundColor: `${statusColor}15` }}
+                      >
+                        <Text
+                          className="text-xs font-semibold"
+                          style={{ color: statusColor }}
+                        >
+                          {arabicStatus}
                         </Text>
-                      )}
+                      </View>
+                    </View>
+
+                    {/* Due Date */}
+                    <View className="flex-row items-center mb-2">
+                      <Text className="text-gray-600 text-sm ml-2">
+                        تاريخ الاستحقاق:
+                      </Text>
+                      <Text className="text-gray-800 text-sm">
+                        {bill?.dueDate ? formatDate(bill.dueDate) : "غير محدد"}
+                      </Text>
+                    </View>
+
+                    {/* Amount with Penalty Info */}
+                    <View className="flex-row items-center justify-between pt-2 border-t border-gray-100">
+                      <Text className="text-gray-600 text-sm">
+                        المبلغ الإجمالي:
+                      </Text>
+                      <View>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            direction: "ltr",
+                          }}
+                        >
+                          <Text className="text-gray-600 text-sm">
+                            <SvgIcons name="SARBlack" size={15} />
+                          </Text>
+                          <Text className="text-gray-800 font-bold text-base ml-1">
+                            {displayAmount.toLocaleString()}
+                          </Text>
+                        </View>
+                        {bill?.penaltyInfo && (
+                          <Text className="text-red-600 text-xs text-left mt-1">
+                            يشمل غرامة {bill?.penaltyInfo?.lateFee} ريال
+                          </Text>
+                        )}
+                      </View>
                     </View>
                   </View>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
+                </TouchableOpacity>
+              );
+            })}
 
           {/* Empty space for bottom button */}
           <View className="h-24" />
@@ -451,7 +494,9 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
             className="rounded-xl py-4"
             style={{
               backgroundColor:
-                loading || selectedBills.length === 0 ? "#9CA3AF" : primaryColor,
+                loading || selectedBills.length === 0
+                  ? "#9CA3AF"
+                  : primaryColor,
             }}
             onPress={handlePayNow}
             disabled={loading || selectedBills.length === 0}

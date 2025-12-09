@@ -22,7 +22,10 @@ import { generateTransactionPDF } from "../../../common/services/PDFService";
  * Displays payment confirmation with transaction details
  *
  * Route params:
- * - bill: Original bill object
+ * - bill: Original bill object (for single payment)
+ * - billsToPay: Array of bills (for bulk payment)
+ * - isBulkPayment: Boolean flag for bulk payment mode
+ * - billsCount: Number of bills paid (for bulk payment)
  * - totalAmount: Total amount paid
  * - transactionId: Created transaction ID
  * - referenceNumber: Transaction reference number
@@ -32,6 +35,9 @@ import { generateTransactionPDF } from "../../../common/services/PDFService";
 const BillPaymentSuccessScreen = ({ navigation, route }) => {
   const {
     bill,
+    billsToPay,
+    isBulkPayment = false,
+    billsCount = 1,
     totalAmount,
     transactionId,
     referenceNumber,
@@ -75,6 +81,15 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
 
   const handleShare = async () => {
     try {
+      // Construct transaction description based on payment type
+      const descriptionAr = isBulkPayment
+        ? `سداد ${billsCount} فاتورة حكومية`
+        : `سداد فاتورة - ${bill?.serviceName?.ar || "فاتورة حكومية"}`;
+
+      const descriptionEn = isBulkPayment
+        ? `Payment for ${billsCount} government bills`
+        : `Bill Payment - ${bill?.serviceName?.en || bill?.serviceName?.ar || "Government bill"}`;
+
       // Construct transaction object for PDF
       const transaction = {
         id: transactionId,
@@ -83,10 +98,8 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
         timestamp: new Date().toISOString(),
         status: "completed",
         referenceNumber: referenceNumber,
-        descriptionAr: `سداد فاتورة - ${bill.serviceName.ar}`,
-        descriptionEn: `Bill Payment - ${
-          bill.serviceName.en || bill.serviceName.ar
-        }`,
+        descriptionAr,
+        descriptionEn,
         balanceAfter: newBalance,
         // Add bill specific details if needed in description or separate fields
         // The PDF template handles basic transaction fields
@@ -143,11 +156,15 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
           <View className="items-center mb-6 pb-6 border-b border-gray-100">
             <Text className="text-gray-600 text-sm mb-2">الخدمة</Text>
             <Text className="text-lg font-bold text-gray-800 mb-1 text-center">
-              {bill.serviceName.ar}
+              {isBulkPayment
+                ? `دفع ${billsCount} فاتورة حكومية`
+                : bill?.serviceName?.ar || "فاتورة حكومية"}
             </Text>
-            <Text className="text-sm text-gray-500 text-center">
-              {bill.ministryName.ar}
-            </Text>
+            {!isBulkPayment && bill?.ministryName?.ar && (
+              <Text className="text-sm text-gray-500 text-center">
+                {bill.ministryName.ar}
+              </Text>
+            )}
           </View>
 
           {/* Amount */}
@@ -159,16 +176,26 @@ const BillPaymentSuccessScreen = ({ navigation, route }) => {
             >
               {formatAmount(totalAmount)} ريال
             </Text>
-            {bill.penaltyInfo && (
+            {!isBulkPayment && bill?.penaltyInfo && (
               <Text className="text-xs text-gray-500 mt-1">
                 (شامل غرامة تأخير {bill.penaltyInfo.lateFee.toFixed(2)} ريال)
+              </Text>
+            )}
+            {isBulkPayment && billsToPay?.some((b) => b?.penaltyInfo) && (
+              <Text className="text-xs text-gray-500 mt-1">
+                (شامل غرامات التأخير)
               </Text>
             )}
           </View>
 
           {/* Transaction Details */}
           <View className="space-y-3">
-            <InfoRow label="رقم الفاتورة" value={bill.referenceNumber} />
+            {!isBulkPayment && bill?.referenceNumber && (
+              <InfoRow label="رقم الفاتورة" value={bill.referenceNumber} />
+            )}
+            {isBulkPayment && (
+              <InfoRow label="عدد الفواتير" value={`${billsCount} فاتورة`} />
+            )}
             <InfoRow label="رقم العملية" value={transactionId} />
             <InfoRow label="التاريخ" value={transactionDate} />
             <InfoRow label="الوقت" value={transactionTime} />

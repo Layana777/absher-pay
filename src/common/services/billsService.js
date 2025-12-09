@@ -100,9 +100,12 @@ export const calculatePenalty = (bill, lateFeeRate = 0.1) => {
  * @returns {number} Total amount
  */
 export const calculateBulkTotal = (bills) => {
+  if (!bills || !Array.isArray(bills)) return 0;
+
   return bills.reduce((total, bill) => {
+    if (!bill) return total;
     // If bill has penalty info, use total with penalty, otherwise use base amount
-    const amount = bill.penaltyInfo?.totalWithPenalty || bill.amount;
+    const amount = bill?.penaltyInfo?.totalWithPenalty || bill?.amount || 0;
     return total + amount;
   }, 0);
 };

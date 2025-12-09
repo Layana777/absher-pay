@@ -28,20 +28,27 @@ import { updateBusinessWalletBalance } from "../../../store/slices/walletSlice";
  * Handles OTP verification and bill payment processing
  *
  * Route params:
- * - bill: Full bill object
+ * - bill: Full bill object (for single payment)
+ * - billsToPay: Array of bills (for bulk payment)
  * - totalAmount: Total amount to pay (including penalties)
  * - walletId: Wallet ID
  * - userId: User ID
  * - primaryColor: Theme color
+ * - isBulkPayment: Boolean flag for bulk payment mode
  */
 const BillPaymentOtpScreen = ({ navigation, route }) => {
   const {
     bill,
+    billsToPay,
     totalAmount,
     walletId,
     userId,
     primaryColor = "#0055aa",
+    isBulkPayment = false,
   } = route.params || {};
+
+  // Use billsToPay if bulk payment, otherwise wrap single bill in array
+  const bills = isBulkPayment ? billsToPay : bill ? [bill] : [];
 
   const dispatch = useDispatch();
   const [otpValue, setOtpValue] = useState("");
@@ -97,11 +104,11 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
 
     try {
       console.log("=== BILL PAYMENT DEBUG ===");
-      console.log("Bill ID:", bill.id);
+      console.log("Is Bulk Payment:", isBulkPayment);
+      console.log("Bills Count:", bills.length);
       console.log("User ID:", userId);
       console.log("Wallet ID:", walletId);
       console.log("Total Amount:", totalAmount);
-      console.log("Service Type:", bill.serviceType);
       console.log("============================");
 
       // 1. Verify OTP (mock for now)
@@ -125,15 +132,28 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
 
       // 4. Create payment transaction
       console.log("Creating payment transaction...");
+
+      // Determine transaction description
+      const descriptionAr = isBulkPayment
+        ? `دفع ${bills.length} فاتورة حكومية`
+        : bill?.serviceName?.ar || "دفع فاتورة";
+      const descriptionEn = isBulkPayment
+        ? `Payment for ${bills.length} government bills`
+        : bill?.serviceName?.en || bill?.serviceName?.ar || "Bill payment";
+      const serviceType = isBulkPayment
+        ? "bulk_payment"
+        : bill?.serviceType || "government_service";
+
       const transactionResult = await createPaymentTransaction(
         walletId,
         userId,
         totalAmount,
         balanceBefore,
-        bill.serviceType, // e.g., "passports", "traffic"
-        bill.serviceName.ar, // Arabic description
-        bill.serviceName.en || bill.serviceName.ar // English description
+        serviceType,
+        descriptionAr,
+        descriptionEn
       );
+    
 
       if (!transactionResult.success) {
         throw new Error(transactionResult.error || "فشل إنشاء المعاملة");
@@ -164,26 +184,36 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
 
       console.log("Wallet balance updated successfully");
 
-      // 6. Mark bill as paid
-      console.log("Marking bill as paid...");
-      const billUpdateSuccess = await markBillAsPaid(
-        userId,
-        bill.id,
-        transaction.id
-      );
+      // 6. Mark bills as paid
+      console.log("Marking bills as paid...");
+      let failedBills = 0;
 
-      if (!billUpdateSuccess) {
-        console.warn("Failed to mark bill as paid, but payment processed");
-      } else {
-        console.log("Bill marked as paid successfully");
+      for (const currentBill of bills) {
+        if (currentBill?.id) {
+          const billUpdateSuccess = await markBillAsPaid(
+            userId,
+            currentBill.id,
+            transaction.id
+          );
+
+          if (!billUpdateSuccess) {
+            console.warn(`Failed to mark bill ${currentBill.id} as paid`);
+            failedBills++;
+          } else {
+            console.log(`Bill ${currentBill.id} marked as paid successfully`);
+          }
+        }
+      }
+
+      if (failedBills > 0) {
+        console.warn(
+          `${failedBills} bills failed to update, but payment processed`
+        );
       }
 
       // 7. Update Redux state to refresh UI on home screen
       dispatch(updateBusinessWalletBalance(newBalance));
       console.log("Redux wallet balance updated to:", newBalance);
-
-      // 8. Show success and navigate
-      setIsProcessing(false);
 
       // 8. Show success and navigate
       setIsProcessing(false);
@@ -199,7 +229,10 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
             {
               name: "BillPaymentSuccess",
               params: {
-                bill,
+                bill: isBulkPayment ? null : bill,
+                billsToPay: isBulkPayment ? bills : null,
+                isBulkPayment,
+                billsCount: bills.length,
                 totalAmount,
                 transactionId: transaction.id,
                 referenceNumber: transaction.referenceNumber,
@@ -274,7 +307,11 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
               أدخل رمز التحقق المرسل إلى رقم جوالك المسجل
             </Text>
             <Text className="text-gray-500 text-sm text-center">
-              {bill.serviceName.ar} - {bill.ministryName.ar}
+              {isBulkPayment
+                ? `دفع ${bills.length} فاتورة`
+                : bill?.serviceName?.ar && bill?.ministryName?.ar
+                ? `${bill.serviceName.ar} - ${bill.ministryName.ar}`
+                : bill?.serviceName?.ar || "فاتورة"}
             </Text>
           </View>
 
@@ -290,9 +327,14 @@ const BillPaymentOtpScreen = ({ navigation, route }) => {
                 {formatAmount(totalAmount)}
               </Text>
             </View>
-            {bill.penaltyInfo && (
+            {!isBulkPayment && bill?.penaltyInfo && (
               <Text className="text-xs text-gray-500 mt-2">
                 (شامل غرامة تأخير {formatAmount(bill.penaltyInfo.lateFee)} ريال)
+              </Text>
+            )}
+            {isBulkPayment && bills.some((b) => b?.penaltyInfo) && (
+              <Text className="text-xs text-gray-500 mt-2">
+                (شامل غرامات التأخير)
               </Text>
             )}
           </View>
