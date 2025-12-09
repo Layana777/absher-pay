@@ -304,7 +304,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
             {/* الجزء العلوي بالكامل - كرت + فلاتر بخلفية واحدة */}
             <View className="bg-[#ffffff] p-3 mb-6 pb-4 rounded-b-[30px]">
               {/* إجمالي المدفوعات المستحقة */}
-              <View className="px-4 pt-6 pb-4">
+              <View className="px-4 pt-2 pb-4">
                 <View
                   className="rounded-3xl p-9"
                   style={{ backgroundColor: primaryColor }}

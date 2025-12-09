@@ -1,117 +1,132 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   Modal,
+  ActivityIndicator,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import CustomHeader from "../../../common/components/CustomHeader";
 import DatePickerWheels from "../../components/DatePickerWheels";
+import { useUser, useBusinessWallet } from "../../../store/hooks";
+import { getFinancialAnalysis } from "../../../common/services/transactionService";
 
 const FinancialAnalysisScreen = ({ navigation }) => {
-  const monthNames = [
-    "يناير",
-    "فبراير",
-    "مارس",
-    "أبريل",
-    "مايو",
-    "يونيو",
-    "يوليو",
-    "أغسطس",
-    "سبتمبر",
-    "أكتوبر",
-    "نوفمبر",
-    "ديسمبر",
-  ];
+  // Get user and wallet from Redux
+  const user = useUser();
+  const businessWallet = useBusinessWallet();
 
-  // Calculate default date range: previous month to current month
+  // Calculate default date range: start of current month to today
   const getDefaultDateRange = () => {
     const today = new Date();
-    const currentMonth = today.getMonth(); // 0-indexed
-    const currentYear = today.getFullYear();
-
-    // Calculate previous month
-    let previousMonth = currentMonth - 1;
-    let previousYear = currentYear;
-
-    // Handle January case (previous month would be December of previous year)
-    if (previousMonth < 0) {
-      previousMonth = 11; // December
-      previousYear = currentYear - 1;
-    }
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     return {
-      startMonth: previousMonth,
-      startYear: previousYear,
-      endMonth: currentMonth,
-      endYear: currentYear,
-      startMonthName: monthNames[previousMonth],
-      endMonthName: monthNames[currentMonth],
+      fromDate: startOfMonth,
+      toDate: today,
     };
   };
 
-  // Get last three months dynamically
-  const getLastThreeMonths = () => {
-    const today = new Date();
-    const currentMonth = today.getMonth(); // 0-indexed
-    const months = [];
-
-    for (let i = 0; i < 3; i++) {
-      let monthIndex = currentMonth - i;
-      if (monthIndex < 0) {
-        monthIndex = 12 + monthIndex; // Handle year wrap
-      }
-      months.push(monthNames[monthIndex]);
-    }
-
-    return months;
-  };
-
-  const [selectedPeriod, setSelectedPeriod] = useState("all");
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showFromDatePicker, setShowFromDatePicker] = useState(false);
+  const [showToDatePicker, setShowToDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState(getDefaultDateRange());
+  const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [metrics, setMetrics] = useState({
+    monthlySpending: 0,
+    yearlySpending: 0,
+    monthlyAverage: 0,
+    totalTransactions: 0,
+  });
 
-  // Sample data
-
-  const categories = [
-    { name: "المعاملات الضريبية", amount: 800, percentage: 35.4, color: "#ef4444" },
-    { name: "خدمات", amount: 650, percentage: 25.5, color: "#3b82f6" },
-    { name: "المواردات", amount: 760, percentage: 24.5, color: "#10b981" },
-    { name: "رسوم شهرية", amount: 500, percentage: 10.5, color: "#f97316" },
-    { name: "أخرى", amount: 250, percentage: 5.1, color: "#6b7280" },
-  ];
-
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+  // Color mapping for categories
+  const categoryColors = {
+    passports: "#ef4444",
+    traffic: "#3b82f6",
+    civil_affairs: "#10b981",
+    commerce: "#f97316",
   };
 
-  const handleDateDone = () => {
-    // Update date range based on selected date
-    const date = new Date(selectedDate);
-    const month = date.getMonth();
-    const year = date.getFullYear();
+  const [tempDate, setTempDate] = useState(new Date());
 
-    setDateRange({
-      startMonth: month,
-      startYear: year,
-      endMonth: month,
-      endYear: year,
-      startMonthName: monthNames[month],
-      endMonthName: monthNames[month],
-    });
-
-    setShowDatePicker(false);
-    setSelectedPeriod("custom");
-  };
-
-  const getDisplayDateRange = () => {
-    if (dateRange.startYear === dateRange.endYear) {
-      return `${dateRange.startMonthName} - ${dateRange.endMonthName} ${dateRange.startYear}`;
+  // Fetch financial data from Firebase
+  const fetchFinancialData = async () => {
+    if (!businessWallet?.id) {
+      console.log("No business wallet found");
+      setLoading(false);
+      return;
     }
-    return `${dateRange.startMonthName} ${dateRange.startYear} - ${dateRange.endMonthName} ${dateRange.endYear}`;
+
+    try {
+      setLoading(true);
+
+      // Convert dates to timestamps
+      const startTimestamp = dateRange.fromDate.getTime();
+      const endTimestamp = new Date(dateRange.toDate).setHours(23, 59, 59, 999);
+
+      console.log("Fetching financial analysis from", new Date(startTimestamp), "to", new Date(endTimestamp));
+
+      const result = await getFinancialAnalysis(
+        businessWallet.id,
+        startTimestamp,
+        endTimestamp
+      );
+
+      if (result.success) {
+        // Map categories with colors
+        const categoriesWithColors = result.data.categories.map((cat) => ({
+          ...cat,
+          color: categoryColors[cat.serviceType] || "#6b7280",
+        }));
+
+        setCategories(categoriesWithColors);
+        setMetrics(result.data.metrics);
+      } else {
+        console.error("Error fetching financial analysis:", result.error);
+      }
+    } catch (error) {
+      console.error("Error fetching financial data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch data when component mounts or date range changes
+  useEffect(() => {
+    fetchFinancialData();
+  }, [dateRange.fromDate.getTime(), dateRange.toDate.getTime(), businessWallet?.id]);
+
+  const handleFromDateChange = (date) => {
+    setTempDate(date);
+  };
+
+  const handleToDateChange = (date) => {
+    setTempDate(date);
+  };
+
+  const handleFromDateDone = () => {
+    setDateRange({
+      fromDate: new Date(tempDate),
+      toDate: new Date(dateRange.toDate),
+    });
+    setShowFromDatePicker(false);
+  };
+
+  const handleToDateDone = () => {
+    setDateRange({
+      fromDate: new Date(dateRange.fromDate),
+      toDate: new Date(tempDate),
+    });
+    setShowToDatePicker(false);
+  };
+
+  const formatDate = (date) => {
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
   return (
@@ -126,172 +141,184 @@ const FinancialAnalysisScreen = ({ navigation }) => {
       />
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        {/* Date Selector */}
-        <View className="flex-row items-center justify-between px-6 mt-6" style={{direction: "rtl"}}>
-          <Text className="text-gray-600 text-sm">{getDisplayDateRange()}</Text>
-          <View className="flex-row gap-3">
-            <TouchableOpacity
-              className="w-10 h-10 bg-white rounded-lg items-center justify-center"
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Feather name="calendar" size={20} color="#6b7280" />
-            </TouchableOpacity>
-            <TouchableOpacity className="w-10 h-10 bg-white rounded-lg items-center justify-center">
-              <Feather name="download" size={20} color="#6b7280" />
-            </TouchableOpacity>
+        {/* Date Range Selector */}
+        <View className="px-6 mt-6" style={{direction: "rtl"}}>
+          <View className="flex-row items-center justify-between gap-4">
+            {/* From Date */}
+            <View className="flex-1" style={{direction:"ltr"}}>
+              <Text className="text-gray-600 text-sm mb-2 text-right">من</Text>
+              <TouchableOpacity
+                className="bg-white rounded-lg px-4 py-3 flex-row items-center justify-between"
+                onPress={() => {
+                  setTempDate(dateRange.fromDate);
+                  setShowFromDatePicker(true);
+                }}
+              >
+                <Feather name="calendar" size={18} color="#6b7280" />
+                <Text className="text-gray-700 text-sm flex-1 text-center">
+                  {formatDate(dateRange.fromDate)}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* To Date */}
+            <View className="flex-1" style={{direction:"ltr"}}>
+              <Text className="text-gray-600 text-sm mb-2 text-right">إلى</Text>
+              <TouchableOpacity
+                className="bg-white rounded-lg px-4 py-3 flex-row items-center justify-between"
+                onPress={() => {
+                  setTempDate(dateRange.toDate);
+                  setShowToDatePicker(true);
+                }}
+              >
+                <Feather name="calendar" size={18} color="#6b7280" />
+                <Text className="text-gray-700 text-sm flex-1 text-center">
+                  {formatDate(dateRange.toDate)}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
-        {/* Period Filter Buttons */}
-        <View className="flex-row gap-2 px-6 mt-4" style={{direction: "rtl"}}>
-          {["الكل", ...getLastThreeMonths()].map((period) => (
-            <TouchableOpacity
-              key={period}
-              onPress={() => setSelectedPeriod(period)}
-              className={`px-6 py-2 rounded-lg ${
-                selectedPeriod === period || (selectedPeriod === "all" && period === "الكل")
-                  ? "bg-[#0055aa]"
-                  : "bg-white"
-              }`}
-            >
-              <Text
-                className={`text-sm font-medium ${
-                  selectedPeriod === period || (selectedPeriod === "all" && period === "الكل")
-                    ? "text-white"
-                    : "text-gray-600"
-                }`}
-              >
-                {period}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
 
+        {/* Loading Indicator */}
+        {loading && (
+          <View className="flex-1 items-center justify-center py-20">
+            <ActivityIndicator size="large" color="#0055aa" />
+            <Text className="text-gray-500 mt-4">جاري تحميل البيانات...</Text>
+          </View>
+        )}
 
         {/* Metric Cards */}
-        <View className="px-6 mt-6">
-          {/* First Row */}
-          <View className="flex-row justify-between mb-3" style={{direction:"rtl"}}>
-            {/* Monthly Spending 1 */}
-            <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
-              <Text className="text-gray-400 text-sm text-right mb-6">
-                الإنفاق الشهري
-              </Text>
-              <Text className="text-gray-900 text-4xl font-bold text-center mb-6">
-                3,280
-              </Text>
-              <View className="flex-row items-center justify-end">
-                <Text className="text-red-500 text-xs font-semibold" style={{direction:"ltr"}}>
-                  حر 12.5%
+        {!loading && (
+          <View className="px-6 mt-6">
+            {/* First Row */}
+            <View className="flex-row justify-between mb-3" style={{direction:"rtl"}}>
+              {/* Monthly Spending */}
+              <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
+                <Text className="text-gray-400 text-xs text-right mb-4">
+                  الإنفاق الشهري
                 </Text>
-                <Feather
-                  name="trending-down"
-                  size={14}
-                  color="#ef4444"
-                  style={{ marginRight: 4 }}
-                />
+                <Text className="text-gray-900 text-2xl font-bold text-center mb-4">
+                  {metrics.monthlySpending.toLocaleString()}
+                </Text>
+                <Text className="text-gray-300 text-xs text-right" style={{direction:"rtl"}}>ريال</Text>
+              </View>
+
+              {/* Yearly Spending */}
+              <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
+                <Text className="text-gray-400 text-xs text-right mb-4">
+                  الإنفاق السنوي
+                </Text>
+                <Text className="text-gray-900 text-2xl font-bold text-center mb-4">
+                  {metrics.yearlySpending.toLocaleString()}
+                </Text>
+                <Text className="text-gray-300 text-xs text-right" style={{direction:"rtl"}}>ريال</Text>
               </View>
             </View>
 
-            {/* Monthly Spending 2 */}
-            <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
-              <Text className="text-gray-400 text-sm text-right mb-6">
-                الإنفاق السنوي
-              </Text>
-              <Text className="text-gray-900 text-4xl font-bold text-center mb-6">
-                3,103
-              </Text>
-              <Text className="text-gray-300 text-xs text-right" style={{direction:"rtl"}}>ريال</Text>
+            {/* Second Row */}
+            <View className="flex-row justify-between" style={{direction:"rtl"}}>
+              {/* Monthly Average */}
+              <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
+                <Text className="text-gray-400 text-xs text-right mb-4">
+                  المتوسط الشهري
+                </Text>
+                <Text className="text-gray-900 text-2xl font-bold text-center mb-4">
+                  {metrics.monthlyAverage.toLocaleString()}
+                </Text>
+                <Text className="text-gray-300 text-xs text-right" style={{direction:"rtl"}}>ريال</Text>
+              </View>
+
+              {/* Transaction Count */}
+              <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
+                <Text className="text-gray-400 text-xs text-right mb-4">
+                  عدد المعاملات
+                </Text>
+                <Text className="text-gray-900 text-2xl font-bold text-center mb-4">
+                  {metrics.totalTransactions}
+                </Text>
+                <Text className="text-gray-300 text-xs text-right" style={{direction:"rtl"}}>معاملة</Text>
+              </View>
             </View>
           </View>
-
-          {/* Second Row */}
-          <View className="flex-row justify-between" style={{direction:"rtl"}}>
-            {/* Monthly Average */}
-            <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
-              <Text className="text-gray-400 text-sm text-right mb-6">
-                المتوسط الشهري
-              </Text>
-              <Text className="text-gray-900 text-4xl font-bold text-center mb-6">
-                34,130
-              </Text>
-              <Text className="text-gray-300 text-xs text-right" style={{direction:"rtl"}}>ريال</Text>
-            </View>
-
-            {/* Transaction Count */}
-            <View className="bg-white rounded-2xl p-5 w-[48.5%]" style={{direction:"ltr"}}>
-              <Text className="text-gray-400 text-sm text-right mb-6">
-                عدد المعاملات
-              </Text>
-              <Text className="text-gray-900 text-4xl font-bold text-center mb-6">
-                47
-              </Text>
-              <Text className="text-gray-300 text-xs text-right" style={{direction:"rtl"}}>معاملة</Text>
-            </View>
-          </View>
-        </View>
+        )}
 
         {/* Category Breakdown */}
-        <View className="bg-white rounded-2xl p-5 mx-6 mt-6" style={{direction: "rtl"}}>
-          <Text className="text-gray-900 text-base font-semibold text-right mb-6" style={{direction: "ltr"}}>
-            التصنيف حسب الفئات
-          </Text>
+        {!loading && (
+          <View className="bg-white rounded-2xl p-5 mx-6 mt-6" style={{direction: "rtl"}}>
+            <Text className="text-gray-900 text-base font-semibold text-right mb-6" style={{direction: "ltr"}}>
+              التصنيف حسب الفئات
+            </Text>
 
-          {categories.map((category, index) => (
-            <View key={index} className="mb-5">
-              <View className="flex-row items-center justify-between mb-2" style={{direction: "rtl"}}>
-                <Text className="text-gray-700 text-sm font-medium">
-                  {category.name}
-                </Text>
-                <View className="flex-row items-center">
-                  <View
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: category.color }}
-                  />
+            {categories.length === 0 ? (
+              <Text className="text-gray-500 text-sm text-center py-8">
+                لا توجد معاملات في الفترة المحددة
+              </Text>
+            ) : (
+              categories.map((category, index) => (
+                <View key={index} className="mb-5">
+                  <Text className="text-gray-700 text-sm font-medium mb-1 text-right" style={{direction: 'ltr'}}>
+                    {category.name}
+                  </Text>
+                  <Text className="text-gray-900 text-lg font-bold mb-1 text-right" style={{direction: 'rtl'}}>
+                    {category.amount.toLocaleString()} ريال
+                  </Text>
+
+                  {/* Progress Bar */}
+                  <View className="flex-row-reverse items-center gap-2">
+                    <Text className="text-gray-500 text-xs font-semibold min-w-[45px] text-right">
+                      {category.percentage}%
+                    </Text>
+                    <View className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <View
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${category.percentage}%`,
+                          backgroundColor: category.color
+                        }}
+                      />
+                    </View>
+                  </View>
                 </View>
-              </View>
-              <Text className="text-gray-900 text-lg font-bold text-right">
-                {category.amount} ريال
-              </Text>
-              <Text className="text-gray-500 text-xs text-right mt-1">
-                {category.percentage}%
-              </Text>
-            </View>
-          ))}
-        </View>
+              ))
+            )}
+          </View>
+        )}
 
         {/* Financial Insights */}
-        <View className="bg-purple-50 rounded-2xl p-5 mx-6 mt-6 mb-8" style={{direction: "rtl"}}>
-          <View className="flex-row items-center justify-between mb-4" style={{direction: "rtl"}}>
-            <Text className="text-purple-900 text-base font-bold">
-              رؤى مالية
-            </Text>
-            <Text className="text-2xl" style={{direction: "rtl"}}>💡</Text>
-          </View>
+        {!loading && categories.length > 0 && (
+          <View className="bg-purple-50 rounded-2xl p-5 mx-6 mt-6 mb-8" style={{direction: "rtl"}}>
+            <View className="flex-row items-center justify-between mb-4" style={{direction: "rtl"}}>
+              <Text className="text-purple-900 text-base font-bold">
+                رؤى مالية
+              </Text>
+              <Text className="text-2xl" style={{direction: "rtl"}}>💡</Text>
+            </View>
 
-          <View className="gap-3">
-            <Text className="text-purple-700 text-sm text-right leading-6" style={{direction: "ltr"}}>
-              • متوسط انفاقك 34,130 ريال يضعك على الهدف المحدد
-            </Text>
-            <Text className="text-red-600 text-sm text-right leading-6" style={{direction: "ltr"}}>
-              حر 12.5%
-            </Text>
-            <Text className="text-purple-700 text-sm text-right leading-6" style={{direction: "ltr"}}>
-              • مخطط الانفاق الخاص بك في (36.4) يقع في المعاملات الضريبية
-            </Text>
-            <Text className="text-purple-700 text-sm text-right leading-6" style={{direction: "ltr"}}>
-              • يُنصح بمراجعة المعاملات الضريبية لتقليل التكاليف
-            </Text>
+            <View className="gap-3">
+              <Text className="text-purple-700 text-sm text-right leading-6" style={{direction: "ltr"}}>
+                • متوسط انفاقك الشهري {metrics.monthlyAverage.toLocaleString()} ريال
+              </Text>
+              {categories[0] && (
+                <Text className="text-purple-700 text-sm text-right leading-6" style={{direction: "ltr"}}>
+                  • أعلى إنفاق في {categories[0].name} بنسبة {categories[0].percentage}%
+                </Text>
+              )}
+              <Text className="text-purple-700 text-sm text-right leading-6" style={{direction: "ltr"}}>
+                • إجمالي المعاملات: {metrics.totalTransactions} معاملة
+              </Text>
+            </View>
           </View>
-        </View>
+        )}
       </ScrollView>
 
-      {/* Date Picker Modal */}
+      {/* From Date Picker Modal */}
       <Modal
-        visible={showDatePicker}
+        visible={showFromDatePicker}
         transparent={true}
         animationType="slide"
-        onRequestClose={() => setShowDatePicker(false)}
+        onRequestClose={() => setShowFromDatePicker(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
           <View className="bg-white rounded-t-3xl px-5 pb-8">
@@ -302,20 +329,20 @@ const FinancialAnalysisScreen = ({ navigation }) => {
 
             {/* Title */}
             <Text className="text-gray-800 text-xl font-bold text-center mb-6">
-              اختر التاريخ
+              اختر تاريخ البداية
             </Text>
 
             {/* Date Picker */}
             <DatePickerWheels
-              onDateChange={handleDateChange}
-              initialDate={selectedDate}
+              onDateChange={handleFromDateChange}
+              initialDate={tempDate}
               minimumDate={new Date(2020, 0, 1)}
             />
 
             {/* Action Buttons */}
             <View className="flex-row gap-3 mt-4">
               <TouchableOpacity
-                onPress={handleDateDone}
+                onPress={handleFromDateDone}
                 className="flex-1 rounded-xl py-3"
                 style={{ backgroundColor: "#0055aa" }}
               >
@@ -325,7 +352,58 @@ const FinancialAnalysisScreen = ({ navigation }) => {
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={() => setShowDatePicker(false)}
+                onPress={() => setShowFromDatePicker(false)}
+                className="flex-1 rounded-xl py-3 border border-gray-300"
+              >
+                <Text className="text-gray-700 text-base font-semibold text-center">
+                  إلغاء
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* To Date Picker Modal */}
+      <Modal
+        visible={showToDatePicker}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowToDatePicker(false)}
+      >
+        <View className="flex-1 justify-end bg-black/50">
+          <View className="bg-white rounded-t-3xl px-5 pb-8">
+            {/* Handle Bar */}
+            <View className="items-center py-3">
+              <View className="w-12 h-1 bg-gray-300 rounded-full" />
+            </View>
+
+            {/* Title */}
+            <Text className="text-gray-800 text-xl font-bold text-center mb-6">
+              اختر تاريخ النهاية
+            </Text>
+
+            {/* Date Picker */}
+            <DatePickerWheels
+              onDateChange={handleToDateChange}
+              initialDate={tempDate}
+              minimumDate={new Date(2020, 0, 1)}
+            />
+
+            {/* Action Buttons */}
+            <View className="flex-row gap-3 mt-4">
+              <TouchableOpacity
+                onPress={handleToDateDone}
+                className="flex-1 rounded-xl py-3"
+                style={{ backgroundColor: "#0055aa" }}
+              >
+                <Text className="text-white text-base font-semibold text-center">
+                  تأكيد
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => setShowToDatePicker(false)}
                 className="flex-1 rounded-xl py-3 border border-gray-300"
               >
                 <Text className="text-gray-700 text-base font-semibold text-center">

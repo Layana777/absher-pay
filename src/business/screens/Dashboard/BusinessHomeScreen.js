@@ -23,6 +23,7 @@ import {
   AITipsSection,
   QuickStatsSection,
 } from "../../components/HomeContentSections";
+import ScheduledPaymentsSection from "../../../common/components/ScheduledPaymentsSection";
 
 const BusinessHomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -103,6 +104,12 @@ const BusinessHomeScreen = ({ navigation }) => {
     });
   };
 
+  // Handle view all scheduled bills
+  const handleViewAllScheduledBills = () => {
+    console.log("View all scheduled bills pressed");
+    navigation.navigate("ScheduledBills");
+  };
+
   return (
     <View className="flex-1 bg-white" style={{ direction: "ltr" }}>
       <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
@@ -151,6 +158,14 @@ const BusinessHomeScreen = ({ navigation }) => {
           key={refreshKey}
           userId={user?.uid}
           onViewAll={handleViewAllPayments}
+          onPaymentPress={handlePaymentPress}
+        />
+
+        {/* Scheduled Payments Section */}
+        <ScheduledPaymentsSection
+          key={`scheduled-${refreshKey}`}
+          userId={user?.uid}
+          onViewAll={handleViewAllScheduledBills}
           onPaymentPress={handlePaymentPress}
         />
       </ScrollView>

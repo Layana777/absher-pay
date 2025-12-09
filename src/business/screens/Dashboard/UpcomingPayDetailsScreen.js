@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   ScrollView,
@@ -25,10 +25,14 @@ import { getWalletById } from "../../../common/services/walletService";
 import {
   createScheduledBill,
   getDateOnlyTimestamp,
+  getScheduledBillsByBillId,
+  updateScheduledBill,
 } from "../../../common/services/scheduledBillsService";
+import { updateBillStatus } from "../../../common/services/billsService";
 import { generateBillPDF } from "../../../common/services/PDFService";
 import { formatAmount } from "../../../common/utils";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { useUser } from "../../../store/hooks";
 
 /**
  * Upcoming Payment Details Screen
@@ -41,8 +45,11 @@ import SvgIcons from "../../../common/components/SvgIcons";
  */
 const UpcomingPayDetailsScreen = ({ navigation, route }) => {
   const { payment, primaryColor = "#0055aa" } = route.params || {};
+  const user = useUser();
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [walletData, setWalletData] = useState(null);
+  const [existingScheduledBill, setExistingScheduledBill] = useState(null);
+  const [isScheduled, setIsScheduled] = useState(false);
 
   // Handle case where no payment data is provided
   if (!payment) {
@@ -51,6 +58,31 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
     ]);
     return null;
   }
+
+  // Check if bill is already scheduled
+  useEffect(() => {
+    const checkIfScheduled = async () => {
+      if (!user?.uid || !payment?.billData?.id) return;
+
+      try {
+        const scheduledBills = await getScheduledBillsByBillId(user.uid, payment.billData.id);
+        // Filter for active scheduled bills only (not completed or cancelled)
+        const activeScheduledBills = scheduledBills.filter(sb => sb.status === 'scheduled');
+
+        if (activeScheduledBills.length > 0) {
+          setExistingScheduledBill(activeScheduledBills[0]);
+          setIsScheduled(true);
+        } else {
+          setExistingScheduledBill(null);
+          setIsScheduled(false);
+        }
+      } catch (error) {
+        console.error("Error checking scheduled status:", error);
+      }
+    };
+
+    checkIfScheduled();
+  }, [user?.uid, payment?.billData?.id]);
 
   // Extract bill data if available
   const billData = payment.billData || null;
@@ -150,31 +182,67 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         new Date(scheduledDateTimestamp).toISOString()
       );
 
-      const scheduledBillData = {
-        walletId: enrichedPayment.billData.walletId,
-        billId: enrichedPayment.billData.id,
-        billReferenceNumber: enrichedPayment.referenceNumber,
-        serviceName: payment.title,
-        ministryName: enrichedPayment.billData.ministryName,
-        scheduledAmount: totalAmount,
-        scheduledDate: scheduledDateTimestamp,
-        metadata: {
-          baseAmount,
-          penaltyAmount,
-          vatAmount,
-          serviceFee,
-          serviceType: enrichedPayment.billData.serviceType,
-          category: enrichedPayment.billData.category,
-        },
-      };
+      let scheduledBill;
 
-      // Save scheduled bill to database
-      const scheduledBill = await createScheduledBill(
-        enrichedPayment.billData.userId || walletData?.userId,
-        scheduledBillData
-      );
+      if (isScheduled && existingScheduledBill) {
+        // Update existing scheduled bill
+        console.log("📅 Updating existing scheduled bill:", existingScheduledBill.id);
 
-      console.log("✅ Scheduled bill saved:", scheduledBill.id);
+        await updateScheduledBill(user.uid, existingScheduledBill.id, {
+          scheduledDate: scheduledDateTimestamp,
+          scheduledAmount: totalAmount,
+        });
+
+        // Ensure bill is marked as scheduled (in case it wasn't before)
+        await updateBillStatus(
+          enrichedPayment.billData.userId || user?.uid,
+          enrichedPayment.billData.id,
+          enrichedPayment.billData.status,
+          { isScheduled: true }
+        );
+
+        scheduledBill = {
+          ...existingScheduledBill,
+          scheduledDate: scheduledDateTimestamp,
+          scheduledAmount: totalAmount,
+        };
+
+        console.log("✅ Scheduled bill updated and bill marked as scheduled:", scheduledBill.id);
+      } else {
+        // Create new scheduled bill
+        const scheduledBillData = {
+          walletId: enrichedPayment.billData.walletId,
+          billId: enrichedPayment.billData.id,
+          billReferenceNumber: enrichedPayment.referenceNumber,
+          serviceName: payment.title,
+          ministryName: enrichedPayment.billData.ministryName,
+          scheduledAmount: totalAmount,
+          scheduledDate: scheduledDateTimestamp,
+          metadata: {
+            baseAmount,
+            penaltyAmount,
+            vatAmount,
+            serviceFee,
+            serviceType: enrichedPayment.billData.serviceType,
+            category: enrichedPayment.billData.category,
+          },
+        };
+
+        scheduledBill = await createScheduledBill(
+          enrichedPayment.billData.userId || user?.uid,
+          scheduledBillData
+        );
+
+        // Mark the bill as scheduled
+        await updateBillStatus(
+          enrichedPayment.billData.userId || user?.uid,
+          enrichedPayment.billData.id,
+          enrichedPayment.billData.status, // Keep current status
+          { isScheduled: true }
+        );
+
+        console.log("✅ Scheduled bill created and bill marked as scheduled:", scheduledBill.id);
+      }
 
       // Format date for display in success screen
       const day = String(paymentDate.getDate()).padStart(2, "0");
@@ -189,6 +257,7 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
         paymentDate: formattedDateForDisplay,
         serviceName: payment.title,
         amount: `${totalAmount.toLocaleString("en-US")} ريال`,
+        isUpdate: isScheduled,
       });
     } catch (error) {
       console.error("❌ Error scheduling payment:", error);
@@ -317,6 +386,8 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
             isUrgent={enrichedPayment.isUrgent}
             serviceName={payment.title}
             amount={`${totalAmount.toLocaleString("en-US")} ريال`}
+            isScheduled={isScheduled}
+            existingScheduledBill={existingScheduledBill}
           />
         )}
 

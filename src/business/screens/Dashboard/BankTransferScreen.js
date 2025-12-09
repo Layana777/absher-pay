@@ -22,17 +22,54 @@ import { createTransaction } from "../../../common/services/transactionService";
 import { updateWalletBalance } from "../../../common/services/walletService";
 import { getBankAccountsByUserId } from "../../../common/services/bankAccountService";
 
-// Bank logos mapping
+// Bank logos mapping by ID
+const BANK_LOGOS_BY_ID = {
+  "1": require("../../../common/assets/icons/alrajhi-logo.png"),
+  "2": require("../../../common/assets/icons/snb-logo.png"),
+  "3": require("../../../common/assets/icons/riyad-bank-logo.png"),
+  "4": require("../../../common/assets/icons/sabb-logo.png"),
+  "5": require("../../../common/assets/icons/anb-logo.png"),
+  "6": require("../../../common/assets/icons/albilad-logo.png"),
+  "7": require("../../../common/assets/icons/alinma-logo.png"),
+  "8": require("../../../common/assets/icons/aljazira-logo.png"),
+};
+
+// Bank logos mapping by name (fallback for older accounts)
 const bankLogos = {
   "مصرف الراجحي": require("../../../common/assets/icons/alrajhi-logo.png"),
   "البنك الأهلي السعودي": require("../../../common/assets/icons/snb-logo.png"),
   "بنك الرياض": require("../../../common/assets/icons/riyad-bank-logo.png"),
   "بنك ساب": require("../../../common/assets/icons/sabb-logo.png"),
+  "بنك السعودي الأول": require("../../../common/assets/icons/sabb-logo.png"),
   "البنك السعودي الوطني": require("../../../common/assets/icons/snb-logo.png"),
+  "البنك العربي الوطني": require("../../../common/assets/icons/anb-logo.png"),
   "مصرف الإنماء": require("../../../common/assets/icons/alinma-logo.png"),
+  "بنك الإنماء": require("../../../common/assets/icons/alinma-logo.png"),
   "بنك البلاد": require("../../../common/assets/icons/albilad-logo.png"),
   "بنك الجزيرة": require("../../../common/assets/icons/aljazira-logo.png"),
   "البنك الأهلي التجاري": require("../../../common/assets/icons/anb-logo.png"),
+};
+
+// Helper function to get bank logo
+const getBankLogo = (account) => {
+  if (!account) return null;
+
+  // Try bankId first (new accounts)
+  if (account.bankId && BANK_LOGOS_BY_ID[account.bankId]) {
+    return BANK_LOGOS_BY_ID[account.bankId];
+  }
+
+  // Fallback to bank name (old accounts)
+  if (account.bankName && bankLogos[account.bankName]) {
+    return bankLogos[account.bankName];
+  }
+
+  // Check if bankLogo property exists
+  if (account.bankLogo) {
+    return account.bankLogo;
+  }
+
+  return null;
 };
 
 const BankTransferScreen = ({ navigation }) => {
@@ -264,9 +301,9 @@ const BankTransferScreen = ({ navigation }) => {
 
                 {/* Bank Icon */}
                 <View className="rounded-xl w-10 h-10 items-center justify-center overflow-hidden">
-                  {bankLogos[linkedBank.bankName] ? (
+                  {getBankLogo(linkedBank) ? (
                     <Image
-                      source={bankLogos[linkedBank.bankName]}
+                      source={getBankLogo(linkedBank)}
                       style={{ width: 30, height: 30 }}
                       resizeMode="contain"
                     />
