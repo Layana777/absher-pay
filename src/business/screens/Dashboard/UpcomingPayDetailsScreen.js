@@ -36,6 +36,42 @@ import SvgIcons from "../../../common/components/SvgIcons";
 import { useUser } from "../../../store/hooks";
 
 /**
+ * Format date to Gregorian format with English month names
+ * @param {string|Date} date - Date string or Date object
+ * @returns {string} Formatted date in Gregorian (e.g., "25 December 2024")
+ */
+const formatGregorianDate = (date) => {
+  if (!date) return "";
+
+  const englishMonths = {
+    "01": "January",
+    "02": "February",
+    "03": "March",
+    "04": "April",
+    "05": "May",
+    "06": "June",
+    "07": "July",
+    "08": "August",
+    "09": "September",
+    10: "October",
+    11: "November",
+    12: "December",
+  };
+
+  const momentDate = moment(date);
+
+  if (!momentDate.isValid()) {
+    return date; // Return original if invalid
+  }
+
+  const day = momentDate.format("D");
+  const month = englishMonths[momentDate.format("MM")];
+  const year = momentDate.format("YYYY");
+
+  return `${day} ${month} ${year}`;
+};
+
+/**
  * Upcoming Payment Details Screen
  * Displays detailed information about a payment and provides payment actions
  *
@@ -353,8 +389,7 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
                   مجدولة للدفع التلقائي
                 </Text>
                 <Text className="text-blue-700 text-xs text-right">
-                  سيتم الدفع تلقائياً في{" "}
-                  {moment(scheduledDate).format("D MMMM YYYY")}
+                  سيتم الدفع تلقائياً في {formatGregorianDate(scheduledDate)}
                 </Text>
               </View>
               <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center ml-3">

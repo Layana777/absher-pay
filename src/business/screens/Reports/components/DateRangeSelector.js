@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TouchableOpacity, Modal } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import DatePickerWheels from "../../../components/DatePickerWheels";
+import { formatGregorianDate } from "../../../../common/utils/dateUtils";
 
 const DateRangeSelector = ({
   startDate,
@@ -17,11 +18,7 @@ const DateRangeSelector = ({
   // Format date for display
   const formatDate = (date) => {
     if (!date) return "اختر التاريخ";
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    return formatGregorianDate(date);
   };
 
   // Open start date picker

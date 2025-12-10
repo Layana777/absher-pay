@@ -7,6 +7,7 @@ const ReportTypeFilter = ({ activeType, onTypeSelect }) => {
     { id: "monthly", label: "شهري" },
     { id: "quarterly", label: "ربع سنوي" },
     { id: "yearly", label: "سنوي" },
+    { id: "service", label: "حسب الخدمة" },
   ];
 
   return (
