@@ -20,7 +20,7 @@ import {
 } from "../../../common/services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../../../common/services/firebase/governmentServicesData";
 import { getMinistryIconName } from "../../../common/utils/ministryIconMapper";
-import { getArabicStatus } from "../../../common/utils/billStatusUtils";
+import { getArabicStatus, getStatusBgColor } from "../../../common/utils/billStatusUtils";
 
 const AllPaymentsScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
@@ -130,6 +130,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       isUrgent: isBillOverdue(bill),
       dueDate: bill.dueDate,
       status: arabicStatus,
+      statusColor: getStatusBgColor(arabicStatus),
       category: arabicStatus,
       serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
       aiSuggestion: bill.penaltyInfo

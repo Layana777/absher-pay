@@ -8,7 +8,7 @@ import {
 } from "../services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../services/firebase/governmentServicesData";
 import { getMinistryIconName } from "../utils/ministryIconMapper";
-import { getArabicStatus } from "../utils/billStatusUtils";
+import { getArabicStatus, getStatusBgColor } from "../utils/billStatusUtils";
 
 /**
  * Helper function to get service name in Arabic
@@ -91,6 +91,7 @@ const transformBillToPayment = (bill) => {
     isScheduled: bill.isScheduled || false,
     dueDate: bill.dueDate,
     status: arabicStatus,
+    statusColor: getStatusBgColor(arabicStatus),
     category: arabicStatus,
     serviceType: bill.serviceName?.ar || serviceSubTypeNameAr || "غير محدد",
     aiSuggestion: bill.penaltyInfo

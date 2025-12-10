@@ -109,19 +109,8 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
         className="flex-row items-center justify-between"
         style={{ direction: "ltr" }}
       >
-        {/* Left side: Status badges */}
+        {/* Left side: Status badge */}
         <View className="flex-row items-center gap-2">
-          {isUrgent && (
-            <View className="bg-red-500 px-3 py-1 rounded-lg items-center justify-center">
-              <Text className="text-white text-xs font-bold">عاجل</Text>
-            </View>
-          )}
-          {isScheduled && (
-            <View className="bg-blue-500 px-3 py-1 rounded-lg items-center justify-center flex-row">
-              <Feather name="clock" size={12} color="white" />
-              <Text className="text-white text-xs font-bold ml-1">مجدولة</Text>
-            </View>
-          )}
           {status && (
             <View
               className={`${statusColor} px-3 py-1 rounded-lg items-center justify-center`}
