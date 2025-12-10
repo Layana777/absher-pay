@@ -192,9 +192,9 @@ const AddBankAccountScreen = ({ navigation }) => {
 
       // Prepare bank account data
       const bankAccountData = {
+        bankId: selectedBank?.id, // Store bank ID instead of logo
         bankName: selectedBank?.name,
         bankNameEn: selectedBank?.nameEn,
-        bankLogo: selectedBank?.logo,
         iban: cleanIban,
         ibanFormatted: iban, // Keep formatted version for display
         accountOwner,

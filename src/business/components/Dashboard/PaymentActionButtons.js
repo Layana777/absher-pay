@@ -14,6 +14,8 @@ import DatePickerWheels from "../DatePickerWheels";
  * @param {boolean} isUrgent - Whether the payment is urgent (affects button styling)
  * @param {string} serviceName - Name of the service to be scheduled
  * @param {string|number} amount - Amount to be paid
+ * @param {boolean} isScheduled - Whether the bill is already scheduled
+ * @param {Object} existingScheduledBill - Existing scheduled bill data if any
  */
 const PaymentActionButtons = ({
   onPayNow,
@@ -23,13 +25,36 @@ const PaymentActionButtons = ({
   isUrgent = false,
   serviceName = "",
   amount = "",
+  isScheduled = false,
+  existingScheduledBill = null,
 }) => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Initialize with existing scheduled date if available
+  const getInitialDate = () => {
+    if (existingScheduledBill?.scheduledDate) {
+      return new Date(existingScheduledBill.scheduledDate);
+    }
+    return new Date();
+  };
+
+  const [selectedDate, setSelectedDate] = useState(getInitialDate());
   const [paymentDate, setPaymentDate] = useState("");
 
   const handleScheduleClick = () => {
+    // If editing existing schedule, pre-fill the date
+    if (isScheduled && existingScheduledBill?.scheduledDate) {
+      const existingDate = new Date(existingScheduledBill.scheduledDate);
+      setSelectedDate(existingDate);
+
+      const day = String(existingDate.getDate()).padStart(2, '0');
+      const month = String(existingDate.getMonth() + 1).padStart(2, '0');
+      const year = existingDate.getFullYear();
+      const formattedDate = `${day}-${month}-${year}`;
+      setPaymentDate(formattedDate);
+    }
+
     setShowScheduleModal(true);
     setShowDatePicker(false);
   };
@@ -112,7 +137,7 @@ const PaymentActionButtons = ({
             style={{ marginLeft: 6 }}
           />
           <Text className="text-sm font-bold" style={{ color: primaryColor }}>
-            جدولة
+            {isScheduled ? "تعديل" : "جدولة"}
           </Text>
         </TouchableOpacity>
 
@@ -148,7 +173,7 @@ const PaymentActionButtons = ({
 
             {/* Title */}
             <Text className="text-gray-800 text-xl font-bold text-center mb-6">
-              جدولة المدفوعات
+              {isScheduled ? "تعديل الجدولة" : "جدولة المدفوعات"}
             </Text>
 
             {/* Service Name */}

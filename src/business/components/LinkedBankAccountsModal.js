@@ -6,6 +6,50 @@ import { selectBankAccount, removeBankAccount } from "../../store/slices/bankAcc
 import { deleteBankAccount } from "../../common/services/bankAccountService";
 import { useUser } from "../../store/hooks";
 
+// Saudi Banks logos mapping by ID
+const BANK_LOGOS = {
+  "1": require("../../common/assets/icons/alrajhi-logo.png"),
+  "2": require("../../common/assets/icons/snb-logo.png"),
+  "3": require("../../common/assets/icons/riyad-bank-logo.png"),
+  "4": require("../../common/assets/icons/sabb-logo.png"),
+  "5": require("../../common/assets/icons/anb-logo.png"),
+  "6": require("../../common/assets/icons/albilad-logo.png"),
+  "7": require("../../common/assets/icons/alinma-logo.png"),
+  "8": require("../../common/assets/icons/aljazira-logo.png"),
+};
+
+// Fallback mapping by bank name (for older accounts without bankId)
+const BANK_LOGOS_BY_NAME = {
+  "مصرف الراجحي": require("../../common/assets/icons/alrajhi-logo.png"),
+  "البنك الأهلي السعودي": require("../../common/assets/icons/snb-logo.png"),
+  "بنك الرياض": require("../../common/assets/icons/riyad-bank-logo.png"),
+  "بنك السعودي الأول": require("../../common/assets/icons/sabb-logo.png"),
+  "البنك العربي الوطني": require("../../common/assets/icons/anb-logo.png"),
+  "بنك البلاد": require("../../common/assets/icons/albilad-logo.png"),
+  "بنك الإنماء": require("../../common/assets/icons/alinma-logo.png"),
+  "بنك الجزيرة": require("../../common/assets/icons/aljazira-logo.png"),
+};
+
+// Helper function to get bank logo
+const getBankLogo = (account) => {
+  // Try bankId first (new accounts)
+  if (account.bankId && BANK_LOGOS[account.bankId]) {
+    return BANK_LOGOS[account.bankId];
+  }
+
+  // Fallback to bank name (old accounts)
+  if (account.bankName && BANK_LOGOS_BY_NAME[account.bankName]) {
+    return BANK_LOGOS_BY_NAME[account.bankName];
+  }
+
+  // Check if bankLogo property exists
+  if (account.bankLogo) {
+    return account.bankLogo;
+  }
+
+  return null;
+};
+
 const LinkedBankAccountsModal = ({ visible, onClose, accounts, onAddAccount, selectedAccountId }) => {
   const dispatch = useDispatch();
   const user = useUser();
@@ -94,8 +138,8 @@ const LinkedBankAccountsModal = ({ visible, onClose, accounts, onAddAccount, sel
 
           {/* Bank Icon/Logo */}
           <View className="rounded-xl w-12 h-12 items-center justify-center ml-3" style={{direction:"rtl"}}>
-            {item.bankLogo ? (
-              <Image source={item.bankLogo} style={{ width: 32, height: 32 }} resizeMode="contain" />
+            {getBankLogo(item) ? (
+              <Image source={getBankLogo(item)} style={{ width: 32, height: 32 }} resizeMode="contain" />
             ) : (
               <Feather name="briefcase" size={24} color="#0055aa" />
             )}

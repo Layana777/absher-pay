@@ -156,7 +156,7 @@ const UpcomingPaymentsSection = ({
   const displayPayments = payments.length > 0 ? payments : bills;
 
   return (
-    <View className=" p-8 mb-6" style={{ direction: "rtl" }}>
+    <View className=" p-8 mb-2" style={{ direction: "rtl" }}>
       {/* Header */}
       <View className="flex-row justify-between items-center mb-4 ">
         <Text className="text-gray-800 text-lg font-bold text-right">

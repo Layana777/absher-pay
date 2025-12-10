@@ -1002,3 +1002,121 @@ export const getMonthlyTotalPayments = async (walletId) => {
     return { success: false, error: error.message };
   }
 };
+
+/**
+ * Gets financial analysis data for a date range
+ * Groups government service payments by service type (ministry)
+ * @param {string} walletId - Wallet ID
+ * @param {number} startDate - Start timestamp
+ * @param {number} endDate - End timestamp
+ * @returns {Promise<object>} Financial analysis data
+ */
+export const getFinancialAnalysis = async (walletId, startDate, endDate) => {
+  try {
+    const result = await getTransactionsByDateRange(walletId, startDate, endDate);
+
+    if (!result.success) {
+      return result;
+    }
+
+    const transactions = result.data;
+
+    // Ministry/Service Type mapping
+    const serviceTypeNames = {
+      passports: { ar: "الجوازات", en: "Passports" },
+      traffic: { ar: "المرور", en: "Traffic" },
+      civil_affairs: { ar: "الأحوال المدنية", en: "Civil Affairs" },
+      commerce: { ar: "وزارة التجارة", en: "Ministry of Commerce" },
+    };
+
+    // Initialize category data
+    const categoryData = {
+      passports: { amount: 0, count: 0 },
+      traffic: { amount: 0, count: 0 },
+      civil_affairs: { amount: 0, count: 0 },
+      commerce: { amount: 0, count: 0 },
+    };
+
+    let totalSpending = 0;
+    let monthlySpending = 0;
+    let yearlySpending = 0;
+    let totalTransactions = 0;
+
+    // Get current month and year for filtering
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+    const startOfMonth = new Date(currentYear, currentMonth, 1).getTime();
+    const endOfMonth = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59, 999).getTime();
+    const startOfYear = new Date(currentYear, 0, 1).getTime();
+
+    transactions.forEach((txn) => {
+      // Only count payment transactions (negative amounts)
+      if (txn.type === "payment" && txn.category === "government_service" && txn.amount < 0) {
+        const amount = Math.abs(txn.amount);
+        totalSpending += amount;
+        totalTransactions++;
+
+        // Group by service type
+        if (txn.serviceType && categoryData[txn.serviceType]) {
+          categoryData[txn.serviceType].amount += amount;
+          categoryData[txn.serviceType].count++;
+        }
+
+        // Calculate monthly spending (current month)
+        if (txn.timestamp >= startOfMonth && txn.timestamp <= endOfMonth) {
+          monthlySpending += amount;
+        }
+
+        // Calculate yearly spending (current year)
+        if (txn.timestamp >= startOfYear) {
+          yearlySpending += amount;
+        }
+      }
+    });
+
+    // Convert category data to array with percentages
+    const categories = Object.keys(categoryData).map((key) => {
+      const amount = parseFloat(categoryData[key].amount.toFixed(2));
+      const percentage = totalSpending > 0 ? parseFloat(((amount / totalSpending) * 100).toFixed(1)) : 0;
+
+      return {
+        serviceType: key,
+        name: serviceTypeNames[key]?.ar || key,
+        amount,
+        percentage,
+        count: categoryData[key].count,
+      };
+    });
+
+    // Filter out categories with zero amount and sort by amount
+    const filteredCategories = categories
+      .filter((cat) => cat.amount > 0)
+      .sort((a, b) => b.amount - a.amount);
+
+    // Calculate monthly average (spending per month in the selected date range)
+    const daysDiff = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const monthsInRange = Math.max(1, daysDiff / 30); // At least 1 month
+    const monthlyAverage = parseFloat((totalSpending / monthsInRange).toFixed(2));
+
+    // Calculate metrics
+    const metrics = {
+      monthlySpending: parseFloat(monthlySpending.toFixed(2)),
+      yearlySpending: parseFloat(yearlySpending.toFixed(2)),
+      monthlyAverage,
+      totalTransactions,
+      totalSpending: parseFloat(totalSpending.toFixed(2)),
+    };
+
+    return {
+      success: true,
+      data: {
+        categories: filteredCategories,
+        metrics,
+      },
+    };
+  } catch (error) {
+    console.error("Error getting financial analysis:", error);
+    return { success: false, error: error.message };
+  }
+};
