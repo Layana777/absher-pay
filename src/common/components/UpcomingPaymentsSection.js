@@ -88,6 +88,7 @@ const transformBillToPayment = (bill) => {
     iconColor: colors.icon,
     iconBgColor: colors.bg,
     isUrgent: isBillOverdue(bill),
+    isScheduled: bill.isScheduled || false,
     dueDate: bill.dueDate,
     status: arabicStatus,
     category: arabicStatus,

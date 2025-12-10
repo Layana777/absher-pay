@@ -4,8 +4,15 @@ import { Feather } from "@expo/vector-icons";
 import SvgIcons from "../../../../common/components/SvgIcons";
 import { generateReportPDF } from "../../../../common/services/PDFService";
 import { getTransactionsByDateRange } from "../../../../common/services/transactionService";
+import { formatGregorianDate } from "../../../../common/utils/dateUtils";
 
-const ReportCard = ({ report, onDownload, onPreview, primaryColor = "#0055aa", walletId }) => {
+const ReportCard = ({
+  report,
+  onDownload,
+  onPreview,
+  primaryColor = "#0055aa",
+  walletId,
+}) => {
   const [downloading, setDownloading] = useState(false);
   // Get report type icon and color
   const getReportTypeStyle = (type) => {
@@ -14,6 +21,7 @@ const ReportCard = ({ report, onDownload, onPreview, primaryColor = "#0055aa", w
       quarterly: { icon: "trending-up", color: "#10B981", bgColor: "#D1FAE5" },
       yearly: { icon: "bar-chart-2", color: "#3B82F6", bgColor: "#DBEAFE" },
       custom: { icon: "settings", color: "#F59E0B", bgColor: "#FEF3C7" },
+      service: { icon: "briefcase", color: "#EC4899", bgColor: "#FCE7F3" },
     };
     return styles[type] || styles.monthly;
   };
@@ -22,11 +30,7 @@ const ReportCard = ({ report, onDownload, onPreview, primaryColor = "#0055aa", w
 
   // Format date
   const formatDate = (timestamp) => {
-    const date = new Date(timestamp);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-    });
+    return formatGregorianDate(timestamp);
   };
 
   // Handle PDF download
@@ -48,7 +52,18 @@ const ReportCard = ({ report, onDownload, onPreview, primaryColor = "#0055aa", w
 
       if (result.success) {
         // Filter only payment transactions (money out)
-        const paymentTransactions = result.data.filter((txn) => txn.amount < 0);
+        let paymentTransactions = result.data.filter((txn) => txn.amount < 0);
+
+        // If this is a service report, filter by service type
+        if (report.type === "service" && report.serviceType) {
+          const serviceCategory = report.serviceInfo?.category;
+          paymentTransactions = paymentTransactions.filter((txn) => {
+            return (
+              txn.serviceType === report.serviceType ||
+              txn.category === serviceCategory
+            );
+          });
+        }
 
         if (paymentTransactions.length === 0) {
           Alert.alert("تنبيه", "لا توجد عمليات لتحميلها في التقرير");
@@ -90,9 +105,11 @@ const ReportCard = ({ report, onDownload, onPreview, primaryColor = "#0055aa", w
           </View>
 
           <View className="flex-1 m-3">
-            <Text className="text-base font-bold text-left text-gray-900 mb-1">
-              {report.title}
-            </Text>
+            <View className="flex-row items-center mb-1">
+              <Text className="text-base font-bold text-left text-gray-900">
+                {report.title}
+              </Text>
+            </View>
             <Text className="text-sm text-gray-500 text-left">
               {report.periodLabel}
             </Text>
@@ -134,7 +151,10 @@ const ReportCard = ({ report, onDownload, onPreview, primaryColor = "#0055aa", w
           style={{ borderColor: primaryColor }}
         >
           <Feather name="eye" size={18} color={primaryColor} />
-          <Text className="font-bold text-sm mr-2" style={{ color: primaryColor }}>
+          <Text
+            className="font-bold text-sm mr-2"
+            style={{ color: primaryColor }}
+          >
             معاينة
           </Text>
         </TouchableOpacity>

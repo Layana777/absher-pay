@@ -25,6 +25,7 @@ import { formatAmount } from "../../../common/utils";
  * @param {string} payment.ministryIconName - Ministry icon name for SvgIcons
  * @param {number} payment.ministryIconSize - Size of ministry icon
  * @param {boolean} payment.isUrgent - Urgency flag
+ * @param {boolean} isScheduled - Whether the payment is scheduled
  * @param {string} primaryColor - Primary brand color (default: "#0055aa")
  * @param {Function} onBack - Back button callback
  */
@@ -32,6 +33,7 @@ const UpcomingPayHeaderDetails = ({
   payment,
   primaryColor = "#0055aa",
   onBack,
+  isScheduled = false,
 }) => {
   const {
     title,
@@ -83,18 +85,31 @@ const UpcomingPayHeaderDetails = ({
           </View>
         </View>
 
-        {/* Urgent Badge Below Amount */}
-        {isUrgent && (
-          <View className="bg-white/20 px-4 py-2 rounded-full mt-3 flex-row items-center">
-            <Feather
-              name="users"
-              size={14}
-              color="white"
-              style={{ marginLeft: 6 }}
-            />
-            <Text className="text-white text-xs font-bold">{description}</Text>
-          </View>
-        )}
+        {/* Badges Below Amount */}
+        <View className="flex-row items-center gap-2 mt-3">
+          {isScheduled && (
+            <View className="bg-white/20 px-4 py-2 rounded-full flex-row items-center">
+              <Feather
+                name="clock"
+                size={14}
+                color="white"
+                style={{ marginLeft: 6 }}
+              />
+              <Text className="text-white text-xs font-bold">مجدولة</Text>
+            </View>
+          )}
+          {isUrgent && (
+            <View className="bg-white/20 px-4 py-2 rounded-full flex-row items-center">
+              <Feather
+                name="alert-circle"
+                size={14}
+                color="white"
+                style={{ marginLeft: 6 }}
+              />
+              <Text className="text-white text-xs font-bold">عاجل</Text>
+            </View>
+          )}
+        </View>
       </View>
     </View>
   );

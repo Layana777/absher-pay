@@ -5,6 +5,7 @@ import { Feather } from "@expo/vector-icons";
 import { useBusinessWallet } from "../../../store/hooks";
 import { getTransactionsByDateRange } from "../../../common/services/transactionService";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { formatGregorianDate } from "../../../common/utils/dateUtils";
 
 const ReportDetailsScreen = ({ navigation, route }) => {
   const { report, primaryColor = "#0055aa" } = route.params || {};
@@ -34,9 +35,18 @@ const ReportDetailsScreen = ({ navigation, route }) => {
       );
 
       if (result.success) {
-        // Filter only payment transactions (money out)
-        const paymentTransactions = result.data.filter((txn) => txn.amount < 0);
-        setTransactions(paymentTransactions);
+        let filteredTransactions = result.data.filter((txn) => txn.amount < 0);
+
+        // If this is a service report, filter by service type
+        if (report.type === 'service' && report.serviceType) {
+          const serviceCategory = report.serviceInfo?.category;
+          filteredTransactions = filteredTransactions.filter((txn) => {
+            return txn.serviceType === report.serviceType ||
+                   txn.category === serviceCategory;
+          });
+        }
+
+        setTransactions(filteredTransactions);
       } else {
         Alert.alert("خطأ", result.error || "فشل تحميل تفاصيل التقرير");
       }
@@ -50,11 +60,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
 
   // Format date
   const formatDate = (timestamp) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    return formatGregorianDate(timestamp);
   };
 
   // Format time
@@ -116,9 +122,14 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           className="bg-white rounded-3xl p-5 mb-4"
           style={{ direction: "ltr" }}
         >
-          <Text className="text-lg font-bold text-gray-900 mb-4 text-right">
-            ملخص التقرير
-          </Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-lg font-bold text-gray-900 text-right">
+              ملخص التقرير
+            </Text>
+            {report?.type === 'service' && report?.serviceInfo?.icon && (
+              <Text className="text-2xl">{report.serviceInfo.icon}</Text>
+            )}
+          </View>
 
           <View className="mb-3">
             <Text className="text-sm text-gray-500 text-right mb-1">

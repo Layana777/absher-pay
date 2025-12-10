@@ -5,8 +5,9 @@
  * Uses existing Firebase configuration from firebaseConfig.js
  */
 
-import { ref, get, query, orderByChild } from 'firebase/database';
-import { getWalletTransactions } from './transactionService';
+import { ref, get, query, orderByChild } from "firebase/database";
+import { getWalletTransactions } from "./transactionService";
+import GOVERNMENT_SERVICES_DATA from "./firebase/governmentServicesData";
 
 // ============================================================================
 // DATE UTILITIES
@@ -19,7 +20,15 @@ import { getWalletTransactions } from './transactionService';
  */
 export const getMonthRange = (date = new Date()) => {
   const start = new Date(date.getFullYear(), date.getMonth(), 1).getTime();
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999).getTime();
+  const end = new Date(
+    date.getFullYear(),
+    date.getMonth() + 1,
+    0,
+    23,
+    59,
+    59,
+    999
+  ).getTime();
   return { start, end };
 };
 
@@ -31,7 +40,15 @@ export const getMonthRange = (date = new Date()) => {
 export const getQuarterRange = (date = new Date()) => {
   const quarter = Math.floor(date.getMonth() / 3);
   const start = new Date(date.getFullYear(), quarter * 3, 1).getTime();
-  const end = new Date(date.getFullYear(), quarter * 3 + 3, 0, 23, 59, 59, 999).getTime();
+  const end = new Date(
+    date.getFullYear(),
+    quarter * 3 + 3,
+    0,
+    23,
+    59,
+    59,
+    999
+  ).getTime();
   return { start, end };
 };
 
@@ -54,12 +71,12 @@ export const getYearRange = (date = new Date()) => {
 export const getQuickRange = (range) => {
   const end = Date.now();
   const daysMap = {
-    '7d': 7,
-    '30d': 30,
-    '90d': 90
+    "7d": 7,
+    "30d": 30,
+    "90d": 90,
   };
   const days = daysMap[range] || 30;
-  const start = end - (days * 24 * 60 * 60 * 1000);
+  const start = end - days * 24 * 60 * 60 * 1000;
   return { start, end };
 };
 
@@ -73,16 +90,16 @@ export const formatDateRangeLabel = (start, end) => {
   const startDate = new Date(start);
   const endDate = new Date(end);
 
-  const startStr = startDate.toLocaleDateString('ar-SA', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  const startStr = startDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
-  const endStr = endDate.toLocaleDateString('ar-SA', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  const endStr = endDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
   return `${startStr} - ${endStr}`;
@@ -95,8 +112,18 @@ export const formatDateRangeLabel = (start, end) => {
  */
 export const getArabicMonthName = (monthIndex) => {
   const months = [
-    'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
-    'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+    "يناير",
+    "فبراير",
+    "مارس",
+    "أبريل",
+    "مايو",
+    "يونيو",
+    "يوليو",
+    "أغسطس",
+    "سبتمبر",
+    "أكتوبر",
+    "نوفمبر",
+    "ديسمبر",
   ];
   return months[monthIndex];
 };
@@ -107,7 +134,12 @@ export const getArabicMonthName = (monthIndex) => {
  * @returns {string} Quarter name in Arabic
  */
 export const getArabicQuarterName = (quarterIndex) => {
-  const quarters = ['الربع الأول', 'الربع الثاني', 'الربع الثالث', 'الربع الرابع'];
+  const quarters = [
+    "الربع الأول",
+    "الربع الثاني",
+    "الربع الثالث",
+    "الربع الرابع",
+  ];
   return quarters[quarterIndex];
 };
 
@@ -134,15 +166,17 @@ export const generateMonthlyReports = async (walletId) => {
     // Group transactions by month
     const monthlyGroups = {};
 
-    transactions.forEach(txn => {
+    transactions.forEach((txn) => {
       const date = new Date(txn.timestamp);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
 
       if (!monthlyGroups[monthKey]) {
         monthlyGroups[monthKey] = {
           year: date.getFullYear(),
           month: date.getMonth(),
-          transactions: []
+          transactions: [],
         };
       }
 
@@ -150,7 +184,7 @@ export const generateMonthlyReports = async (walletId) => {
     });
 
     // Generate reports for each month
-    const reports = Object.keys(monthlyGroups).map(monthKey => {
+    const reports = Object.keys(monthlyGroups).map((monthKey) => {
       const group = monthlyGroups[monthKey];
       const { start, end } = getMonthRange(new Date(group.year, group.month));
 
@@ -160,7 +194,7 @@ export const generateMonthlyReports = async (walletId) => {
       let totalExpense = 0;
       let operationsCount = group.transactions.length;
 
-      group.transactions.forEach(txn => {
+      group.transactions.forEach((txn) => {
         totalAmount += txn.amount;
         if (txn.amount > 0) {
           totalIncome += txn.amount;
@@ -171,7 +205,7 @@ export const generateMonthlyReports = async (walletId) => {
 
       return {
         id: `monthly_${monthKey}`,
-        type: 'monthly',
+        type: "monthly",
         title: `تقرير ${getArabicMonthName(group.month)} ${group.year}`,
         periodLabel: `${getArabicMonthName(group.month)} ${group.year}`,
         fromDate: start,
@@ -182,7 +216,7 @@ export const generateMonthlyReports = async (walletId) => {
         totalExpense: parseFloat(totalExpense.toFixed(2)),
         fileSize: Math.floor(245 + Math.random() * 100), // Mock KB size
         year: group.year,
-        month: group.month
+        month: group.month,
       };
     });
 
@@ -191,7 +225,7 @@ export const generateMonthlyReports = async (walletId) => {
 
     return { success: true, data: reports };
   } catch (error) {
-    console.error('Error generating monthly reports:', error);
+    console.error("Error generating monthly reports:", error);
     return { success: false, error: error.message };
   }
 };
@@ -212,7 +246,7 @@ export const generateQuarterlyReports = async (walletId) => {
     const transactions = result.data;
     const quarterlyGroups = {};
 
-    transactions.forEach(txn => {
+    transactions.forEach((txn) => {
       const date = new Date(txn.timestamp);
       const quarter = Math.floor(date.getMonth() / 3);
       const quarterKey = `${date.getFullYear()}-Q${quarter + 1}`;
@@ -221,23 +255,25 @@ export const generateQuarterlyReports = async (walletId) => {
         quarterlyGroups[quarterKey] = {
           year: date.getFullYear(),
           quarter,
-          transactions: []
+          transactions: [],
         };
       }
 
       quarterlyGroups[quarterKey].transactions.push(txn);
     });
 
-    const reports = Object.keys(quarterlyGroups).map(quarterKey => {
+    const reports = Object.keys(quarterlyGroups).map((quarterKey) => {
       const group = quarterlyGroups[quarterKey];
-      const { start, end } = getQuarterRange(new Date(group.year, group.quarter * 3));
+      const { start, end } = getQuarterRange(
+        new Date(group.year, group.quarter * 3)
+      );
 
       let totalAmount = 0;
       let totalIncome = 0;
       let totalExpense = 0;
       let operationsCount = group.transactions.length;
 
-      group.transactions.forEach(txn => {
+      group.transactions.forEach((txn) => {
         totalAmount += txn.amount;
         if (txn.amount > 0) {
           totalIncome += txn.amount;
@@ -248,7 +284,7 @@ export const generateQuarterlyReports = async (walletId) => {
 
       return {
         id: `quarterly_${quarterKey}`,
-        type: 'quarterly',
+        type: "quarterly",
         title: `تقرير ${getArabicQuarterName(group.quarter)} ${group.year}`,
         periodLabel: `${getArabicQuarterName(group.quarter)} ${group.year}`,
         fromDate: start,
@@ -259,14 +295,14 @@ export const generateQuarterlyReports = async (walletId) => {
         totalExpense: parseFloat(totalExpense.toFixed(2)),
         fileSize: Math.floor(245 + Math.random() * 100),
         year: group.year,
-        quarter: group.quarter
+        quarter: group.quarter,
       };
     });
 
     reports.sort((a, b) => b.fromDate - a.fromDate);
     return { success: true, data: reports };
   } catch (error) {
-    console.error('Error generating quarterly reports:', error);
+    console.error("Error generating quarterly reports:", error);
     return { success: false, error: error.message };
   }
 };
@@ -287,21 +323,21 @@ export const generateYearlyReports = async (walletId) => {
     const transactions = result.data;
     const yearlyGroups = {};
 
-    transactions.forEach(txn => {
+    transactions.forEach((txn) => {
       const date = new Date(txn.timestamp);
       const year = date.getFullYear();
 
       if (!yearlyGroups[year]) {
         yearlyGroups[year] = {
           year,
-          transactions: []
+          transactions: [],
         };
       }
 
       yearlyGroups[year].transactions.push(txn);
     });
 
-    const reports = Object.keys(yearlyGroups).map(year => {
+    const reports = Object.keys(yearlyGroups).map((year) => {
       const group = yearlyGroups[year];
       const { start, end } = getYearRange(new Date(group.year, 0));
 
@@ -310,7 +346,7 @@ export const generateYearlyReports = async (walletId) => {
       let totalExpense = 0;
       let operationsCount = group.transactions.length;
 
-      group.transactions.forEach(txn => {
+      group.transactions.forEach((txn) => {
         totalAmount += txn.amount;
         if (txn.amount > 0) {
           totalIncome += txn.amount;
@@ -321,7 +357,7 @@ export const generateYearlyReports = async (walletId) => {
 
       return {
         id: `yearly_${year}`,
-        type: 'yearly',
+        type: "yearly",
         title: `تقرير السنة ${year}`,
         periodLabel: `${year}`,
         fromDate: start,
@@ -331,14 +367,14 @@ export const generateYearlyReports = async (walletId) => {
         totalIncome: parseFloat(totalIncome.toFixed(2)),
         totalExpense: parseFloat(totalExpense.toFixed(2)),
         fileSize: Math.floor(567 + Math.random() * 200),
-        year: group.year
+        year: group.year,
       };
     });
 
     reports.sort((a, b) => b.year - a.year);
     return { success: true, data: reports };
   } catch (error) {
-    console.error('Error generating yearly reports:', error);
+    console.error("Error generating yearly reports:", error);
     return { success: false, error: error.message };
   }
 };
@@ -351,12 +387,17 @@ export const generateYearlyReports = async (walletId) => {
  * @param {string} customTitle - Optional custom title for the report
  * @returns {Promise<Object>} Custom report
  */
-export const generateCustomReport = async (walletId, startDate, endDate, customTitle = null) => {
+export const generateCustomReport = async (
+  walletId,
+  startDate,
+  endDate,
+  customTitle = null
+) => {
   try {
     const result = await getWalletTransactions(walletId, {
       startDate,
       endDate,
-      limit: 10000
+      limit: 10000,
     });
 
     if (!result.success) {
@@ -369,7 +410,7 @@ export const generateCustomReport = async (walletId, startDate, endDate, customT
     let totalIncome = 0;
     let totalExpense = 0;
 
-    transactions.forEach(txn => {
+    transactions.forEach((txn) => {
       totalAmount += txn.amount;
       if (txn.amount > 0) {
         totalIncome += txn.amount;
@@ -380,7 +421,7 @@ export const generateCustomReport = async (walletId, startDate, endDate, customT
 
     const report = {
       id: `custom_${startDate}_${endDate}`,
-      type: 'custom',
+      type: "custom",
       title: customTitle || `تقرير مخصص`,
       periodLabel: formatDateRangeLabel(startDate, endDate),
       fromDate: startDate,
@@ -389,33 +430,209 @@ export const generateCustomReport = async (walletId, startDate, endDate, customT
       totalAmount: parseFloat(totalAmount.toFixed(2)),
       totalIncome: parseFloat(totalIncome.toFixed(2)),
       totalExpense: parseFloat(totalExpense.toFixed(2)),
-      fileSize: Math.floor(245 + Math.random() * 100)
+      fileSize: Math.floor(245 + Math.random() * 100),
     };
 
     return { success: true, data: report };
   } catch (error) {
-    console.error('Error generating custom report:', error);
+    console.error("Error generating custom report:", error);
     return { success: false, error: error.message };
   }
 };
 
 /**
- * Get all reports (monthly, quarterly, yearly)
+ * Generate report for a specific service
+ * @param {string} walletId - Wallet ID
+ * @param {string} serviceType - Service type (e.g., 'traffic', 'passports')
+ * @returns {Promise<Object>} Service report
+ */
+export const generateServiceReport = async (walletId, serviceType) => {
+  try {
+    // Get all transactions
+    const result = await getWalletTransactions(walletId, { limit: 10000 });
+
+    if (!result.success) {
+      return result;
+    }
+
+    const transactions = result.data;
+    const serviceInfo = GOVERNMENT_SERVICES_DATA[serviceType];
+
+    if (!serviceInfo) {
+      return { success: false, error: "Service not found" };
+    }
+
+    // Filter transactions for this service
+    // Check both serviceType and category
+    const serviceTransactions = transactions.filter((txn) => {
+      return (
+        txn.serviceType === serviceType ||
+        txn.category === serviceInfo.category ||
+        (txn.serviceSubType && txn.serviceSubType.startsWith(serviceType))
+      );
+    });
+
+    if (serviceTransactions.length === 0) {
+      return { success: true, data: null };
+    }
+
+    let totalAmount = 0;
+    let totalIncome = 0;
+    let totalExpense = 0;
+
+    serviceTransactions.forEach((txn) => {
+      totalAmount += txn.amount;
+      if (txn.amount > 0) {
+        totalIncome += txn.amount;
+      } else {
+        totalExpense += Math.abs(txn.amount);
+      }
+    });
+
+    // Get date range from transactions
+    const timestamps = serviceTransactions.map((t) => t.timestamp);
+    const fromDate = Math.min(...timestamps);
+    const toDate = Math.max(...timestamps);
+
+    const report = {
+      id: `service_${serviceType}`,
+      type: "service",
+      serviceType,
+      title: `تقرير ${serviceInfo.nameAr}`,
+      periodLabel: "الكل", // Or calculate based on range
+      fromDate,
+      toDate,
+      operationsCount: serviceTransactions.length,
+      totalAmount: parseFloat(totalAmount.toFixed(2)),
+      totalIncome: parseFloat(totalIncome.toFixed(2)),
+      totalExpense: parseFloat(totalExpense.toFixed(2)),
+      fileSize: Math.floor(150 + Math.random() * 100),
+      serviceInfo: {
+        nameAr: serviceInfo.nameAr,
+        nameEn: serviceInfo.nameEn,
+        icon: serviceInfo.icon,
+        category: serviceInfo.category,
+      },
+    };
+
+    return { success: true, data: report };
+  } catch (error) {
+    console.error(`Error generating report for ${serviceType}:`, error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Generate reports for all available services
+ * @param {string} walletId - Wallet ID
+ * @returns {Promise<Object>} Array of service reports
+ */
+export const generateAllServiceReports = async (walletId) => {
+  try {
+    const services = Object.keys(GOVERNMENT_SERVICES_DATA);
+    const reports = [];
+
+    // We can optimize this by fetching transactions once and then filtering
+    // But for now, let's reuse generateServiceReport or implement optimized logic here
+    // Optimized approach: Fetch once
+    const result = await getWalletTransactions(walletId, { limit: 10000 });
+
+    if (!result.success) {
+      return { success: true, data: [] };
+    }
+
+    const transactions = result.data;
+
+    services.forEach((serviceType) => {
+      const serviceInfo = GOVERNMENT_SERVICES_DATA[serviceType];
+      
+      const serviceTransactions = transactions.filter((txn) => {
+        return (
+          txn.serviceType === serviceType ||
+          txn.category === serviceInfo.category ||
+          (txn.serviceSubType && txn.serviceSubType.startsWith(serviceType))
+        );
+      });
+
+      if (serviceTransactions.length > 0) {
+        let totalAmount = 0;
+        let totalIncome = 0;
+        let totalExpense = 0;
+
+        serviceTransactions.forEach((txn) => {
+          totalAmount += txn.amount;
+          if (txn.amount > 0) {
+            totalIncome += txn.amount;
+          } else {
+            totalExpense += Math.abs(txn.amount);
+          }
+        });
+
+        const timestamps = serviceTransactions.map((t) => t.timestamp);
+        const fromDate = Math.min(...timestamps);
+        const toDate = Math.max(...timestamps);
+
+        reports.push({
+          id: `service_${serviceType}`,
+          type: "service",
+          serviceType,
+          title: `تقرير ${serviceInfo.nameAr}`,
+          periodLabel: "الكل",
+          fromDate,
+          toDate,
+          operationsCount: serviceTransactions.length,
+          totalAmount: parseFloat(totalAmount.toFixed(2)),
+          totalIncome: parseFloat(totalIncome.toFixed(2)),
+          totalExpense: parseFloat(totalExpense.toFixed(2)),
+          fileSize: Math.floor(150 + Math.random() * 100),
+          serviceInfo: {
+            nameAr: serviceInfo.nameAr,
+            nameEn: serviceInfo.nameEn,
+            icon: serviceInfo.icon,
+            category: serviceInfo.category,
+          },
+        });
+      }
+    });
+
+    return { success: true, data: reports };
+  } catch (error) {
+    console.error("Error generating all service reports:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get labels for all service types
+ * @returns {Object} Service type labels
+ */
+export const getServiceTypeLabels = () => {
+  const labels = {};
+  Object.keys(GOVERNMENT_SERVICES_DATA).forEach((key) => {
+    labels[key] = GOVERNMENT_SERVICES_DATA[key].nameAr;
+  });
+  return labels;
+};
+
+/**
+ * Get all reports (monthly, quarterly, yearly, services)
  * @param {string} walletId - Wallet ID
  * @returns {Promise<Object>} All reports combined
  */
 export const getAllReports = async (walletId) => {
   try {
-    const [monthlyResult, quarterlyResult, yearlyResult] = await Promise.all([
+    const [monthlyResult, quarterlyResult, yearlyResult, servicesResult] = await Promise.all([
       generateMonthlyReports(walletId),
       generateQuarterlyReports(walletId),
-      generateYearlyReports(walletId)
+      generateYearlyReports(walletId),
+      generateAllServiceReports(walletId),
     ]);
 
     const allReports = [
       ...(monthlyResult.success ? monthlyResult.data : []),
       ...(quarterlyResult.success ? quarterlyResult.data : []),
-      ...(yearlyResult.success ? yearlyResult.data : [])
+      ...(yearlyResult.success ? yearlyResult.data : []),
+      ...(servicesResult.success ? servicesResult.data : []),
     ];
 
     // Sort by date descending
@@ -423,7 +640,7 @@ export const getAllReports = async (walletId) => {
 
     return { success: true, data: allReports };
   } catch (error) {
-    console.error('Error getting all reports:', error);
+    console.error("Error getting all reports:", error);
     return { success: false, error: error.message };
   }
 };
@@ -435,11 +652,11 @@ export const getAllReports = async (walletId) => {
  * @returns {Array} Filtered reports
  */
 export const filterReports = (reports, filters = {}) => {
-  const { type = 'all', startDate = null, endDate = null } = filters;
+  const { type = "all", startDate = null, endDate = null } = filters;
 
-  return reports.filter(report => {
+  return reports.filter((report) => {
     // Filter by type
-    if (type !== 'all' && report.type !== type) {
+    if (type !== "all" && report.type !== type) {
       return false;
     }
 
@@ -463,11 +680,12 @@ export const filterReports = (reports, filters = {}) => {
  */
 export const getReportTypeLabel = (type) => {
   const labels = {
-    'all': 'الكل',
-    'monthly': 'شهري',
-    'quarterly': 'ربع سنوي',
-    'yearly': 'سنوي',
-    'custom': 'مخصص'
+    all: "الكل",
+    monthly: "شهري",
+    quarterly: "ربع سنوي",
+    yearly: "سنوي",
+    custom: "مخصص",
+    service: "خدمات",
   };
-  return labels[type] || 'الكل';
+  return labels[type] || "الكل";
 };

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
+import moment from "moment";
 import {
   UpcomingPayHeaderDetails,
   UpcomingPayNavBar,
@@ -35,6 +36,42 @@ import SvgIcons from "../../../common/components/SvgIcons";
 import { useUser } from "../../../store/hooks";
 
 /**
+ * Format date to Gregorian format with English month names
+ * @param {string|Date} date - Date string or Date object
+ * @returns {string} Formatted date in Gregorian (e.g., "25 December 2024")
+ */
+const formatGregorianDate = (date) => {
+  if (!date) return "";
+
+  const englishMonths = {
+    "01": "January",
+    "02": "February",
+    "03": "March",
+    "04": "April",
+    "05": "May",
+    "06": "June",
+    "07": "July",
+    "08": "August",
+    "09": "September",
+    10: "October",
+    11: "November",
+    12: "December",
+  };
+
+  const momentDate = moment(date);
+
+  if (!momentDate.isValid()) {
+    return date; // Return original if invalid
+  }
+
+  const day = momentDate.format("D");
+  const month = englishMonths[momentDate.format("MM")];
+  const year = momentDate.format("YYYY");
+
+  return `${day} ${month} ${year}`;
+};
+
+/**
  * Upcoming Payment Details Screen
  * Displays detailed information about a payment and provides payment actions
  *
@@ -50,6 +87,7 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
   const [walletData, setWalletData] = useState(null);
   const [existingScheduledBill, setExistingScheduledBill] = useState(null);
   const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState(null);
 
   // Handle case where no payment data is provided
   if (!payment) {
@@ -65,16 +103,23 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
       if (!user?.uid || !payment?.billData?.id) return;
 
       try {
-        const scheduledBills = await getScheduledBillsByBillId(user.uid, payment.billData.id);
+        const scheduledBills = await getScheduledBillsByBillId(
+          user.uid,
+          payment.billData.id
+        );
         // Filter for active scheduled bills only (not completed or cancelled)
-        const activeScheduledBills = scheduledBills.filter(sb => sb.status === 'scheduled');
+        const activeScheduledBills = scheduledBills.filter(
+          (sb) => sb.status === "scheduled"
+        );
 
         if (activeScheduledBills.length > 0) {
           setExistingScheduledBill(activeScheduledBills[0]);
           setIsScheduled(true);
+          setScheduledDate(activeScheduledBills[0].scheduledDate);
         } else {
           setExistingScheduledBill(null);
           setIsScheduled(false);
+          setScheduledDate(null);
         }
       } catch (error) {
         console.error("Error checking scheduled status:", error);
@@ -186,7 +231,10 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
 
       if (isScheduled && existingScheduledBill) {
         // Update existing scheduled bill
-        console.log("📅 Updating existing scheduled bill:", existingScheduledBill.id);
+        console.log(
+          "📅 Updating existing scheduled bill:",
+          existingScheduledBill.id
+        );
 
         await updateScheduledBill(user.uid, existingScheduledBill.id, {
           scheduledDate: scheduledDateTimestamp,
@@ -207,7 +255,10 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
           scheduledAmount: totalAmount,
         };
 
-        console.log("✅ Scheduled bill updated and bill marked as scheduled:", scheduledBill.id);
+        console.log(
+          "✅ Scheduled bill updated and bill marked as scheduled:",
+          scheduledBill.id
+        );
       } else {
         // Create new scheduled bill
         const scheduledBillData = {
@@ -241,7 +292,10 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
           { isScheduled: true }
         );
 
-        console.log("✅ Scheduled bill created and bill marked as scheduled:", scheduledBill.id);
+        console.log(
+          "✅ Scheduled bill created and bill marked as scheduled:",
+          scheduledBill.id
+        );
       }
 
       // Format date for display in success screen
@@ -322,7 +376,28 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
           payment={enrichedPayment}
           primaryColor={primaryColor}
           onBack={() => navigation.goBack()}
+          isScheduled={isScheduled}
+          scheduledDate={scheduledDate}
         />
+
+        {/* Scheduled Date Info Banner */}
+        {isScheduled && scheduledDate && (
+          <View className="mx-4 mb-4 bg-blue-50 border border-blue-200 rounded-2xl p-4">
+            <View className="flex-row items-center ">
+              <View className="flex-1">
+                <Text className="text-blue-900 font-bold text-sm mb-1 text-right">
+                  مجدولة للدفع التلقائي
+                </Text>
+                <Text className="text-blue-700 text-xs text-right">
+                  سيتم الدفع تلقائياً في {formatGregorianDate(scheduledDate)}
+                </Text>
+              </View>
+              <View className="w-10 h-10 bg-blue-100 rounded-full items-center justify-center ml-3">
+                <Feather name="clock" size={20} color="#3B82F6" />
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Warning Alert for urgent payments */}
         {/* {enrichedPayment.isUrgent && (
