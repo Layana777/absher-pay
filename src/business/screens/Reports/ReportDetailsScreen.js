@@ -38,11 +38,13 @@ const ReportDetailsScreen = ({ navigation, route }) => {
         let filteredTransactions = result.data.filter((txn) => txn.amount < 0);
 
         // If this is a service report, filter by service type
-        if (report.type === 'service' && report.serviceType) {
+        if (report.type === "service" && report.serviceType) {
           const serviceCategory = report.serviceInfo?.category;
           filteredTransactions = filteredTransactions.filter((txn) => {
-            return txn.serviceType === report.serviceType ||
-                   txn.category === serviceCategory;
+            return (
+              txn.serviceType === report.serviceType ||
+              txn.category === serviceCategory
+            );
           });
         }
 
@@ -122,13 +124,10 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           className="bg-white rounded-3xl p-5 mb-4"
           style={{ direction: "ltr" }}
         >
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg font-bold text-gray-900 text-right">
+          <View className="items-center mb-4">
+            <Text className="text-lg font-bold text-gray-900 text-left">
               ملخص التقرير
             </Text>
-            {report?.type === 'service' && report?.serviceInfo?.icon && (
-              <Text className="text-2xl">{report.serviceInfo.icon}</Text>
-            )}
           </View>
 
           <View className="mb-3">

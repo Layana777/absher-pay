@@ -5,6 +5,7 @@ import SvgIcons from "../../../../common/components/SvgIcons";
 import { generateReportPDF } from "../../../../common/services/PDFService";
 import { getTransactionsByDateRange } from "../../../../common/services/transactionService";
 import { formatGregorianDate } from "../../../../common/utils/dateUtils";
+import { getMinistryIconName } from "../../../../common/utils/ministryIconMapper";
 
 const ReportCard = ({
   report,
@@ -27,6 +28,15 @@ const ReportCard = ({
   };
 
   const typeStyle = getReportTypeStyle(report.type);
+
+  // Get ministry icon for service reports
+  const ministryIconName =
+    report.type === "service" && report.serviceType
+      ? getMinistryIconName(report.serviceType)
+      : null;
+
+  // Determine if we should use ministry icon or default icon
+  const useMinistryIcon = ministryIconName !== null;
 
   // Format date
   const formatDate = (timestamp) => {
@@ -99,9 +109,19 @@ const ReportCard = ({
         <View className="flex-row items-center flex-1">
           <View
             className="w-12 h-12 rounded-xl items-center justify-center mr-3"
-            style={{ backgroundColor: typeStyle.bgColor }}
+            style={{
+              backgroundColor: useMinistryIcon ? "#FFFFFF" : typeStyle.bgColor,
+            }}
           >
-            <Feather name={typeStyle.icon} size={24} color={typeStyle.color} />
+            {useMinistryIcon ? (
+              <SvgIcons name={ministryIconName} size={50} />
+            ) : (
+              <Feather
+                name={typeStyle.icon}
+                size={24}
+                color={typeStyle.color}
+              />
+            )}
           </View>
 
           <View className="flex-1 m-3">

@@ -102,32 +102,36 @@ const UpcomingPayDetailsScreen = ({ navigation, route }) => {
     const checkIfScheduled = async () => {
       if (!user?.uid || !payment?.billData?.id) return;
 
-      try {
-        const scheduledBills = await getScheduledBillsByBillId(
-          user.uid,
-          payment.billData.id
-        );
-        // Filter for active scheduled bills only (not completed or cancelled)
-        const activeScheduledBills = scheduledBills.filter(
-          (sb) => sb.status === "scheduled"
-        );
+      // Use the flag from the bill data as the primary source of truth
+      const isBillScheduled = payment?.billData?.isScheduled === true;
+      setIsScheduled(isBillScheduled);
 
-        if (activeScheduledBills.length > 0) {
-          setExistingScheduledBill(activeScheduledBills[0]);
-          setIsScheduled(true);
-          setScheduledDate(activeScheduledBills[0].scheduledDate);
-        } else {
-          setExistingScheduledBill(null);
-          setIsScheduled(false);
-          setScheduledDate(null);
+      if (isBillScheduled) {
+        try {
+          const scheduledBills = await getScheduledBillsByBillId(
+            user.uid,
+            payment.billData.id
+          );
+          // Filter for active scheduled bills only (not completed or cancelled)
+          const activeScheduledBills = scheduledBills.filter(
+            (sb) => sb.status === "scheduled"
+          );
+
+          if (activeScheduledBills.length > 0) {
+            setExistingScheduledBill(activeScheduledBills[0]);
+            setScheduledDate(activeScheduledBills[0].scheduledDate);
+          }
+        } catch (error) {
+          console.error("Error checking scheduled status:", error);
         }
-      } catch (error) {
-        console.error("Error checking scheduled status:", error);
+      } else {
+        setExistingScheduledBill(null);
+        setScheduledDate(null);
       }
     };
 
     checkIfScheduled();
-  }, [user?.uid, payment?.billData?.id]);
+  }, [user?.uid, payment?.billData?.id, payment?.billData?.IsScheduled]);
 
   // Extract bill data if available
   const billData = payment.billData || null;
