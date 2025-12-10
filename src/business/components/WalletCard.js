@@ -126,6 +126,7 @@ const WalletCard = ({ navigation, onTransferPress }) => {
             secondaryText="التقارير"
             size="small"
             onPrimaryPress={() => navigation.navigate("FinancialAnalysis")}
+            onSecondaryPress={() => navigation.navigate("FinancialReports", { primaryColor: "#0055aa" })}
           />
         </View>
       </View>

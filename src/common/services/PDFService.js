@@ -64,7 +64,7 @@ export const generateTransactionPDF = async (transaction) => {
   try {
     const logoBase64 = await loadLogoBase64();
     const html = createTransactionHTML(transaction, logoBase64);
-    
+
     const { uri } = await Print.printToFileAsync({
       html,
       base64: false,
@@ -81,6 +81,36 @@ export const generateTransactionPDF = async (transaction) => {
     }
   } catch (error) {
     console.error("Error generating Transaction PDF:", error);
+    Alert.alert("خطأ", "حدث خطأ أثناء إنشاء ملف PDF");
+  }
+};
+
+/**
+ * Generate and share a PDF for a financial report
+ * @param {Object} report - The report object
+ * @param {Array} transactions - Array of transactions for this report
+ */
+export const generateReportPDF = async (report, transactions) => {
+  try {
+    const logoBase64 = await loadLogoBase64();
+    const html = createReportHTML(report, transactions, logoBase64);
+
+    const { uri } = await Print.printToFileAsync({
+      html,
+      base64: false,
+    });
+
+    if (Platform.OS === "ios" || Platform.OS === "android") {
+      await Sharing.shareAsync(uri, {
+        UTI: ".pdf",
+        mimeType: "application/pdf",
+        dialogTitle: `${report.title} - تقرير مالي`,
+      });
+    } else {
+      Alert.alert("PDF Generated", `PDF saved to: ${uri}`);
+    }
+  } catch (error) {
+    console.error("Error generating Report PDF:", error);
     Alert.alert("خطأ", "حدث خطأ أثناء إنشاء ملف PDF");
   }
 };
@@ -481,6 +511,305 @@ const createTransactionHTML = (transaction, logoBase64) => {
           <span class="value">${getStatusLabel(status)}</span>
         </div>
         ${extraRows}
+      </div>
+
+      <div class="footer">
+        <p>تم إنشاء هذا المستند تلقائياً عبر تطبيق Absher Pay</p>
+        <p>${new Date().toLocaleString("en-US")}</p>
+      </div>
+    </body>
+    </html>
+  `;
+};
+
+/**
+ * Create HTML template for financial report
+ * @param {Object} report
+ * @param {Array} transactions
+ * @param {string} logoBase64
+ * @returns {string} HTML string
+ */
+const createReportHTML = (report, transactions, logoBase64) => {
+  const {
+    title,
+    periodLabel,
+    fromDate,
+    toDate,
+    operationsCount,
+    totalExpense,
+  } = report;
+
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleDateString("en-US", {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString("en-US", {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const logoImg = logoBase64 ? `<img src="${logoBase64}" class="logo-img" />` : '<div class="logo">Absher Pay</div>';
+
+  // Group transactions by date
+  const groupedTransactions = transactions.reduce((groups, txn) => {
+    const date = formatDate(txn.timestamp);
+    if (!groups[date]) {
+      groups[date] = [];
+    }
+    groups[date].push(txn);
+    return groups;
+  }, {});
+
+  // Generate transactions HTML
+  let transactionsHTML = '';
+  Object.keys(groupedTransactions).forEach((date) => {
+    transactionsHTML += `
+      <div class="date-header">${date}</div>
+    `;
+
+    groupedTransactions[date].forEach((txn) => {
+      const amount = Math.abs(txn.amount).toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+
+      const serviceName = txn.serviceName?.ar || txn.serviceName?.en || txn.descriptionAr || txn.descriptionEn;
+      const ministryName = txn.ministryName?.ar || txn.ministryName?.en || '';
+
+      transactionsHTML += `
+        <div class="transaction-item">
+          <div class="transaction-row">
+            <div>
+              <div class="transaction-desc">${serviceName}</div>
+              ${ministryName ? `<div class="transaction-ministry">${ministryName}</div>` : ''}
+              <div class="transaction-time">${formatTime(txn.timestamp)} • ${txn.referenceNumber}</div>
+            </div>
+            <div class="transaction-amount">-${amount} ر.س</div>
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  return `
+    <!DOCTYPE html>
+    <html lang="ar" dir="rtl">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Financial Report</title>
+      <style>
+        body {
+          font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+          padding: 40px;
+          color: #000;
+          direction: rtl;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 40px;
+          border-bottom: 2px solid #eee;
+          padding-bottom: 20px;
+        }
+        .logo-img {
+          height: 60px;
+          margin-bottom: 10px;
+        }
+        .logo {
+          font-size: 24px;
+          font-weight: bold;
+          color: #0055aa;
+          margin-bottom: 10px;
+        }
+        .title {
+          font-size: 20px;
+          margin-bottom: 5px;
+          font-weight: bold;
+        }
+        .subtitle {
+          color: #000;
+          font-size: 14px;
+        }
+        .summary-box {
+          background-color: #f9fafb;
+          border-radius: 8px;
+          padding: 20px;
+          margin-bottom: 30px;
+          border: 1px solid #e5e7eb;
+        }
+        .summary-title {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 20px;
+          text-align: center;
+        }
+        .summary-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+          border-bottom: 1px solid #eee;
+        }
+        .summary-row:last-child {
+          border-bottom: none;
+        }
+        .label {
+          font-weight: bold;
+          color: #000;
+        }
+        .value {
+          color: #000;
+          font-weight: 500;
+        }
+        .stats-container {
+          display: flex;
+          justify-content: space-around;
+          margin: 20px 0;
+        }
+        .stat-box {
+          text-align: center;
+          padding: 15px;
+          background-color: white;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+          flex: 1;
+          margin: 0 5px;
+        }
+        .stat-value {
+          font-size: 24px;
+          font-weight: bold;
+          color: #0055aa;
+        }
+        .stat-label {
+          font-size: 12px;
+          color: #666;
+          margin-top: 5px;
+        }
+        .transactions-section {
+          margin-top: 30px;
+        }
+        .section-title {
+          font-size: 18px;
+          font-weight: bold;
+          margin-bottom: 15px;
+          text-align: center;
+        }
+        .date-header {
+          background-color: #f3f4f6;
+          padding: 10px;
+          margin: 10px 0;
+          border-radius: 6px;
+          font-weight: bold;
+          font-size: 14px;
+        }
+        .transaction-item {
+          background-color: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+          padding: 12px;
+          margin-bottom: 8px;
+        }
+        .transaction-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .transaction-desc {
+          font-weight: bold;
+          font-size: 14px;
+          margin-bottom: 4px;
+        }
+        .transaction-ministry {
+          font-size: 12px;
+          color: #666;
+          margin-bottom: 4px;
+        }
+        .transaction-time {
+          font-size: 11px;
+          color: #666;
+        }
+        .transaction-amount {
+          font-size: 16px;
+          font-weight: bold;
+          color: #EF4444;
+        }
+        .total-box {
+          text-align: center;
+          margin-top: 30px;
+          padding: 20px;
+          background-color: #EF4444;
+          color: white;
+          border-radius: 8px;
+        }
+        .total-label {
+          font-size: 14px;
+          opacity: 0.9;
+          margin-bottom: 5px;
+        }
+        .total-value {
+          font-size: 32px;
+          font-weight: bold;
+        }
+        .footer {
+          margin-top: 50px;
+          text-align: center;
+          color: #000;
+          font-size: 12px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        ${logoImg}
+        <div class="title">تقرير مالي</div>
+        <div class="subtitle">${title}</div>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-title">ملخص التقرير</div>
+
+        <div class="summary-row">
+          <span class="label">الفترة الزمنية:</span>
+          <span class="value">${periodLabel}</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="label">من تاريخ:</span>
+          <span class="value">${formatDate(fromDate)}</span>
+        </div>
+
+        <div class="summary-row">
+          <span class="label">إلى تاريخ:</span>
+          <span class="value">${formatDate(toDate)}</span>
+        </div>
+
+        <div class="stats-container">
+          <div class="stat-box">
+            <div class="stat-value">${operationsCount || 0}</div>
+            <div class="stat-label">عدد العمليات</div>
+          </div>
+
+          <div class="stat-box">
+            <div class="stat-value" style="color: #EF4444;">${(totalExpense || 0).toLocaleString("en-US")}</div>
+            <div class="stat-label">إجمالي المدفوعات</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="transactions-section">
+        <div class="section-title">تفاصيل العمليات (${transactions.length})</div>
+        ${transactionsHTML}
+      </div>
+
+      <div class="total-box">
+        <div class="total-label">إجمالي المدفوعات</div>
+        <div class="total-value">${(totalExpense || 0).toLocaleString("en-US")} ر.س</div>
       </div>
 
       <div class="footer">
