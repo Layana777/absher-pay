@@ -62,7 +62,7 @@ const AnimatedTypingIndicator = () => {
           className="text-xs font-semibold mx-1"
           style={{ color: COLORS.businessPrimary }}
         >
-          AI Assistant
+          المساعدة الذكية للأعمال
         </Text>
       </View>
       <View

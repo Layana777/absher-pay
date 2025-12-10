@@ -716,14 +716,33 @@ export const generateRandomBill = (userId, walletId, isBusiness, serviceType, st
     throw new Error(`No sub-types available for ${serviceType} (${userType})`);
   }
 
-  // Pick random sub-type
-  const [subTypeKey, subType] = availableSubTypes[Math.floor(Math.random() * availableSubTypes.length)];
+  // Pick sub-type - for business traffic, only use traffic_violations
+  let subTypeKey, subType;
+  if (serviceType === 'traffic' && isBusiness) {
+    // Force traffic_violations for business traffic bills
+    const trafficViolationEntry = availableSubTypes.find(([key]) => key === 'traffic_violations');
+    if (trafficViolationEntry) {
+      [subTypeKey, subType] = trafficViolationEntry;
+    } else {
+      // Fallback to first available if traffic_violations not found
+      [subTypeKey, subType] = availableSubTypes[0];
+    }
+  } else {
+    // Pick random sub-type for other cases
+    [subTypeKey, subType] = availableSubTypes[Math.floor(Math.random() * availableSubTypes.length)];
+  }
 
   // Generate dates based on status
   const now = Date.now();
   let issueDate, dueDate, paymentDate = null, paidWith = null;
 
-  switch (status) {
+  // Traffic violations cannot be "upcoming" - they happen after incidents (always past dates)
+  let actualStatus = status;
+  if (serviceType === 'traffic' && status === 'upcoming') {
+    actualStatus = 'unpaid';
+  }
+
+  switch (actualStatus) {
     case 'paid':
       issueDate = now - (60 * 24 * 60 * 60 * 1000); // 60 days ago
       dueDate = now - (30 * 24 * 60 * 60 * 1000); // 30 days ago
@@ -781,7 +800,7 @@ export const generateRandomBill = (userId, walletId, isBusiness, serviceType, st
 
   // Calculate penalty if overdue
   let penaltyInfo = null;
-  if (status === 'overdue') {
+  if (actualStatus === 'overdue') {
     const daysOverdue = Math.abs(getDaysUntilDue({ dueDate }));
     const lateFee = subType.fee * 0.1; // 10% penalty
     penaltyInfo = {
@@ -806,7 +825,7 @@ export const generateRandomBill = (userId, walletId, isBusiness, serviceType, st
     ministryName: service.ministryName,
     amount: subType.fee,
     currency: 'SAR',
-    status,
+    status: actualStatus,
     issueDate,
     dueDate,
     paymentDate,

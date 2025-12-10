@@ -20,6 +20,7 @@ import {
 } from "../../../common/services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../../../common/services/firebase/governmentServicesData";
 import { getMinistryIconName } from "../../../common/utils/ministryIconMapper";
+import { getArabicStatus } from "../../../common/utils/billStatusUtils";
 
 const AllPaymentsScreen = ({ navigation, route }) => {
   const { primaryColor = "#0055aa" } = route.params || {};
@@ -37,7 +38,7 @@ const AllPaymentsScreen = ({ navigation, route }) => {
   const [totalDueAmount, setTotalDueAmount] = useState(0);
 
   // Status filters (Arabic)
-  const statusFilters = ["الكل", "مستحق", "متوقع", "متأخر"];
+  const statusFilters = ["الكل", "غير مدفوع", "قادم", "متأخر"];
 
   // Fixed service filters from GOVERNMENT_SERVICES_DATA (Arabic only)
   const serviceFilters = [
@@ -52,15 +53,6 @@ const AllPaymentsScreen = ({ navigation, route }) => {
       ([_, service]) => service.nameAr === arabicName
     );
     return entry ? entry[0] : null;
-  };
-
-  // Helper function to map Firebase status to Arabic
-  const getArabicStatus = (bill) => {
-    if (bill.status === "paid") return "مدفوع";
-    if (isBillOverdue(bill)) return "متأخر";
-    if (bill.status === "upcoming") return "متوقع";
-    if (bill.status === "unpaid") return "مستحق";
-    return "الكل";
   };
 
   // Helper function to get service name in Arabic
@@ -198,6 +190,9 @@ const AllPaymentsScreen = ({ navigation, route }) => {
   // فلترة المدفوعات حسب الفلاتر النشطة
   const filteredPayments = allBills
     .filter((bill) => {
+      // IMPORTANT: Exclude paid bills - this screen only shows unpaid/upcoming/overdue bills
+      if (bill.status === "paid") return false;
+
       // Filter by status
       if (activeStatusFilter !== "الكل") {
         const arabicStatus = getArabicStatus(bill);

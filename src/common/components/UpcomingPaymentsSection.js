@@ -8,6 +8,7 @@ import {
 } from "../services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../services/firebase/governmentServicesData";
 import { getMinistryIconName } from "../utils/ministryIconMapper";
+import { getArabicStatus } from "../utils/billStatusUtils";
 
 /**
  * Helper function to get service name in Arabic
@@ -53,16 +54,6 @@ const getServiceColor = (serviceType) => {
     commerce: { icon: "#F97316", bg: "bg-orange-50" },
   };
   return colorMap[serviceType] || { icon: "#6B7280", bg: "bg-gray-50" };
-};
-
-/**
- * Helper function to map Firebase status to Arabic
- */
-const getArabicStatus = (bill) => {
-  if (isBillOverdue(bill)) return "متأخر";
-  if (bill.status === "upcoming") return "متوقع";
-  if (bill.status === "unpaid") return "مستحق";
-  return "الكل";
 };
 
 /**

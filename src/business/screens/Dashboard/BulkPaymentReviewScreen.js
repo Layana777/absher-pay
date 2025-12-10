@@ -21,6 +21,7 @@ import {
 } from "../../../common/services/billsService";
 import GOVERNMENT_SERVICES_DATA from "../../../common/services/firebase/governmentServicesData";
 import { getMinistryIconName } from "../../../common/utils/ministryIconMapper";
+import { getArabicStatus } from "../../../common/utils/billStatusUtils";
 
 const BulkPaymentReviewScreen = ({ navigation, route }) => {
   const {
@@ -93,14 +94,6 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
       month: "2-digit",
       day: "2-digit",
     });
-  };
-
-  // Helper function to get Arabic status
-  const getArabicStatus = (bill) => {
-    if (isBillOverdue(bill)) return "متأخر";
-    if (bill.status === "upcoming") return "متوقع";
-    if (bill.status === "unpaid") return "مستحق";
-    return "الكل";
   };
 
   // Toggle bill selection
@@ -357,7 +350,7 @@ const BulkPaymentReviewScreen = ({ navigation, route }) => {
               const statusColor =
                 arabicStatus === "متأخر"
                   ? "#EF4444"
-                  : arabicStatus === "مستحق"
+                  : arabicStatus === "غير مدفوع"
                   ? "#F59E0B"
                   : "#6B7280";
 

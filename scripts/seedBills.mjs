@@ -316,13 +316,19 @@ const generateRandomBill = (
     .toString(36)
     .substring(7)}`;
 
+  // Determine service subtype - traffic violations for business traffic bills
+  let serviceSubType = `${serviceType}_sub`;
+  if (serviceType === "traffic") {
+    serviceSubType = "traffic_violations";
+  }
+
   return {
     id: billId,
     userId,
     walletId,
     isBusiness,
     serviceType,
-    serviceSubType: `${serviceType}_sub`,
+    serviceSubType,
     serviceName: {
       ar: service.ar,
       en: service.en,
