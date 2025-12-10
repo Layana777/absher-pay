@@ -124,11 +124,63 @@ const BankTransferScreen = ({ navigation }) => {
     loadBankAccounts();
   }, [user?.uid, dispatch]);
 
+  // SAR amount validation and formatting
+  const handleAmountChange = (text) => {
+    // Remove any non-numeric characters except decimal point
+    let cleanText = text.replace(/[^0-9.]/g, '');
+
+    // Prevent multiple decimal points
+    const decimalCount = (cleanText.match(/\./g) || []).length;
+    if (decimalCount > 1) {
+      cleanText = cleanText.slice(0, cleanText.lastIndexOf('.'));
+    }
+
+    // Limit to 2 decimal places
+    if (cleanText.includes('.')) {
+      const parts = cleanText.split('.');
+      if (parts[1] && parts[1].length > 2) {
+        cleanText = `${parts[0]}.${parts[1].slice(0, 2)}`;
+      }
+    }
+
+    // Prevent leading zeros (except for 0.xx format)
+    if (cleanText.length > 1 && cleanText[0] === '0' && cleanText[1] !== '.') {
+      cleanText = cleanText.replace(/^0+/, '');
+    }
+
+    // Validate maximum amount (shouldn't exceed balance)
+    const numericValue = parseFloat(cleanText);
+    if (!isNaN(numericValue) && numericValue > (businessWallet?.balance || 0)) {
+      return; // Don't update if exceeds balance
+    }
+
+    setAmount(cleanText);
+  };
+
   const handleQuickAmount = (value) => {
-    setAmount(value.toString());
+    // Validate quick amount against balance
+    if (value <= (businessWallet?.balance || 0)) {
+      setAmount(value.toString());
+    }
+  };
+
+  const isValidAmount = () => {
+    const numericAmount = parseFloat(amount);
+    return (
+      amount &&
+      !isNaN(numericAmount) &&
+      numericAmount > 0 &&
+      numericAmount >= 1 && // Minimum 1 SAR
+      numericAmount <= (businessWallet?.balance || 0)
+    );
   };
 
   const handleContinue = () => {
+    if (!isValidAmount()) {
+      alert('يرجى إدخال مبلغ صحيح (الحد الأدنى 1 ريال)');
+      return;
+    }
+
     if (linkedBank) {
       setShowConfirmModal(true);
     } else {
@@ -347,8 +399,8 @@ const BankTransferScreen = ({ navigation }) => {
                 className="text-gray-800 text-2xl font-bold text-center flex-1 mr-2"
                 style={{ fontSize: SIZES.fontSize.xxl }}
                 value={amount}
-                onChangeText={setAmount}
-                keyboardType="numeric"
+                onChangeText={handleAmountChange}
+                keyboardType="decimal-pad"
                 placeholder="0"
                 placeholderTextColor="#9ca3af"
               />
@@ -375,7 +427,7 @@ const BankTransferScreen = ({ navigation }) => {
             title="متابعة"
             onPress={handleContinue}
             variant="business-primary"
-            disabled={!amount || amount === "0"}
+            disabled={!isValidAmount()}
             className="w-full"
           />
         </View>
