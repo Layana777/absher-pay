@@ -33,6 +33,8 @@ import AllPaymentsScreen from "../screens/Dashboard/AllPaymentsScreen";
 import BulkPaymentReviewScreen from "../screens/Dashboard/BulkPaymentReviewScreen";
 import PaidBillsScreen from "../screens/Dashboard/PaidBillsScreen";
 import BillGeneratorScreen from "../screens/Settings/BillGeneratorScreen";
+import FinancialReportsScreen from "../screens/Reports/FinancialReportsScreen";
+import ReportDetailsScreen from "../screens/Reports/ReportDetailsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -234,6 +236,12 @@ const BusinessNavigator = () => {
 
       {/* Paid Bills Screen */}
       <Stack.Screen name="PaidBills" component={PaidBillsScreen} />
+
+      {/* Financial Reports Screen */}
+      <Stack.Screen name="FinancialReports" component={FinancialReportsScreen} />
+
+      {/* Report Details Screen */}
+      <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} />
 
       {/* Bill Generator Screen */}
       <Stack.Screen name="BillGenerator" component={BillGeneratorScreen} />
