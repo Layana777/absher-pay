@@ -25,6 +25,8 @@ import Justice from "../assets/icons/justice.svg";
 import Commerce from "../assets/icons/commerce.svg";
 import SARTGreen from "../assets/icons/SARTGreen.svg";
 import SARTred from "../assets/icons/SARTred.svg";
+import AI from "../assets/icons/ai.svg";
+
 const SvgIcons = ({ name, size, color, style }) => {
   switch (name) {
     case "wallet":
@@ -78,6 +80,8 @@ const SvgIcons = ({ name, size, color, style }) => {
       return <SARTGreen height={size} width={size} />;
     case "SARTred":
       return <SARTred height={size} width={size} />;
+    case "AI":
+      return <AI height={size} width={size} />;
 
     default:
       return null;

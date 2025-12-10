@@ -24,6 +24,9 @@ import {
   QuickStatsSection,
 } from "../../components/HomeContentSections";
 import ScheduledPaymentsSection from "../../../common/components/ScheduledPaymentsSection";
+import AIInsightsSection from "../../components/AIInsightsSection";
+import { getUserBills } from "../../../common/services/billsService";
+import { clearInsightsCache } from "../../../common/services/aiInsightsService";
 
 const BusinessHomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -76,6 +79,9 @@ const BusinessHomeScreen = ({ navigation }) => {
             await AsyncStorage.removeItem("authToken");
             await AsyncStorage.removeItem("userType");
 
+            // Clear AI insights cache
+            await clearInsightsCache();
+
             console.log("User logged out successfully");
             // RootNavigator will automatically switch to AuthNavigator
           } catch (error) {
@@ -110,6 +116,29 @@ const BusinessHomeScreen = ({ navigation }) => {
     navigation.navigate("ScheduledBills");
   };
 
+  // Handle AI insight card press (navigate to bill if actionable)
+  const handleInsightPress = async (billId) => {
+    try {
+      console.log("AI Insight pressed for bill:", billId);
+      // Fetch the bill data
+      const bills = await getUserBills(user?.uid);
+      const bill = bills.find((b) => b.id === billId);
+
+      if (bill) {
+        // Navigate to payment details with the bill
+        navigation.navigate("UpcomingPayDetails", {
+          payment: {
+            id: bill.id,
+            billData: bill,
+          },
+          primaryColor: "#0055aa",
+        });
+      }
+    } catch (error) {
+      console.error("Error navigating to bill from insight:", error);
+    }
+  };
+
   return (
     <View className="flex-1 bg-white" style={{ direction: "ltr" }}>
       <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
@@ -142,6 +171,8 @@ const BusinessHomeScreen = ({ navigation }) => {
           onTransferPress={() => navigation.navigate("BankTransfer")}
         />
 
+        {/* AI Insights Section */}
+
         {/* Home Content Sections - Reusable Components */}
         {/*
           Example with custom data:
@@ -167,6 +198,11 @@ const BusinessHomeScreen = ({ navigation }) => {
           userId={user?.uid}
           onViewAll={handleViewAllScheduledBills}
           onPaymentPress={handlePaymentPress}
+        />
+
+        <AIInsightsSection
+          userId={user?.uid}
+          onInsightPress={handleInsightPress}
         />
       </ScrollView>
     </View>
