@@ -8,6 +8,7 @@ import {
   Platform,
   TextInput as RNTextInput,
   StatusBar,
+  Keyboard,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
@@ -365,15 +366,16 @@ const AiBusinessChatScreen = ({ navigation }) => {
       />
       <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
           className="flex-1"
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 120 : 0}
         >
           <ScrollView
             ref={scrollViewRef}
             className="flex-1"
             contentContainerStyle={{ padding: 16 }}
             showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
           >
             <View
               className="bg-gradient-to-br rounded-2xl p-5 mb-5 shadow-lg"
@@ -581,6 +583,9 @@ const AiBusinessChatScreen = ({ navigation }) => {
                   style={{ color: COLORS.text }}
                   multiline
                   maxLength={500}
+                  onSubmitEditing={handleSend}
+                  blurOnSubmit={false}
+                  returnKeyType="send"
                 />
               </View>
             </View>
