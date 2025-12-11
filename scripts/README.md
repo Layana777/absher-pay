@@ -6,6 +6,45 @@ This directory contains seeding scripts for populating Firebase with test data f
 
 1. **seedUsers.mjs** - Creates test users in Firebase Authentication and Database
 2. **seedGovernmentServices.mjs** - Populates government services data in Firebase
+3. **seedBills.mjs** - Generates government bills for users and wallets
+4. **seedTransactions.mjs** - Creates transaction history for wallets
+
+---
+
+## Environment Setup
+
+### Prerequisites
+
+Before running any seeding scripts, you need to set up your environment variables:
+
+1. **Copy the environment example file**:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Add your Firebase credentials** to the `.env` file:
+   ```env
+   FIREBASE_API_KEY=your_api_key_here
+   FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   FIREBASE_DATABASE_URL=https://your_project.firebasedatabase.app
+   FIREBASE_PROJECT_ID=your_project_id
+   FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   FIREBASE_APP_ID=your_app_id
+   FIREBASE_MEASUREMENT_ID=your_measurement_id
+   ```
+
+3. **Install dependencies** (if not already installed):
+   ```bash
+   npm install
+   ```
+
+### Security Notes
+
+- **Never commit the `.env` file** to version control (it's already in `.gitignore`)
+- The `.env.example` file contains placeholder values and should be committed
+- All scripts will validate Firebase configuration before running
+- If environment variables are missing, scripts will exit with an error message
 
 ---
 
