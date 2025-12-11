@@ -2,7 +2,7 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { Text } from "react-native";
-import { SingleHomeScreen } from "../screens";
+import { SingleHomeScreen, UpcomingPayDetailsScreen } from "../screens";
 import { OtpVerificationScreen } from "../../common/screens";
 import {
   TopupAmountScreen,
@@ -15,6 +15,12 @@ import SingleBankTransferScreen from "../screens/transformation/SingleBankTransf
 import SingleTransferReceiptScreen from "../screens/transformation/SingleTransferReceiptScreen";
 import SingleAddBankAccountScreen from "../screens/transformation/SingleAddBankAccountScreen";
 import SingleBankAccountSuccessScreen from "../screens/transformation/SingleBankAccountSuccessScreen";
+import {
+  BillPaymentOtpScreen,
+  BillPaymentSuccessScreen,
+} from "../../business/screens/BillPayment";
+import ScheduleSuccessScreen from "../../business/screens/Dashboard/ScheduleSuccessScreen";
+import AllPaymentsScreen from "../../business/screens/Dashboard/AllPaymentsScreen";
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -161,6 +167,13 @@ const SingleNavigator = () => {
       {/* Standalone screens without tabs */}
       <Stack.Screen name="OtpVerification" component={OtpVerificationScreen} />
       <Stack.Screen name="SingleHome" component={SingleHomeScreen} />
+      <Stack.Screen name="UpcomingPayDetails" component={UpcomingPayDetailsScreen} />
+      <Stack.Screen name="AllPayments" component={AllPaymentsScreen} />
+
+      {/* Bill Payment Flow Screens */}
+      <Stack.Screen name="BillPaymentOtp" component={BillPaymentOtpScreen} />
+      <Stack.Screen name="BillPaymentSuccess" component={BillPaymentSuccessScreen} />
+      <Stack.Screen name="ScheduleSuccess" component={ScheduleSuccessScreen} />
 
       {/* Wallet Topup Flow Screens */}
       <Stack.Screen name="CardSelection" component={CardSelectionScreen} />

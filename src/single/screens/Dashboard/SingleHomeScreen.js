@@ -1,14 +1,70 @@
-import { View, ScrollView, StatusBar, TouchableOpacity, Text, Alert } from "react-native";
+import {
+  View,
+  ScrollView,
+  StatusBar,
+  TouchableOpacity,
+  Text,
+  Alert,
+  RefreshControl,
+} from "react-native";
+import React, { useState, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import { useDispatch } from "react-redux";
+import { useUser } from "../../../store/hooks";
 import { clearUser } from "../../../store/slices/userSlice";
-import { clearWallets } from "../../../store/slices/walletSlice";
-import { WalletCard } from "../../components";
+import { clearWallets, setWallets } from "../../../store/slices/walletSlice";
+import { getWalletsByUserId } from "../../../common/services/walletService";
+import { WalletCard, UpcomingPayments } from "../../components";
 import SvgIcons from "../../../common/components/SvgIcons";
+import { COLORS } from "../../../common/constants/colors";
 
 const SingleHomeScreen = ({ navigation }) => {
   const dispatch = useDispatch();
+
+  // Get user data from Redux
+  const user = useUser();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const onRefresh = useCallback(async () => {
+    if (!user?.uid) return;
+
+    setRefreshing(true);
+    try {
+      // 1. Fetch fresh wallet data
+      const wallets = await getWalletsByUserId(user.uid);
+
+      // 2. Update Redux store
+      dispatch(setWallets(wallets));
+
+      // 3. Force re-fetch of upcoming payments
+      setRefreshKey((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      Alert.alert("خطأ", "فشل تحديث البيانات");
+    } finally {
+      setRefreshing(false);
+    }
+  }, [user?.uid, dispatch]);
+
+  // Handle view all payments
+  const handleViewAllPayments = () => {
+    console.log("View all payments pressed");
+    navigation.navigate("AllPayments", {
+      primaryColor: COLORS.singlePrimary,
+    });
+  };
+
+  // Handle payment card press
+  const handlePaymentPress = (payment) => {
+    console.log("Payment pressed:", payment);
+    navigation.navigate("UpcomingPayDetails", {
+      payment,
+      primaryColor: COLORS.singlePrimary,
+    });
+  };
 
   // Handle logout
   const handleLogout = () => {
@@ -61,11 +117,28 @@ const SingleHomeScreen = ({ navigation }) => {
         <SvgIcons name={"AbsherWhite"} size={45} />
       </View>
 
-      <ScrollView className="flex-1 bg-gray-50">
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[COLORS.singlePrimary]}
+          />
+        }
+      >
         {/* Wallet Card Component */}
         <WalletCard
           navigation={navigation}
           onTransferPress={() => navigation.navigate("SingleBankTransfer")}
+        />
+
+        {/* Upcoming Payments Section */}
+        <UpcomingPayments
+          key={refreshKey}
+          userId={user?.uid}
+          onViewAll={handleViewAllPayments}
+          onPaymentPress={handlePaymentPress}
         />
       </ScrollView>
     </View>

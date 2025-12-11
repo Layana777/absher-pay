@@ -1,6 +1,8 @@
 // Export all customer-specific components
 export { default as WalletCard } from "./WalletCard";
 export { default as ActionButtons } from "./ActionButtons";
+export { default as UpcomingPayments } from "./UpcomingPayments";
+
 // export { default as CategoryCard } from './Home/CategoryCard';
 // export { default as FeaturedProduct } from './Home/FeaturedProduct';
 // export { default as Banner } from './Home/Banner';
