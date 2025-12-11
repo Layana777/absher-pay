@@ -6,6 +6,8 @@ This directory contains seeding scripts for populating Firebase with test data f
 
 1. **seedUsers.mjs** - Creates test users in Firebase Authentication and Database
 2. **seedGovernmentServices.mjs** - Populates government services data in Firebase
+3. **seedBills.mjs** - Generates government bills for specific users and wallets
+4. **seedTransactions.mjs** - Generates wallet transactions with historical data
 
 ---
 
@@ -770,3 +772,391 @@ Now you have a complete development environment with:
 - ✅ Realistic bills for testing
 - ✅ Multiple bill statuses
 - ✅ Ready to test payment flows!
+
+---
+
+# 4. Seed Wallet Transactions Script
+
+This script generates and populates test transactions in Firebase for specific wallets with realistic historical data spanning the past year.
+
+## Features
+
+- ✅ Accepts userId and walletId as command-line parameters
+- ✅ Generates realistic transaction history across past 12 months
+- ✅ Supports multiple transaction types (top_up, payment, transfers, etc.)
+- ✅ All dates are in the past or today (never future dates)
+- ✅ Maintains accurate balance tracking
+- ✅ Links payment transactions to existing bills
+- ✅ Distributes transactions realistically over time
+- ✅ Perfect for testing financial analysis features
+- ✅ Shows detailed statistics and summary
+
+## Prerequisites
+
+- Node.js installed (v14 or higher)
+- Firebase project configured
+- User and wallet must exist in Firebase
+- Internet connection
+
+## Usage
+
+### Basic Usage
+
+Generate 30 transactions for a wallet with 12 months of history:
+
+```bash
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890"
+```
+
+### With Options
+
+Generate custom number of transactions with specific types:
+
+```bash
+# Generate 50 transactions
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890" --count=50
+
+# Generate only specific transaction types
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890" --types="top_up,payment,cashback"
+
+# Generate 6 months of data with custom starting balance
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_business_7001234567" --months=6 --startBalance=10000
+```
+
+## Command-Line Options
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--userId` | **Yes** | - | Firebase user ID (UID) |
+| `--walletId` | **Yes** | - | Wallet ID (wallet_personal_* or wallet_business_*) |
+| `--count` | No | 30 | Number of transactions to generate |
+| `--types` | No | all | Comma-separated transaction types (see below) |
+| `--months` | No | 12 | Number of months back to generate data |
+| `--startBalance` | No | 5000 | Starting wallet balance for calculations (SAR) |
+
+## Available Transaction Types
+
+- **top_up**: Deposit money into wallet (mada, bank transfer, credit card)
+- **payment**: Pay for government services (passports, traffic, civil affairs, commerce)
+- **transfer_in**: Receive money from other users
+- **transfer_out**: Send money to other users
+- **withdrawal**: Withdraw money to bank account
+- **refund**: Refund from cancelled or returned services
+- **cashback**: Cashback rewards (1-5%)
+- **bonus**: Promotional bonuses, referral rewards
+
+## How It Works
+
+1. **Validates Parameters**: Checks that userId and walletId are provided
+2. **Fetches Wallet Data**: Retrieves wallet from Firebase
+3. **Fetches User Bills**: Gets paid bills for linking to payment transactions
+4. **Generates Timestamps**: Creates realistic date distribution across past months
+5. **Generates Transactions**: Creates varied transactions with proper balance tracking
+   - Maintains running balance (balanceBefore/balanceAfter)
+   - Ensures balance never goes negative (auto top-up if needed)
+   - Links payment transactions to actual bills when available
+6. **Seeds to Firebase**: Saves transactions to `transactions/{walletId}/{transactionId}`
+7. **Shows Summary**: Displays statistics including income/expense breakdown
+
+## Expected Output
+
+```
+🌱 Starting Wallet Transactions seeding process...
+======================================================================
+
+📊 CONFIGURATION
+======================================================================
+   User ID: abc123xyz
+   Wallet ID: wallet_personal_1234567890
+   Transactions to generate: 30
+   Time period: Past 12 months
+   Starting balance: 5000 SAR
+   Transaction types: top_up, payment, transfer_in, transfer_out, withdrawal, refund, cashback, bonus
+
+🔍 Fetching wallet data...
+   ✅ Wallet found: personal wallet
+
+🔍 Fetching user bills for payment linking...
+   ✅ Found 8 bills (5 paid bills for linking)
+
+🎲 Generating transactions...
+   ✅ Generated 30 transactions
+
+📋 TRANSACTION SUMMARY
+======================================================================
+   Total Transactions: 30
+   Total Income: 8,450.00 SAR
+   Total Expense: 4,200.00 SAR
+   Final Balance: 9,250.00 SAR
+   By Type:
+      - top_up: 5
+      - payment: 12
+      - transfer_in: 3
+      - transfer_out: 2
+      - withdrawal: 1
+      - refund: 2
+      - cashback: 3
+      - bonus: 2
+
+🌱 Seeding transactions to Firebase...
+
+   ✅ Transaction txn_2024_12345_1234567890 created (top_up)
+   ✅ Transaction txn_2024_23456_1234567891 created (payment)
+   ✅ Transaction txn_2024_34567_1234567892 created (cashback)
+   ...
+
+======================================================================
+📈 SEEDING SUMMARY
+======================================================================
+✅ Seeded: 30
+❌ Failed: 0
+📊 Total: 30
+======================================================================
+
+✨ Transactions successfully seeded to Firebase!
+🔍 Check Firebase Console to verify the data.
+📂 Path: transactions/wallet_personal_1234567890
+```
+
+## Transaction Data Structure
+
+Each transaction includes:
+
+```javascript
+{
+  id: "txn_2024_12345_1234567890",
+  walletId: "wallet_personal_1234567890",
+  userId: "abc123xyz",
+  type: "payment",                    // Transaction type
+  category: "government_service",      // Transaction category
+  amount: -300.00,                     // Negative for expense, positive for income
+  balanceBefore: 5000.00,
+  balanceAfter: 4700.00,
+  timestamp: 1672531200000,            // Always in the past
+  createdAt: 1672531200000,
+  status: "completed",
+  referenceNumber: "GOV-2024-1234",
+  descriptionAr: "دفع تجديد جواز السفر",
+  descriptionEn: "Payment for Renew Passport",
+
+  // Type-specific fields
+  serviceType: "passports",            // For payments
+  ministry: "MOI",                     // For payments
+  linkedBillIds: ["bill_123"],         // For payments
+  paymentMethod: "mada",               // For top-ups
+  fromUserName: "محمد العتيبي",       // For transfers
+  cashbackRate: 2,                     // For cashback
+  // ... and more
+}
+```
+
+## Date Distribution
+
+Transactions are distributed realistically across the time period:
+
+- **Recent activity**: More transactions in the past 1-2 months
+- **Historical data**: Scattered transactions throughout the year
+- **All dates in past**: No future dates, ensuring accurate analysis
+- **Chronological order**: Timestamps sorted from oldest to newest
+- **Balance tracking**: Each transaction correctly tracks balance changes
+
+## Example Workflows
+
+### 1. Generate One Year of Transaction History
+
+```bash
+# Create comprehensive transaction history
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890" --count=100 --months=12
+```
+
+### 2. Test Financial Analysis with Recent Data
+
+```bash
+# Generate 6 months of data for analysis testing
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890" --count=60 --months=6
+```
+
+### 3. Generate Only Payment Transactions
+
+```bash
+# Test payment analysis features
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890" --count=20 --types="payment"
+```
+
+### 4. Business Wallet with High Volume
+
+```bash
+# Business wallet with more transactions
+node scripts/seedTransactions.mjs --userId="xyz789abc" --walletId="wallet_business_7001234567" --count=200 --startBalance=50000
+```
+
+### 5. Complete Setup for a User
+
+```bash
+# First, create bills (some paid)
+node scripts/seedBills.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890" --count=15 --statuses="paid,unpaid,overdue"
+
+# Then, generate transactions (will link to paid bills)
+node scripts/seedTransactions.mjs --userId="abc123xyz" --walletId="wallet_personal_1234567890" --count=50
+```
+
+## Transaction Type Distribution
+
+The script uses realistic weights for transaction distribution:
+
+- **Payment**: 35% - Most common (government services)
+- **Top-up**: 15% - Regular deposits
+- **Cashback**: 10% - Rewards for payments
+- **Bonus**: 10% - Promotional rewards
+- **Transfer In**: 10% - Receiving money
+- **Transfer Out**: 10% - Sending money
+- **Withdrawal**: 5% - Less frequent
+- **Refund**: 5% - Occasional
+
+## Verifying Seeded Transactions
+
+### Firebase Console
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Navigate to **Realtime Database**
+3. Expand `transactions → {walletId}`
+4. Verify transactions are present with correct timestamps
+
+### In the App
+
+Use the transaction service to fetch transactions:
+
+```javascript
+import { getWalletTransactions, getTransactionStats } from '../services/transactionService';
+
+// Get all transactions
+const result = await getWalletTransactions(walletId, { limit: 50 });
+const transactions = result.data;
+
+// Get statistics
+const stats = await getTransactionStats(walletId);
+console.log(stats.data); // { totalIncome, totalExpense, byType, byCategory }
+
+// Get transactions by date range
+const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+const recent = await getTransactionsByDateRange(walletId, monthAgo, Date.now());
+```
+
+## Testing Financial Analysis
+
+This script is perfect for testing analysis features:
+
+```javascript
+import { getFinancialAnalysis } from '../services/transactionService';
+
+// Get analysis for past year
+const now = Date.now();
+const yearAgo = now - 365 * 24 * 60 * 60 * 1000;
+const analysis = await getFinancialAnalysis(walletId, yearAgo, now);
+
+console.log(analysis.data);
+// {
+//   categories: [
+//     { serviceType: "traffic", amount: 1500, percentage: 35.7, count: 5 },
+//     { serviceType: "passports", amount: 900, percentage: 21.4, count: 3 },
+//     ...
+//   ],
+//   metrics: {
+//     monthlySpending: 450.00,
+//     yearlySpending: 4200.00,
+//     monthlyAverage: 350.00,
+//     totalTransactions: 30
+//   }
+// }
+```
+
+## Balance Management
+
+The script intelligently manages wallet balance:
+
+- **Tracks balance**: Each transaction updates balanceBefore/balanceAfter
+- **Prevents negatives**: If balance would go negative, auto-adds a top-up
+- **Realistic patterns**: Alternates between deposits and expenses
+- **Accurate totals**: Final balance = starting balance + income - expenses
+
+## Troubleshooting
+
+### Error: "Wallet not found"
+
+**Cause**: The wallet ID doesn't exist in Firebase
+
+**Solution**:
+1. Check wallet ID format: `wallet_personal_*` or `wallet_business_*`
+2. Verify wallet exists in Firebase Console
+3. Make sure user has wallets created (run seed users script first)
+
+### Error: "Missing required parameters"
+
+**Cause**: userId or walletId not provided
+
+**Solution**:
+```bash
+node scripts/seedTransactions.mjs --userId="YOUR_ID" --walletId="YOUR_WALLET_ID"
+```
+
+### Transactions Not Showing Up
+
+**Check**:
+1. Firebase Console → Realtime Database → transactions → {walletId}
+2. Correct wallet ID path
+3. Transactions have valid structure with timestamps in the past
+4. No console errors during seeding
+
+### Negative Balance Issues
+
+If you see negative balances:
+1. Increase `--startBalance` to a higher value
+2. Reduce `--count` for fewer transactions
+3. The script auto-adds top-ups to prevent negatives
+
+### Dates Are Not Historical
+
+All dates are guaranteed to be in the past:
+- Generated using `generatePastDate(monthsBack)` function
+- Maximum date is current timestamp (`Date.now()`)
+- Distributed evenly across the specified months
+
+## Related Documentation
+
+For more details, see:
+- [Transaction Service](../src/common/services/transactionService.js)
+- [Financial Analysis Guide](../docs/FINANCIAL_ANALYSIS.md)
+- [Bills Service](../src/common/services/billsService.js)
+
+---
+
+## Complete Development Setup
+
+To set up a full development environment with users, services, bills, and transactions:
+
+```bash
+# Step 1: Create test users
+node scripts/seedUsers.mjs
+
+# Step 2: Populate government services
+node scripts/seedGovernmentServices.mjs
+
+# Step 3: Generate bills for users
+node scripts/seedBills.mjs --userId="USER_ID_1" --walletId="wallet_personal_1234567890" --count=15 --statuses="paid,unpaid,overdue"
+
+# Step 4: Generate transaction history
+node scripts/seedTransactions.mjs --userId="USER_ID_1" --walletId="wallet_personal_1234567890" --count=100 --months=12
+
+# Repeat for business wallet
+node scripts/seedBills.mjs --userId="USER_ID_2" --walletId="wallet_business_7001234567" --count=20
+node scripts/seedTransactions.mjs --userId="USER_ID_2" --walletId="wallet_business_7001234567" --count=150 --startBalance=50000
+```
+
+Now you have a complete development environment with:
+- ✅ Test users (personal and business)
+- ✅ Government services catalog
+- ✅ Realistic bills (paid, unpaid, overdue)
+- ✅ Complete transaction history (past 12 months)
+- ✅ Accurate balance tracking
+- ✅ Perfect data for testing financial analysis
+- ✅ Ready to test all payment and analytics features!
