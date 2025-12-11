@@ -52,6 +52,7 @@ const formatGregorianDate = (date) => {
  * @param {string} payment.iconBgColor - Icon background color
  * @param {string} payment.ministryIconName - Ministry icon name for SvgIcons
  * @param {boolean} payment.isUrgent - Whether payment is urgent
+ * @param {boolean} payment.isScheduled - Whether payment is scheduled
  * @param {string} payment.status - Payment status (e.g., "مدفوع", "قيد الانتظار", "متأخر")
  * @param {string} payment.statusColor - Status badge color (e.g., "bg-green-500", "bg-yellow-500")
  * @param {string} payment.dueDate - Due date or payment date in Gregorian format (e.g., "25 ديسمبر 2024")
@@ -68,6 +69,7 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
     iconBgColor = "bg-blue-50",
     ministryIconName = "MOI",
     isUrgent = false,
+    isScheduled = false,
     status,
     statusColor = "bg-blue-500",
     dueDate,
@@ -107,13 +109,8 @@ const UpcomingPaymentCard = ({ payment, onPress }) => {
         className="flex-row items-center justify-between"
         style={{ direction: "ltr" }}
       >
-        {/* Left side: Status badges */}
+        {/* Left side: Status badge */}
         <View className="flex-row items-center gap-2">
-          {isUrgent && (
-            <View className="bg-red-500 px-3 py-1 rounded-lg items-center justify-center">
-              <Text className="text-white text-xs font-bold">عاجل</Text>
-            </View>
-          )}
           {status && (
             <View
               className={`${statusColor} px-3 py-1 rounded-lg items-center justify-center`}

@@ -14,6 +14,7 @@ import * as Clipboard from "expo-clipboard";
 import CustomHeader from "../../../common/components/CustomHeader";
 import SvgIcons from "../../../common/components/SvgIcons";
 import { generateTransactionPDF } from "../../../common/services/PDFService";
+import { formatAmount } from "../../../common/utils";
 
 // Constants
 const PRIMARY_COLOR = "#0055aa";
@@ -473,7 +474,7 @@ const TransactionDetailsScreen = ({ navigation, route }) => {
             {/* Merchant/Description (for payment transactions) */}
             {transaction.descriptionEn && (
               <DetailRow
-                label="اسم التاجر"
+                label="نوع العملية"
                 value={transaction.descriptionEn}
                 icon="briefcase"
               />
@@ -483,7 +484,7 @@ const TransactionDetailsScreen = ({ navigation, route }) => {
             {transaction.balanceBefore !== undefined && (
               <DetailRow
                 label="الرصيد قبل"
-                value={`${transaction.balanceBefore.toFixed(2)} ريال`}
+                value={`${formatAmount(transaction.balanceBefore)} ريال`}
                 icon="trending-down"
               />
             )}
@@ -492,7 +493,7 @@ const TransactionDetailsScreen = ({ navigation, route }) => {
             {transaction.balanceAfter !== undefined && (
               <DetailRow
                 label="الرصيد بعد"
-                value={`${transaction.balanceAfter.toFixed(2)} ريال`}
+                value={`${formatAmount(transaction.balanceAfter)} ريال`}
                 icon="trending-up"
               />
             )}

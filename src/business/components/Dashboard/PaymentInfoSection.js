@@ -44,15 +44,20 @@ const PaymentInfoSection = ({ payment, primaryColor = "#0055aa" }) => {
     billData.additionalInfo?.employeeCount ||
     billData.additionalInfo?.employees?.length;
 
-  // Status text mapping
+  // Status text mapping - using Arabic keys
   const statusMap = {
+    "مدفوع": { text: "مدفوع", color: "#10B981" },
+    "غير مدفوع": { text: "غير مدفوع", color: "#F59E0B" },
+    "متأخر": { text: "متأخر", color: "#EF4444" },
+    "قادم": { text: "قادم", color: "#3B82F6" },
+    // Fallback for English keys (backward compatibility)
     paid: { text: "مدفوع", color: "#10B981" },
     unpaid: { text: "غير مدفوع", color: "#F59E0B" },
     overdue: { text: "متأخر", color: "#EF4444" },
-    upcoming: { text: "قادم", color: "#6366F1" },
+    upcoming: { text: "قادم", color: "#3B82F6" },
   };
 
-  const statusInfo = statusMap[status] || statusMap.unpaid;
+  const statusInfo = statusMap[status] || statusMap["غير مدفوع"];
 
   return (
     <View

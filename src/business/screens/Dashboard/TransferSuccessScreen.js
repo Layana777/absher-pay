@@ -7,6 +7,7 @@ import CustomHeader from "../../../common/components/CustomHeader";
 import { useBusinessWallet } from "../../../store/hooks";
 import SvgIcons from "../../../common/components/SvgIcons";
 import { formatAmount } from "../../../common/utils";
+import { generateTransactionPDF } from "../../../common/services/PDFService";
 
 const TransferSuccessScreen = ({ navigation, route }) => {
   const { amount, bankName, iban, transactionId, referenceNumber } = route?.params || {};
@@ -20,6 +21,32 @@ const TransferSuccessScreen = ({ navigation, route }) => {
         routes: [{ name: "BusinessTabs" }],
       })
     );
+  };
+
+  const handleShare = async () => {
+    try {
+      // Construct transaction object for PDF
+      const transaction = {
+        id: transactionId,
+        type: "transfer_out",
+        amount: -Math.abs(parseFloat(amount)), // Negative for transfer out
+        timestamp: new Date().toISOString(),
+        status: "completed",
+        referenceNumber: referenceNumber,
+        descriptionAr: `تحويل بنكي إلى ${bankName}`,
+        descriptionEn: `Bank Transfer to ${bankName}`,
+        balanceAfter: businessWallet?.balance,
+        // Add bank transfer specific details
+        bankTransferDetails: {
+          bankName: bankName,
+          iban: iban,
+        },
+      };
+
+      await generateTransactionPDF(transaction);
+    } catch (error) {
+      console.error("Share error:", error);
+    }
   };
 
   const balance = businessWallet?.balance
@@ -120,7 +147,7 @@ const TransferSuccessScreen = ({ navigation, route }) => {
         </View>
 
         {/* Buttons */}
-        <View className="w-full">
+        <View className="w-full space-y-3">
           {/* Go to Dashboard Button */}
           <Button
             title="العودة للرئيسية"
@@ -128,6 +155,19 @@ const TransferSuccessScreen = ({ navigation, route }) => {
             variant="business-primary"
             className="w-full"
           />
+
+          {/* Share/Download PDF Button */}
+          <TouchableOpacity
+            onPress={handleShare}
+            className="rounded-2xl py-4 border-2 border-[#0055aa]"
+          >
+            <View className="flex-row items-center justify-center">
+              <Feather name="file-text" size={20} color="#0055aa" />
+              <Text className="text-[#0055aa] text-center text-base font-bold ml-2">
+                تحميل الإيصال PDF
+              </Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     </View>

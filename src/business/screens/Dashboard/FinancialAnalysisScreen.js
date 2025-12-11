@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Modal,
   ActivityIndicator,
+  Share,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import CustomHeader from "../../../common/components/CustomHeader";
@@ -127,6 +128,37 @@ const FinancialAnalysisScreen = ({ navigation }) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
+  };
+
+  const handleShare = async () => {
+    try {
+      // Construct financial analysis report text
+      const dateRangeText = `الفترة: من ${formatDate(dateRange.fromDate)} إلى ${formatDate(dateRange.toDate)}`;
+
+      let analysisText = `📊 التحليلات المالية\n\n${dateRangeText}\n\n`;
+
+      // Add metrics
+      analysisText += `📈 الإحصائيات الرئيسية:\n`;
+      analysisText += `• الإنفاق الشهري: ${metrics.monthlySpending.toLocaleString()} ريال\n`;
+      analysisText += `• الإنفاق السنوي: ${metrics.yearlySpending.toLocaleString()} ريال\n`;
+      analysisText += `• المتوسط الشهري: ${metrics.monthlyAverage.toLocaleString()} ريال\n`;
+      analysisText += `• عدد المعاملات: ${metrics.totalTransactions} معاملة\n\n`;
+
+      // Add categories breakdown
+      if (categories.length > 0) {
+        analysisText += `📋 التصنيف حسب الفئات:\n`;
+        categories.forEach((category) => {
+          analysisText += `• ${category.name}: ${category.amount.toLocaleString()} ريال (${category.percentage}%)\n`;
+        });
+      }
+
+      await Share.share({
+        message: analysisText,
+        title: "التحليلات المالية - AbsherPay",
+      });
+    } catch (error) {
+      console.error("Error sharing financial analysis:", error);
+    }
   };
 
   return (
@@ -288,7 +320,7 @@ const FinancialAnalysisScreen = ({ navigation }) => {
 
         {/* Financial Insights */}
         {!loading && categories.length > 0 && (
-          <View className="bg-purple-50 rounded-2xl p-5 mx-6 mt-6 mb-8" style={{direction: "rtl"}}>
+          <View className="bg-purple-50 rounded-2xl p-5 mx-6 mt-6 mb-6" style={{direction: "rtl"}}>
             <View className="flex-row items-center justify-between mb-4" style={{direction: "rtl"}}>
               <Text className="text-purple-900 text-base font-bold">
                 رؤى مالية
@@ -309,6 +341,21 @@ const FinancialAnalysisScreen = ({ navigation }) => {
                 • إجمالي المعاملات: {metrics.totalTransactions} معاملة
               </Text>
             </View>
+          </View>
+        )}
+
+        {/* Share Button */}
+        {!loading && categories.length > 0 && (
+          <View className="px-6 mb-8">
+            <TouchableOpacity
+              onPress={handleShare}
+              className="bg-white rounded-2xl py-4 px-6 flex-row items-center justify-center border-2 border-[#0055aa]"
+            >
+              <Feather name="share-2" size={20} color="#0055aa" />
+              <Text className="text-[#0055aa] text-base font-bold ml-2">
+                مشاركة التحليلات
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
       </ScrollView>

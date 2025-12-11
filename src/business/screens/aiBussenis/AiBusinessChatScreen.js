@@ -383,10 +383,9 @@ const AiBusinessChatScreen = ({ navigation }) => {
               }}
             >
               <View
-                className="flex-row items-end mb-4"
+                className="flex-row items-center mb-4"
                 style={{
                   direction: "ltr",
-                  backgroundColor: "rgba(255,255,255,0.2)",
                 }}
               >
                 <View className="flex-1 items-center">
@@ -557,7 +556,7 @@ const AiBusinessChatScreen = ({ navigation }) => {
               ))}
             </ScrollView>
 
-            <View className="flex-row items-center">
+            <View className="flex-row items-center mb-5">
               <TouchableOpacity
                 onPress={handleSend}
                 disabled={!message.trim() || isLoadingAI}
