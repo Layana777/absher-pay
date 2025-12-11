@@ -47,7 +47,6 @@ const PASSWORD = "1122334455"; // Same password for all users
 // You can add/modify national IDs here
 const USERS = [
   { nationalId: "1102673538", isBusiness: false },
-  
 
   // Add more users here as needed
 ];
