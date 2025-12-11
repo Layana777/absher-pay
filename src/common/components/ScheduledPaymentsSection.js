@@ -109,7 +109,7 @@ const ScheduledPaymentsSection = ({
   userId,
   onViewAll,
   onPaymentPress,
-  title = "الدفعات المجدولة",
+  title = "المدفوعات المجدولة",
   showViewAll = true,
 }) => {
   const [scheduledPayments, setScheduledPayments] = useState([]);
