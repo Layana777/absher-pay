@@ -7,6 +7,7 @@ import {
   Modal,
   ActivityIndicator,
   Share,
+  StatusBar,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import * as Print from "expo-print";
@@ -343,19 +344,27 @@ const FinancialAnalysisScreen = ({ navigation }) => {
 
   return (
     <View className="flex-1 bg-gray-50" style={{ direction: "ltr" }}>
-      <CustomHeader
-        title="التحليلات المالية"
-        showBackButton={false}
-        backgroundColor="#0055aa"
-        textColor="#FFFFFF"
-        statusBarStyle="light-content"
-        statusBarBackgroundColor="#0055aa"
-        rightComponent={
-          <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
-            <Feather name="arrow-left" size={24} color="#FFFFFF" />
-          </TouchableOpacity>
-        }
-      />
+      <StatusBar barStyle="light-content" backgroundColor="#0055aa" />
+      <View style={{ backgroundColor: "#0055aa" }}>
+        <View style={{ backgroundColor: "#0055aa", paddingTop: 40 }}>
+          <View className="flex-row items-center justify-between px-4 py-4">
+            {/* Left - Back Button */}
+            <TouchableOpacity onPress={() => navigation.goBack()} className="p-2">
+              <Feather name="arrow-left" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+
+            {/* Center - Title */}
+            <Text className="text-lg font-semibold" style={{ color: "#FFFFFF" }}>
+              التحليلات المالية
+            </Text>
+
+            {/* Right - Share Button */}
+            <TouchableOpacity onPress={handleShare} className="p-2">
+              <Feather name="share-2" size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Date Range Selector */}
@@ -539,20 +548,6 @@ const FinancialAnalysisScreen = ({ navigation }) => {
           </View>
         )}
 
-        {/* Share Button */}
-        {!loading && categories.length > 0 && (
-          <View className="px-6 mb-8">
-            <TouchableOpacity
-              onPress={handleShare}
-              className="bg-white rounded-2xl py-4 px-6 flex-row items-center justify-center border-2 border-[#0055aa]"
-            >
-              <Feather name="share-2" size={20} color="#0055aa" />
-              <Text className="text-[#0055aa] text-base font-bold ml-2">
-                مشاركة التحليلات
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
       </ScrollView>
 
       {/* From Date Picker Modal */}
