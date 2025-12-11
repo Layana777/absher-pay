@@ -4,7 +4,7 @@
     "slug": "absher-pay",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./src/common/assets/icons/logo-blue1.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
