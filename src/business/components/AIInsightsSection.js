@@ -28,7 +28,13 @@ const AIInsightsSection = ({ userId, onInsightPress, title = "رؤى ذكية" }
     try {
       setLoading(true);
       const data = await getAIInsights(userId);
-      setInsights(data || []);
+
+      // Only show if we have real insights (not empty or "no data" messages)
+      if (data && data.length > 0) {
+        setInsights(data);
+      } else {
+        setInsights([]);
+      }
     } catch (error) {
       console.error("Error fetching AI insights:", error);
       setInsights([]);
@@ -89,6 +95,11 @@ const AIInsightsSection = ({ userId, onInsightPress, title = "رؤى ذكية" }
       onInsightPress(insight.billId);
     }
   };
+
+  // Don't render anything if no insights and not loading
+  if (!loading && insights.length === 0) {
+    return null;
+  }
 
   return (
     <View className="px-5 mb-6" style={{ direction: "rtl" }}>
@@ -181,14 +192,6 @@ const AIInsightsSection = ({ userId, onInsightPress, title = "رؤى ذكية" }
           );
         })}
 
-      {/* Empty State */}
-      {!loading && insights.length === 0 && (
-        <View className="py-8 items-center">
-          <Text className="text-gray-500 text-center">
-            لا توجد نصائح متاحة حالياً
-          </Text>
-        </View>
-      )}
     </View>
   );
 };

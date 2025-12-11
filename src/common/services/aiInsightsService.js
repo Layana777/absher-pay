@@ -258,29 +258,49 @@ export const prepareFinancialContext = async (userId) => {
   try {
     console.log("📊 AI Insights: Preparing financial context...");
 
-    // Fetch all financial data
-    const [bills, wallets] = await Promise.all([
-      getUserBills(userId),
-      getWalletsByUserId(userId),
+    // Fetch all financial data with null safety
+    const [billsResult, walletsResult] = await Promise.all([
+      getUserBills(userId).catch(() => []),
+      getWalletsByUserId(userId).catch(() => ({})),
     ]);
 
+    const bills = billsResult || [];
+    const wallets = walletsResult || {};
     const wallet = wallets.business || wallets.personal || {};
 
     // Fetch transactions if wallet exists
     let transactions = [];
     let stats = {
-      totalIncome: 0,
-      totalExpense: 0,
-      netAmount: 0,
-      totalTransactions: 0,
+      currentMonth: {
+        totalIncome: 0,
+        totalExpense: 0,
+        netAmount: 0,
+        totalTransactions: 0,
+      },
+      previousMonth: {
+        totalIncome: 0,
+        totalExpense: 0,
+        netAmount: 0,
+        totalTransactions: 0,
+      },
+      comparison: {
+        expenseChange: 0,
+        incomeChange: 0,
+        expenseIncreased: false,
+        incomeIncreased: false,
+      },
+      topSpendingMinistry: null,
+      averageExpensePerTransaction: 0,
     };
 
     if (wallet.id) {
       const transactionsResult = await getWalletTransactions(wallet.id, {
         limit: 100,
-      });
+      }).catch(() => ({ data: [] }));
       transactions = transactionsResult?.data || [];
-      stats = calculateTransactionStats(transactions);
+      if (transactions.length > 0) {
+        stats = calculateTransactionStats(transactions);
+      }
     }
 
     // Filter bills by status
@@ -607,6 +627,14 @@ export const getFallbackInsights = (financialContext) => {
   const { bills, upcomingBills, overdueBills, wallet, financialAnalysis } =
     financialContext;
 
+  // Don't generate insights if there's no meaningful data
+  const hasNoBills = !bills || bills.total === 0;
+  const hasNoSpending = !financialAnalysis || financialAnalysis.currentMonthSpending === 0;
+
+  if (hasNoBills && hasNoSpending) {
+    return [];
+  }
+
   // Priority 1: Overdue bills warning (HIGH priority)
   if (overdueBills.length > 0) {
     const totalOverdue = overdueBills.reduce(
@@ -679,9 +707,11 @@ export const getFallbackInsights = (financialContext) => {
   }
 
   // Priority 4: Spending trend analysis (MEDIUM priority)
+  // Only show if there's actual spending in both months (avoid 0 to 0 comparisons)
   if (
     financialAnalysis &&
     financialAnalysis.currentMonthSpending > 0 &&
+    financialAnalysis.previousMonthSpending > 0 &&
     Math.abs(financialAnalysis.spendingChangePercentage) > 10
   ) {
     const change = financialAnalysis.spendingChangePercentage;
@@ -783,23 +813,25 @@ export const getAIInsights = async (userId) => {
     const financialContext = await prepareFinancialContext(userId);
 
     // 3. Check if user has any financial data
-    if (
-      financialContext.bills.total === 0 &&
-      financialContext.stats.totalTransactions === 0
-    ) {
+    const hasNoBills = !financialContext.bills || financialContext.bills.total === 0;
+    const hasNoTransactions =
+      !financialContext.financialAnalysis ||
+      financialContext.financialAnalysis.totalTransactionsThisMonth === 0;
+
+    if (hasNoBills && hasNoTransactions) {
       console.log("ℹ️ AI Insights: No financial data for new user");
-      const welcomeInsights = [
+      const noDataInsights = [
         {
           type: "optimization_tip",
-          priority: "medium",
-          titleAr: "مرحباً بك في أبشر للأعمال",
+          priority: "low",
+          titleAr: "لا توجد بيانات مالية",
           messageAr:
-            "ابدأ بإضافة فواتيرك الحكومية وسنقدم لك نصائح مخصصة لتحسين إدارتك المالية",
+            "لا توجد بيانات مالية متاحة حالياً. ابدأ بإضافة فواتيرك الحكومية وسنقدم لك نصائح ذكية مخصصة لتحسين إدارتك المالية",
           actionable: false,
         },
       ];
-      await cacheInsights(userId, welcomeInsights);
-      return welcomeInsights;
+      await cacheInsights(userId, noDataInsights);
+      return noDataInsights;
     }
 
     // 4. Try to generate insights from AI
@@ -815,6 +847,12 @@ export const getAIInsights = async (userId) => {
     if (!insights || insights.length === 0) {
       console.log("ℹ️ AI Insights: No AI insights, using fallback");
       insights = getFallbackInsights(financialContext);
+    }
+
+    // 6. Final check: if still no insights after fallback, return empty
+    if (!insights || insights.length === 0) {
+      console.log("ℹ️ AI Insights: No insights to show");
+      return [];
     }
 
     // 6. Cache the insights
