@@ -15,6 +15,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import moment from "moment";
+import Constants from "expo-constants";
 import { getUserBills, getDaysUntilDue, isBillOverdue } from "./billsService";
 import { getWalletsByUserId } from "./walletService";
 import { getWalletTransactions } from "./transactionService";
@@ -24,8 +25,8 @@ import { formatAmount } from "../utils/formatting";
 // CONFIGURATION
 // ============================================================================
 
-const OPENAI_API_KEY =
-  "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";
+// OpenAI API Key loaded from environment variables
+const OPENAI_API_KEY = Constants.expoConfig?.extra?.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
 const OPENAI_CONFIG = {
   baseURL: "https://api.openai.com/v1",
@@ -166,7 +167,9 @@ const calculateTransactionStats = (transactions) => {
   const ninetyDaysAgo = now - 90 * 24 * 60 * 60 * 1000;
 
   // Current month (last 30 days)
-  const currentMonth = transactions.filter((txn) => txn.timestamp >= thirtyDaysAgo);
+  const currentMonth = transactions.filter(
+    (txn) => txn.timestamp >= thirtyDaysAgo
+  );
 
   // Previous month (30-60 days ago)
   const previousMonth = transactions.filter(
@@ -174,7 +177,9 @@ const calculateTransactionStats = (transactions) => {
   );
 
   // Last 90 days for trend analysis
-  const lastQuarter = transactions.filter((txn) => txn.timestamp >= ninetyDaysAgo);
+  const lastQuarter = transactions.filter(
+    (txn) => txn.timestamp >= ninetyDaysAgo
+  );
 
   const calculatePeriodStats = (txns) => {
     const income = txns
@@ -197,13 +202,15 @@ const calculateTransactionStats = (transactions) => {
   const previous = calculatePeriodStats(previousMonth);
 
   // Calculate percentage changes
-  const expenseChange = previous.expense > 0
-    ? ((current.expense - previous.expense) / previous.expense) * 100
-    : 0;
+  const expenseChange =
+    previous.expense > 0
+      ? ((current.expense - previous.expense) / previous.expense) * 100
+      : 0;
 
-  const incomeChange = previous.income > 0
-    ? ((current.income - previous.income) / previous.income) * 100
-    : 0;
+  const incomeChange =
+    previous.income > 0
+      ? ((current.income - previous.income) / previous.income) * 100
+      : 0;
 
   // Group by ministry for spending analysis
   const spendingByMinistry = {};
@@ -218,8 +225,9 @@ const calculateTransactionStats = (transactions) => {
   });
 
   // Find top spending category
-  const topSpendingMinistry = Object.entries(spendingByMinistry)
-    .sort((a, b) => b[1] - a[1])[0];
+  const topSpendingMinistry = Object.entries(spendingByMinistry).sort(
+    (a, b) => b[1] - a[1]
+  )[0];
 
   return {
     currentMonth: {
@@ -243,9 +251,8 @@ const calculateTransactionStats = (transactions) => {
     topSpendingMinistry: topSpendingMinistry
       ? { name: topSpendingMinistry[0], amount: topSpendingMinistry[1] }
       : null,
-    averageExpensePerTransaction: current.count > 0
-      ? current.expense / current.count
-      : 0,
+    averageExpensePerTransaction:
+      current.count > 0 ? current.expense / current.count : 0,
   };
 };
 
@@ -332,7 +339,8 @@ export const prepareFinancialContext = async (userId) => {
 
       // Extract worker names from additionalInfo
       if (bill.additionalInfo) {
-        const workerName = bill.additionalInfo.employeeName || bill.additionalInfo.holderName;
+        const workerName =
+          bill.additionalInfo.employeeName || bill.additionalInfo.holderName;
         if (workerName && !acc[ministry].workers.includes(workerName)) {
           acc[ministry].workers.push(workerName);
         }
@@ -376,7 +384,10 @@ export const prepareFinancialContext = async (userId) => {
           daysRemaining: getDaysUntilDue(bill),
           ministryAr: bill.ministryName?.ar || bill.ministry,
           penaltyInfo: bill.penaltyInfo,
-          workerName: bill.additionalInfo?.employeeName || bill.additionalInfo?.holderName || null,
+          workerName:
+            bill.additionalInfo?.employeeName ||
+            bill.additionalInfo?.holderName ||
+            null,
           additionalDetails: {
             plateNumber: bill.additionalInfo?.plateNumber,
             violationType: bill.additionalInfo?.violationType,
@@ -392,7 +403,10 @@ export const prepareFinancialContext = async (userId) => {
         penaltyAmount: bill.penaltyInfo?.lateFee || 0,
         totalWithPenalty: bill.penaltyInfo?.totalWithPenalty || bill.amount,
         ministryAr: bill.ministryName?.ar || bill.ministry,
-        workerName: bill.additionalInfo?.employeeName || bill.additionalInfo?.holderName || null,
+        workerName:
+          bill.additionalInfo?.employeeName ||
+          bill.additionalInfo?.holderName ||
+          null,
         additionalDetails: {
           plateNumber: bill.additionalInfo?.plateNumber,
           violationType: bill.additionalInfo?.violationType,
@@ -400,15 +414,13 @@ export const prepareFinancialContext = async (userId) => {
           occupation: bill.additionalInfo?.occupation,
         },
       })),
-      recentTransactions: transactions
-        .slice(0, 10)
-        .map((txn) => ({
-          type: txn.descriptionAr || txn.type,
-          amount: txn.amount,
-          timestamp: moment(txn.timestamp).format("DD MMMM YYYY"),
-          serviceType: txn.serviceType,
-          ministry: txn.ministryName?.ar || txn.ministry,
-        })),
+      recentTransactions: transactions.slice(0, 10).map((txn) => ({
+        type: txn.descriptionAr || txn.type,
+        amount: txn.amount,
+        timestamp: moment(txn.timestamp).format("DD MMMM YYYY"),
+        serviceType: txn.serviceType,
+        ministry: txn.ministryName?.ar || txn.ministry,
+      })),
     };
 
     console.log("✅ AI Insights: Financial context prepared");
@@ -629,7 +641,8 @@ export const getFallbackInsights = (financialContext) => {
 
   // Don't generate insights if there's no meaningful data
   const hasNoBills = !bills || bills.total === 0;
-  const hasNoSpending = !financialAnalysis || financialAnalysis.currentMonthSpending === 0;
+  const hasNoSpending =
+    !financialAnalysis || financialAnalysis.currentMonthSpending === 0;
 
   if (hasNoBills && hasNoSpending) {
     return [];
@@ -655,7 +668,13 @@ export const getFallbackInsights = (financialContext) => {
       type: "bill_warning",
       priority: "high",
       titleAr: "فواتير متأخرة",
-      messageAr: `لديك ${overdueBills.length} فاتورة متأخرة بمبلغ إجمالي ${formatAmount(totalOverdue)} ريال. أقدم فاتورة: ${billDescription} - متأخرة منذ ${mostOverdue.daysOverdue} يوم بغرامة ${formatAmount(mostOverdue.penaltyAmount)} ريال`,
+      messageAr: `لديك ${
+        overdueBills.length
+      } فاتورة متأخرة بمبلغ إجمالي ${formatAmount(
+        totalOverdue
+      )} ريال. أقدم فاتورة: ${billDescription} - متأخرة منذ ${
+        mostOverdue.daysOverdue
+      } يوم بغرامة ${formatAmount(mostOverdue.penaltyAmount)} ريال`,
       billId: mostOverdue.id,
       actionable: true,
     });
@@ -676,7 +695,10 @@ export const getFallbackInsights = (financialContext) => {
 
       if (nextBill.workerName) {
         billDescription = `${nextBill.serviceAr} للعامل ${nextBill.workerName}`;
-        if (nextBill.additionalDetails?.nationality && nextBill.additionalDetails?.occupation) {
+        if (
+          nextBill.additionalDetails?.nationality &&
+          nextBill.additionalDetails?.occupation
+        ) {
           additionalInfo = ` (${nextBill.additionalDetails.nationality} - ${nextBill.additionalDetails.occupation})`;
         }
       } else if (nextBill.additionalDetails?.plateNumber) {
@@ -687,7 +709,9 @@ export const getFallbackInsights = (financialContext) => {
         type: "expense_prediction",
         priority: "medium",
         titleAr: billDescription,
-        messageAr: `${billDescription}${additionalInfo} تستحق خلال ${nextBill.daysRemaining} يوم بمبلغ ${formatAmount(nextBill.amount)} ريال`,
+        messageAr: `${billDescription}${additionalInfo} تستحق خلال ${
+          nextBill.daysRemaining
+        } يوم بمبلغ ${formatAmount(nextBill.amount)} ريال`,
         billId: nextBill.id,
         actionable: true,
       });
@@ -701,7 +725,11 @@ export const getFallbackInsights = (financialContext) => {
       type: "optimization_tip",
       priority: "high",
       titleAr: "تحذير: رصيد غير كافٍ",
-      messageAr: `رصيدك الحالي ${formatAmount(wallet.balance)} ريال أقل من إجمالي الفواتير غير المدفوعة ${formatAmount(bills.totalUnpaidAmount)} ريال. تحتاج لإيداع ${formatAmount(deficit)} ريال`,
+      messageAr: `رصيدك الحالي ${formatAmount(
+        wallet.balance
+      )} ريال أقل من إجمالي الفواتير غير المدفوعة ${formatAmount(
+        bills.totalUnpaidAmount
+      )} ريال. تحتاج لإيداع ${formatAmount(deficit)} ريال`,
       actionable: false,
     });
   }
@@ -731,7 +759,9 @@ export const getFallbackInsights = (financialContext) => {
       type: isIncrease ? "bill_warning" : "spending_pattern",
       priority: change > 40 ? "high" : "medium",
       titleAr: `${trend} مصاريفك بنسبة ${Math.abs(change)}%`,
-      messageAr: `${trend} مصاريفك بنسبة ${Math.abs(change)}% هذا الشهر (${formatAmount(
+      messageAr: `${trend} مصاريفك بنسبة ${Math.abs(
+        change
+      )}% هذا الشهر (${formatAmount(
         financialAnalysis.currentMonthSpending
       )} ريال) مقارنة بالشهر الماضي (${formatAmount(
         financialAnalysis.previousMonthSpending
@@ -772,9 +802,7 @@ export const getFallbackInsights = (financialContext) => {
       type: "spending_pattern",
       priority: "low",
       titleAr: `أعلى فئة صرف: ${financialAnalysis.topSpendingCategory}`,
-      messageAr: `${
-        financialAnalysis.topSpendingCategory
-      }: ${formatAmount(
+      messageAr: `${financialAnalysis.topSpendingCategory}: ${formatAmount(
         financialAnalysis.topSpendingAmount
       )} ريال (${percentage}% من إجمالي المصاريف)${workerInfo}`,
       actionable: false,
@@ -813,7 +841,8 @@ export const getAIInsights = async (userId) => {
     const financialContext = await prepareFinancialContext(userId);
 
     // 3. Check if user has any financial data
-    const hasNoBills = !financialContext.bills || financialContext.bills.total === 0;
+    const hasNoBills =
+      !financialContext.bills || financialContext.bills.total === 0;
     const hasNoTransactions =
       !financialContext.financialAnalysis ||
       financialContext.financialAnalysis.totalTransactionsThisMonth === 0;

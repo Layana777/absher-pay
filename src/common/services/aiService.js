@@ -15,12 +15,12 @@
 
 import axios from "axios";
 import moment from "moment";
+import Constants from "expo-constants";
 import { formatAmount, formatDate } from "../utils/formatting";
 import { getDaysUntilDue } from "./billsService";
 
-// TODO: Move to environment variables for production
-const OPENAI_API_KEY =
-  "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";
+// OpenAI API Key loaded from environment variables
+const OPENAI_API_KEY = Constants.expoConfig?.extra?.OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 
 // OpenAI API Configuration
 const OPENAI_CONFIG = {
