@@ -93,7 +93,7 @@ const UpcomingPayHeaderDetails = ({
                 name="clock"
                 size={14}
                 color="white"
-                style={{ marginLeft: 6 }}
+                style={{ marginRight: 6 }}
               />
               <Text className="text-white text-xs font-bold">مجدولة</Text>
             </View>

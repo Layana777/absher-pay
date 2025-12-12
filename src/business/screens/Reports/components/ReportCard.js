@@ -172,7 +172,7 @@ const ReportCard = ({
         >
           <Feather name="eye" size={18} color={primaryColor} />
           <Text
-            className="font-bold text-sm mr-2"
+            className="font-bold text-sm mx-1"
             style={{ color: primaryColor }}
           >
             معاينة
